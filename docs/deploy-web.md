@@ -9,9 +9,10 @@ with `trunk build --release`, wasm-opt -Oz). Cloudflare Pages and Workers static
 2. Bucket → Settings → Custom Domains → add `editor.englat.com` (the zone must be in the same
    Cloudflare account). R2 serves objects by key, so make `/` serve `index.html` (for example with a
    Transform Rule that rewrites the path `/` to `/index.html`); check this in your account.
-3. My Profile → API Tokens → create a token with R2 edit permission for that bucket.
-4. GitHub → this repository → Settings → Secrets and variables → Actions: add
-   `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` and `R2_BUCKET`.
+3. R2 → Manage API tokens → create an **Object Read & Write** token scoped **to this one bucket**.
+   Do not reuse the production credentials that guard private learner audio.
+4. GitHub → this repository → Settings → Secrets and variables → Actions: add `R2_ACCOUNT_ID`,
+   `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `R2_BUCKET` (the new bucket's name).
 
 ## Publish
 GitHub → Actions → `deploy-web` → Run workflow. It builds with trunk and uploads the files.

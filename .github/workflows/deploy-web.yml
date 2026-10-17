@@ -1,6 +1,7 @@
 # Builds the browser version and uploads it to a Cloudflare R2 bucket.
-# Needs repository secrets: CLOUDFLARE_API_TOKEN (R2 edit), CLOUDFLARE_ACCOUNT_ID, R2_BUCKET.
-# It does nothing until those secrets exist. See docs/deploy-web.md.
+# Needs repository secrets: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET
+# (S3-compatible R2 credentials). Use a SEPARATE bucket and a token scoped to it only; never reuse
+# the production learner-audio credentials. It fails until the secrets exist. See docs/deploy-web.md.
 name: deploy-web
 on:
   workflow_dispatch:
@@ -33,14 +34,17 @@ jobs:
         run: |
           ls -la dist/web
           for f in dist/web/*.wasm; do echo "gzip: $(gzip -9 -c "$f" | wc -c) bytes"; done
-      - name: Upload to R2
+      - name: Upload to R2 (S3 API)
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
         run: |
           set -euo pipefail
-          test -n "$R2_BUCKET" || { echo "R2_BUCKET secret is not set"; exit 1; }
+          test -n "$R2_BUCKET" && test -n "$R2_ACCOUNT_ID" || { echo "R2 secrets are not set"; exit 1; }
+          endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
           cd dist/web
           for f in *; do
             case "$f" in
@@ -50,5 +54,5 @@ jobs:
               index.html) ct="text/html; charset=utf-8"; cc="no-cache" ;;
               *)      ct="application/octet-stream"; cc="public, max-age=3600" ;;
             esac
-            npx --yes wrangler@4 r2 object put "$R2_BUCKET/$f" --file "$f" --content-type "$ct" --cache-control "$cc" --remote
+            aws s3 cp "$f" "s3://$R2_BUCKET/$f" --endpoint-url "$endpoint" --content-type "$ct" --cache-control "$cc"
           done
