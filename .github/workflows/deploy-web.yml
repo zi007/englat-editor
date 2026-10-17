@@ -5,6 +5,9 @@
 name: deploy-web
 on:
   workflow_dispatch:
+  # Temporary: lets the deploy run from this branch before it is merged to main. Remove after merge.
+  push:
+    branches: [work/deploy-cloudflare]
 permissions:
   contents: read
 jobs:
