@@ -7,7 +7,7 @@
 //! comes from other programs: sizes are capped before it reaches the engine.
 
 use serde_json::Value;
-use wordcraft_engine::cmd::paste::{MAX_PASTE_BYTES, MAX_PICTURE_BYTES};
+use englat_engine::cmd::paste::{MAX_PASTE_BYTES, MAX_PICTURE_BYTES};
 
 use crate::{WordApp, paste_picture};
 
@@ -59,7 +59,7 @@ pub(crate) fn fill(app: &mut WordApp, id: &str, params: &mut Value) -> Option<Re
     if id == "edit.pasteSpecial"
         && let Some(png) = paste_picture::clipboard_png(app)
     {
-        let data = wordcraft_engine::cmd::insert::base64_encode(&png);
+        let data = englat_engine::cmd::insert::base64_encode(&png);
         if data.len() <= MAX_PICTURE_BYTES {
             o.insert("picture".into(), Value::String(data));
         }
@@ -136,10 +136,10 @@ mod tests {
     use crate::Services;
     use crate::paste_picture::ClipboardPicture;
     use serde_json::json;
-    use wordcraft_engine::Session;
+    use englat_engine::Session;
 
     fn app(services: Services) -> WordApp {
-        WordApp::new(Session::new(wordcraft_doc::Document::new()), services)
+        WordApp::new(Session::new(englat_doc::Document::new()), services)
     }
 
     fn first_para(a: &WordApp) -> String {
@@ -216,7 +216,7 @@ mod tests {
         assert_eq!(a.session.doc.media.len(), 1);
     }
 
-    /// A clipboard holding nothing WordCraft can paste says what it holds (#833); one that can't
+    /// A clipboard holding nothing ENGLAT Editor can paste says what it holds (#833); one that can't
     /// be read says why; a truly empty one says it is empty.
     #[test]
     fn nothing_to_paste_says_what_the_clipboard_holds() {

@@ -4,10 +4,10 @@
 //! the number and the number's font.
 
 use serde_json::{Value, json};
-use wordcraft_doc::StoryRef;
-use wordcraft_doc::numbering::{Level, LevelSuffix, ListKind, levels_for};
-use wordcraft_doc::props::{Align, NumRef, Rgb, TextColor};
-use wordcraft_doc::section::NumFormat;
+use englat_doc::StoryRef;
+use englat_doc::numbering::{Level, LevelSuffix, ListKind, levels_for};
+use englat_doc::props::{Align, NumRef, Rgb, TextColor};
+use englat_doc::section::NumFormat;
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Session, p};
@@ -237,7 +237,7 @@ fn touch_styles(s: &mut Session, styles: &[String]) -> Result<(), CmdError> {
 }
 
 /// Lay out again every paragraph, in every story, that `f` picks.
-fn touch_where(s: &mut Session, f: &dyn Fn(&wordcraft_doc::Paragraph) -> bool) -> Result<(), CmdError> {
+fn touch_where(s: &mut Session, f: &dyn Fn(&englat_doc::Paragraph) -> bool) -> Result<(), CmdError> {
     let stories: Vec<StoryRef> = std::iter::once(StoryRef::Body).chain(s.doc.parts.keys().map(|k| StoryRef::Part(*k))).collect();
     for story in stories {
         for path in s.doc.para_paths(story) {
@@ -252,8 +252,8 @@ fn touch_where(s: &mut Session, f: &dyn Fn(&wordcraft_doc::Paragraph) -> bool) -
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use wordcraft_doc::Document;
-    use wordcraft_layout::Placed;
+    use englat_doc::Document;
+    use englat_layout::Placed;
 
     use crate::Session;
 
@@ -286,16 +286,16 @@ mod tests {
         let r = s.run("list.define", &json!({"levels": levels, "name": "Spec"})).unwrap();
         let num = r["num"].as_u64().unwrap() as u32;
         // Second and third paragraphs one and two levels down.
-        let paths = s.doc.para_paths(wordcraft_doc::StoryRef::Body);
+        let paths = s.doc.para_paths(englat_doc::StoryRef::Body);
         for (k, lvl) in [(1usize, 1u8), (2, 2)] {
-            let p = s.doc.para_mut(wordcraft_doc::StoryRef::Body, &paths[k]).unwrap();
-            p.props.numbering = Some(wordcraft_doc::props::NumRef { num, level: lvl });
+            let p = s.doc.para_mut(englat_doc::StoryRef::Body, &paths[k]).unwrap();
+            p.props.numbering = Some(englat_doc::props::NumRef { num, level: lvl });
             p.touch();
         }
         s.relayout();
         assert_eq!(labels(&mut s), ["1.", "1.1.", "a)"]);
 
-        let back = wordcraft_docx::read(&wordcraft_docx::write(&s.doc).unwrap()).unwrap();
+        let back = englat_docx::read(&englat_docx::write(&s.doc).unwrap()).unwrap();
         let mut b = Session::new(back);
         assert_eq!(labels(&mut b), ["1.", "1.1.", "a)"]);
         let got = b.run("list.get", &json!({"num": num})).unwrap();

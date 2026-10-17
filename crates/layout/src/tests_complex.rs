@@ -3,7 +3,7 @@
 //! clusters and breaks are the same); shaping tests use a system font when one is installed.
 
 use super::*;
-use wordcraft_doc::{Pos, StoryRef};
+use englat_doc::{Pos, StoryRef};
 
 fn lay(doc: &Document) -> DocLayout {
     let mut c = LayoutCache::new();
@@ -50,7 +50,7 @@ fn myanmar_without_spaces_wraps_between_syllables() {
     let l = lay(&Document::from_text(&text));
     let pl = para_layout(&l, 0);
     assert!(pl.lines.len() > 1, "a long Myanmar paragraph wraps");
-    let breaks = wordcraft_doc::cluster::myanmar_breaks(&text);
+    let breaks = englat_doc::cluster::myanmar_breaks(&text);
     // A line may end before each syllable: before မာ and စာ, never before န် (a final).
     for c in &pl.clusters {
         assert_eq!(c.break_after, breaks.contains(&c.end), "break after {}", c.end);
@@ -65,8 +65,8 @@ fn myanmar_without_spaces_wraps_between_syllables() {
 }
 
 /// A face with Myanmar letters (an installed system font), or `None` to skip.
-fn myanmar_face() -> Option<wordcraft_fonts::FaceRef> {
-    wordcraft_fonts::FontDb::global().fallback_for('\u{1000}', 0).map(|f| wordcraft_fonts::FaceRef::of(&f)).filter(|f| f.has_layout_tables())
+fn myanmar_face() -> Option<englat_fonts::FaceRef> {
+    englat_fonts::FontDb::global().fallback_for('\u{1000}', 0).map(|f| englat_fonts::FaceRef::of(&f)).filter(|f| f.has_layout_tables())
 }
 
 #[test]
@@ -77,14 +77,14 @@ fn myanmar_prevowel_is_drawn_before_its_consonant() {
     };
     // ကေ: in memory consonant first, on screen the vowel sign ေ first.
     let ka = face.glyph_for('\u{1000}');
-    let g = wordcraft_fonts::shape(&face, "\u{1000}\u{1031}", &[], |c| c);
+    let g = englat_fonts::shape(&face, "\u{1000}\u{1031}", &[], |c| c);
     assert_eq!(g.len(), 2, "{g:?}");
     assert_eq!(g[1].gid, ka, "the consonant is drawn second: {g:?}");
     assert!(g.iter().all(|x| x.cluster == 0), "one cluster: {g:?}");
     // Itemised by script: the same syllable after Latin text in the same face shapes the same
     // (shaped as one Latin run, the vowel sign would stay after the consonant).
     if face.covers('H') {
-        let mixed = wordcraft_fonts::shape(&face, "Hi \u{1000}\u{1031}", &[], |c| c);
+        let mixed = englat_fonts::shape(&face, "Hi \u{1000}\u{1031}", &[], |c| c);
         let tail: Vec<u32> = mixed.iter().filter(|x| x.cluster >= 3).map(|x| x.gid).collect();
         assert_eq!(tail, g.iter().map(|x| x.gid).collect::<Vec<_>>());
     }

@@ -1,9 +1,9 @@
-//! WordCraft reader for the Word 97-2003 binary file format (`.doc`, [MS-DOC]).
+//! ENGLAT Editor reader for the Word 97-2003 binary file format (`.doc`, [MS-DOC]).
 //!
-//! [`read`] turns the bytes of a `.doc` file into a [`wordcraft_doc::Document`]. There is no
+//! [`read`] turns the bytes of a `.doc` file into a [`englat_doc::Document`]. There is no
 //! writer: saving always goes through the other formats. The reader is written from the public
 //! specification ([MS-DOC], Word (.doc) Binary File Format, Microsoft Open Specifications) and,
-//! like every WordCraft parser, is lenient by design (unknown structures are skipped, bad numbers
+//! like every ENGLAT Editor parser, is lenient by design (unknown structures are skipped, bad numbers
 //! fall back to defaults) and bounded (stream sizes, piece counts and property counts are
 //! capped), so hostile input yields an error or a best-effort document, never a panic.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
@@ -26,15 +26,15 @@ mod table;
 
 use std::io::{Read, Seek};
 
-use wordcraft_doc::para::InlineObject;
-use wordcraft_doc::para::NoteKind;
-use wordcraft_doc::para::Paragraph;
-use wordcraft_doc::para::Run;
-use wordcraft_doc::props::CharProps;
-use wordcraft_doc::props::NumRef;
-use wordcraft_doc::section::HeaderSet;
-use wordcraft_doc::styles::StyleSheet;
-use wordcraft_doc::{Document, PartKind};
+use englat_doc::para::InlineObject;
+use englat_doc::para::NoteKind;
+use englat_doc::para::Paragraph;
+use englat_doc::para::Run;
+use englat_doc::props::CharProps;
+use englat_doc::props::NumRef;
+use englat_doc::section::HeaderSet;
+use englat_doc::styles::StyleSheet;
+use englat_doc::{Document, PartKind};
 
 use fkp::Bins;
 use piece::{PieceTable, PrmRef};
@@ -70,7 +70,7 @@ pub enum DocbinError {
     /// The password does not open the document.
     #[error("the password is incorrect")]
     WrongPassword,
-    /// The document is encrypted in a way WordCraft can't read (AES, an external provider, an
+    /// The document is encrypted in a way ENGLAT Editor can't read (AES, an external provider, an
     /// unknown header).
     #[error("encrypted document: {0}")]
     Encryption(String),
@@ -338,7 +338,7 @@ struct WalkCtx<'a> {
 struct ParaBuild {
     text: String,
     runs: Vec<Run>,
-    props: wordcraft_doc::props::ParaProps,
+    props: englat_doc::props::ParaProps,
     mark: CharProps,
     /// The current run's properties, so runs only break when formatting changes.
     cur: Option<CharProps>,

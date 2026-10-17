@@ -2,33 +2,33 @@
 resolver = "3"
 members = ["crates/*", "apps/*", "xtask"]
 exclude = ["vendor/craft-pdf", "vendor/craft-ui"]
-default-members = ["crates/*", "apps/wordcraft", "apps/wordcraft-cli", "xtask"]
+default-members = ["crates/*", "apps/englat-editor", "apps/englat-editor-cli", "xtask"]
 
 [workspace.package]
 version = "0.7.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
-repository = "https://github.com/storytold/wordcraft"
+repository = "https://github.com/zi007/englat-editor"
 
 [workspace.dependencies]
 # internal
-wordcraft-geom = { path = "crates/geom" }
-wordcraft-doc = { path = "crates/doc" }
-wordcraft-fonts = { path = "crates/fonts" }
-wordcraft-layout = { path = "crates/layout" }
-wordcraft-docx = { path = "crates/docx" }
-wordcraft-docbin = { path = "crates/docbin" }
-wordcraft-formats = { path = "crates/formats" }
-wordcraft-render = { path = "crates/render" }
-wordcraft-pdf = { path = "crates/pdf" }
-wordcraft-proof = { path = "crates/proof" }
-wordcraft-engine = { path = "crates/engine" }
-wordcraft-mcp = { path = "crates/mcp" }
-wordcraft-zotero = { path = "crates/zotero" }
-wordcraft-control-key = { path = "crates/control-key" }
-wordcraft-ui-egui = { path = "crates/ui-egui" }
-wordcraft-metafile = { path = "crates/metafile" }
+englat-geom = { path = "crates/geom" }
+englat-doc = { path = "crates/doc" }
+englat-fonts = { path = "crates/fonts" }
+englat-layout = { path = "crates/layout" }
+englat-docx = { path = "crates/docx" }
+englat-docbin = { path = "crates/docbin" }
+englat-formats = { path = "crates/formats" }
+englat-render = { path = "crates/render" }
+englat-pdf = { path = "crates/pdf" }
+englat-proof = { path = "crates/proof" }
+englat-engine = { path = "crates/engine" }
+englat-mcp = { path = "crates/mcp" }
+englat-zotero = { path = "crates/zotero" }
+englat-control-key = { path = "crates/control-key" }
+englat-ui-egui = { path = "crates/ui-egui" }
+englat-metafile = { path = "crates/metafile" }
 
 # foundation
 kurbo = { version = "0.13", features = ["serde"] }

@@ -61,8 +61,8 @@ fn package(body: &str, doc_rels: &[(&str, &str, &str)], root_rels: &[(&str, &str
     zip(&entries)
 }
 
-fn save(doc: &wordcraft_doc::Document) -> BTreeMap<String, Vec<u8>> {
-    unzip(&wordcraft_docx::write(doc).expect("write"))
+fn save(doc: &englat_doc::Document) -> BTreeMap<String, Vec<u8>> {
+    unzip(&englat_docx::write(doc).expect("write"))
 }
 
 const SETTINGS: &str = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -78,7 +78,7 @@ fn pos(s: &str, needle: &str) -> usize {
 
 #[test]
 fn unmodelled_settings_survive_a_save_and_owned_ones_follow_the_model() {
-    let mut doc = wordcraft_docx::read(&with_settings(SETTINGS)).unwrap();
+    let mut doc = englat_docx::read(&with_settings(SETTINGS)).unwrap();
     assert!(doc.settings.track_changes);
     doc.settings.track_changes = false;
     let files = save(&doc);
@@ -122,14 +122,14 @@ fn unmodelled_settings_survive_a_save_and_owned_ones_follow_the_model() {
     let p = text(&save(&private), "word/settings.xml");
     assert!(!p.contains("removePersonalInformation") && !p.contains("removeDateAndTime"), "{p}");
     // A second generation is identical.
-    let again = wordcraft_docx::read(&wordcraft_docx::write(&doc).unwrap()).unwrap();
+    let again = englat_docx::read(&englat_docx::write(&doc).unwrap()).unwrap();
     assert_eq!(text(&save(&again), "word/settings.xml"), s);
 }
 
 #[test]
-fn settings_written_by_wordcraft_keep_no_original() {
-    let doc = wordcraft_doc::Document::new();
-    let back = wordcraft_docx::read(&wordcraft_docx::write(&doc).unwrap()).unwrap();
-    assert!(!back.passthrough.contains_key("wordcraft:settings.orig"), "{:?}", back.passthrough.keys());
+fn settings_written_by_englat_keep_no_original() {
+    let doc = englat_doc::Document::new();
+    let back = englat_docx::read(&englat_docx::write(&doc).unwrap()).unwrap();
+    assert!(!back.passthrough.contains_key("englat-editor:settings.orig"), "{:?}", back.passthrough.keys());
     assert_eq!(text(&save(&back), "word/settings.xml"), text(&save(&doc), "word/settings.xml"));
 }

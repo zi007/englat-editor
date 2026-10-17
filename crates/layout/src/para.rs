@@ -4,13 +4,13 @@
 use std::collections::VecDeque;
 use std::sync::Arc;
 
-use wordcraft_doc::math::MathJc;
-use wordcraft_doc::numbering::{Level, LevelSuffix};
-use wordcraft_doc::para::{COLUMN_BREAK, InlineObject, LINE_BREAK, NoteKind, OBJ, PAGE_BREAK, RubyAlign, SOFT_HYPHEN, WrapText};
-use wordcraft_doc::props::{Align, CharProps, LineSpacing, ParaProps, TabAlign, TabLeader, TabStop};
-use wordcraft_doc::resolve::{ResolvedChar, ResolvedPara};
-use wordcraft_doc::{Document, Paragraph};
-use wordcraft_fonts::FaceRef;
+use englat_doc::math::MathJc;
+use englat_doc::numbering::{Level, LevelSuffix};
+use englat_doc::para::{COLUMN_BREAK, InlineObject, LINE_BREAK, NoteKind, OBJ, PAGE_BREAK, RubyAlign, SOFT_HYPHEN, WrapText};
+use englat_doc::props::{Align, CharProps, LineSpacing, ParaProps, TabAlign, TabLeader, TabStop};
+use englat_doc::resolve::{ResolvedChar, ResolvedPara};
+use englat_doc::{Document, Paragraph};
+use englat_fonts::FaceRef;
 
 use crate::NumeralMode;
 use crate::fields::{FIELD_SHADING, FieldCtx, field_code_text, field_text_on};
@@ -18,7 +18,7 @@ use crate::fields::{FIELD_SHADING, FieldCtx, field_code_text, field_text_on};
 /// How a run set in one of Word's symbol fonts (Symbol, Wingdings, Wingdings 2/3, Webdings)
 /// shows its characters. Those fonts are proprietary and usually missing: a substitute has other
 /// glyphs, or none, at their codes, so each character is drawn as its Unicode equivalent
-/// ([`wordcraft_doc::symbol_fonts`]) from a face that has it. The text itself is unchanged.
+/// ([`englat_doc::symbol_fonts`]) from a face that has it. The text itself is unchanged.
 #[derive(Clone, Copy)]
 struct SymbolRun<'a> {
     family: &'a str,
@@ -28,8 +28,8 @@ struct SymbolRun<'a> {
 }
 
 impl<'a> SymbolRun<'a> {
-    fn of(family: &'a str, r: &wordcraft_fonts::word::Resolved) -> Option<Self> {
-        wordcraft_doc::symbol_fonts::is_symbol_font(family).then_some(SymbolRun { family, installed: !r.substituted, face: r.face })
+    fn of(family: &'a str, r: &englat_fonts::word::Resolved) -> Option<Self> {
+        englat_doc::symbol_fonts::is_symbol_font(family).then_some(SymbolRun { family, installed: !r.substituted, face: r.face })
     }
 
     /// The character drawn for `c`.
@@ -45,7 +45,7 @@ impl<'a> SymbolRun<'a> {
                 return p;
             }
         }
-        let Some(u) = wordcraft_doc::symbol_fonts::symbol_char(self.family, c) else { return c };
+        let Some(u) = englat_doc::symbol_fonts::symbol_char(self.family, c) else { return c };
         // A few list bullets have common look-alikes in far more fonts: use one when no face
         // has the exact character.
         let alt = match u {
@@ -54,7 +54,7 @@ impl<'a> SymbolRun<'a> {
             '\u{2B9A}' => Some('\u{27A2}'),
             _ => None,
         };
-        let has = |ch: char| self.face.covers(ch) || wordcraft_fonts::FontDb::global().fallback_for(ch, self.face.id()).is_some();
+        let has = |ch: char| self.face.covers(ch) || englat_fonts::FontDb::global().fallback_for(ch, self.face.id()).is_some();
         match alt {
             Some(a) if !has(u) && has(a) => a,
             _ => u,
@@ -345,7 +345,7 @@ pub struct ParaLayout {
     /// Ruby (Phonetic Guide) text over base-text clusters, in cluster order.
     pub rubies: Vec<RubyLayout>,
     /// Display equations (on lines of their own): cluster index and justification.
-    pub displays: Vec<(usize, wordcraft_doc::math::MathJc)>,
+    pub displays: Vec<(usize, englat_doc::math::MathJc)>,
     /// Byte ranges of the text laid out as nothing ([`left_out`]): hidden text that is not shown,
     /// tracked deletions in the final text. Resolved as laid out, table formatting included.
     pub left_out: Vec<std::ops::Range<usize>>,
@@ -361,7 +361,7 @@ pub struct ParaLayout {
 /// relative to the cluster's left edge and baseline, in the cluster's text colour.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Enclosed {
-    pub kind: wordcraft_doc::para::ShapeKind,
+    pub kind: englat_doc::para::ShapeKind,
     /// Left edge from the cluster's x; top above the baseline (up is positive), points.
     pub x: f32,
     pub top: f32,
@@ -425,12 +425,12 @@ pub struct Grid {
 
 impl Grid {
     /// The grid of section `s` of `doc` (its default font size from the Normal style).
-    pub fn of(doc: &Document, s: &wordcraft_doc::SectionProps) -> Grid {
+    pub fn of(doc: &Document, s: &englat_doc::SectionProps) -> Grid {
         let Some(line) = s.grid_line_pitch() else { return Grid::default() };
         let size = doc.styles.resolve_char(Some("Normal"), &CharProps::default()).size;
         let font_size = if size.is_finite() { size.clamp(1.0, 1584.0) } else { 10.5 };
         let chars = s.grid_char_pitch(font_size);
-        let snap_all = s.doc_grid.is_some_and(|g| g.kind == wordcraft_doc::section::DocGridType::SnapToChars);
+        let snap_all = s.doc_grid.is_some_and(|g| g.kind == englat_doc::section::DocGridType::SnapToChars);
         Grid { line: Some(line), chars, font_size, snap_all }
     }
     /// A cache key for paragraph layouts.
@@ -620,7 +620,7 @@ pub(crate) fn remap_range(map_starts: &[usize], orig_of: &[usize], orig_len: usi
 /// Bidi embedding levels per byte of `text` (UAX #9 rules up to I2), or empty when the
 /// paragraph is left to right and has no right-to-left characters.
 pub fn bidi_levels(text: &str, rtl_para: bool) -> Vec<u8> {
-    if !rtl_para && !text.chars().any(wordcraft_fonts::is_rtl) {
+    if !rtl_para && !text.chars().any(englat_fonts::is_rtl) {
         return Vec::new();
     }
     let level = if rtl_para { unicode_bidi::Level::rtl() } else { unicode_bidi::Level::ltr() };
@@ -672,9 +672,9 @@ const MISSING_ROMAN_FONT: &str = "Cambria";
 
 /// The family to look `font` up as: [`MISSING_ROMAN_FONT`] for a missing roman font, else `font`.
 fn lookup_family<'f>(doc: &Document, font: &'f str) -> &'f str {
-    let db = wordcraft_fonts::FontDb::global();
+    let db = englat_fonts::FontDb::global();
     let roman = doc.settings.roman_fonts.iter().any(|f| f.eq_ignore_ascii_case(font));
-    if roman && !db.has_family(font) && !db.has_family(wordcraft_fonts::word::charset_base_family(font)) { MISSING_ROMAN_FONT } else { font }
+    if roman && !db.has_family(font) && !db.has_family(englat_fonts::word::charset_base_family(font)) { MISSING_ROMAN_FONT } else { font }
 }
 
 impl<'a> Builder<'a> {
@@ -689,7 +689,7 @@ impl<'a> Builder<'a> {
 
     /// Style index for a resolved char in `face` (caps-scaled `size` override for small caps).
     fn style(&mut self, rc: &Arc<ResolvedChar>, face_override: Option<FaceRef>, small: bool) -> u32 {
-        let r = wordcraft_fonts::word::resolve(lookup_family(self.env.doc, &rc.font), rc.bold, rc.italic);
+        let r = englat_fonts::word::resolve(lookup_family(self.env.doc, &rc.font), rc.bold, rc.italic);
         let face = face_override.unwrap_or(r.face);
         // The display list reads every run's format (link target, strike kind, underline colour,
         // baseline shift…) from its StyleRun, so runs share one only when their formats are equal.
@@ -715,7 +715,7 @@ impl<'a> Builder<'a> {
             }
         }
         let size = rc.draw_size() * if small { 0.8 } else { 1.0 };
-        let (a, d) = wordcraft_fonts::word::line_metrics(&face);
+        let (a, d) = englat_fonts::word::line_metrics(&face);
         let k = size as f64 / face.upem.max(1.0);
         // A fallback face (letters the requested font lacks) is emboldened or slanted when it has
         // no bold or italic of its own.
@@ -755,19 +755,19 @@ impl<'a> Builder<'a> {
         // Complex-script characters (Persian, Arabic…) use the run's complex-script font, size,
         // bold and italic.
         let rc_cs: Option<Arc<ResolvedChar>> = text.chars().any(|c| rc.uses_complex(c)).then(|| Arc::new(rc.complex()));
-        let resolved = wordcraft_fonts::word::resolve(lookup_family(self.env.doc, &rc.font), rc.bold, rc.italic);
+        let resolved = englat_fonts::word::resolve(lookup_family(self.env.doc, &rc.font), rc.bold, rc.italic);
         let primary = resolved.face;
         // Symbol-font characters are laid out as their Unicode equivalents.
         let sym = SymbolRun::of(&rc.font, &resolved);
         let show = |c: char| sym.map_or(c, |m| m.show(c));
-        let primary_cs = rc_cs.as_ref().map(|r| wordcraft_fonts::word::resolve(lookup_family(self.env.doc, &r.font), r.bold, r.italic).face);
+        let primary_cs = rc_cs.as_ref().map(|r| englat_fonts::word::resolve(lookup_family(self.env.doc, &r.font), r.bold, r.italic).face);
         // Chinese, Japanese and Korean characters use the run's East Asian font (`w:eastAsia`) when
         // it is installed and has them.
         let primary_ea = rc
             .font_ea
             .as_ref()
             .filter(|f| !f.eq_ignore_ascii_case(&rc.font) && text.chars().any(east_asian))
-            .map(|f| wordcraft_fonts::word::resolve(f, rc.bold, rc.italic))
+            .map(|f| englat_fonts::word::resolve(f, rc.bold, rc.italic))
             .filter(|r| !r.substituted)
             .map(|r| r.face);
         let use_levels = para_text && !self.levels.is_empty();
@@ -785,7 +785,7 @@ impl<'a> Builder<'a> {
             if ea.is_empty() {
                 None
             } else {
-                wordcraft_fonts::FontDb::global().fallback_for_east_asian(&ea, primary.id(), rc.bold, rc.italic).map(|f| FaceRef::of(&f))
+                englat_fonts::FontDb::global().fallback_for_east_asian(&ea, primary.id(), rc.bold, rc.italic).map(|f| FaceRef::of(&f))
             }
         };
         // Split by font coverage (fallback faces), small caps case, script formatting and direction.
@@ -816,7 +816,7 @@ impl<'a> Builder<'a> {
                 _ if !complex && ea_face.is_some() && crate::kinsoku::is_east_asian(c) => ea_face,
                 _ => {
                     let (bold, italic) = if complex { (rc.bold_cs, rc.italic_cs) } else { (rc.bold, rc.italic) };
-                    wordcraft_fonts::FontDb::global().fallback_styled(dc, prim.id(), bold, italic).map(|f| FaceRef::of(&f))
+                    englat_fonts::FontDb::global().fallback_styled(dc, prim.id(), bold, italic).map(|f| FaceRef::of(&f))
                 }
             };
             let small = rc.small_caps && !rc.caps && c.is_lowercase();
@@ -834,7 +834,7 @@ impl<'a> Builder<'a> {
         if let Some(p) = cur {
             segs.push((seg_start, text.len(), p));
         }
-        let no_kern = [wordcraft_fonts::feature_value(b"kern", 0)];
+        let no_kern = [englat_fonts::feature_value(b"kern", 0)];
         for (a, b, key) in segs {
             let Some(sub) = text.get(a..b) else { continue };
             let rc = match (&rc_cs, key.complex) {
@@ -883,18 +883,18 @@ impl<'a> Builder<'a> {
                 }
             };
             // The shaper kerns by default; Word kerns only when Kerning for fonts covers the size.
-            let features: &[wordcraft_fonts::Feature] = if rc.kerned() { &[] } else { &no_kern };
+            let features: &[englat_fonts::Feature] = if rc.kerned() { &[] } else { &no_kern };
             let shaped = if use_levels {
-                wordcraft_fonts::shape_run(&st.face, shape_text, features, map, key.rtl)
+                englat_fonts::shape_run(&st.face, shape_text, features, map, key.rtl)
             } else {
-                wordcraft_fonts::shape(&st.face, shape_text, features, map)
+                englat_fonts::shape(&st.face, shape_text, features, map)
             };
             let k = st.size / st.face.upem.max(1.0) as f32;
             let hscale = rc.scale / 100.0;
             // Group glyphs by cluster byte offset; graphemes may span several shaper clusters.
             // Complex-script syllables the graphemes split (Myanmar vowel signs, stacked
             // consonants) stay one cluster: the caret never stops inside them.
-            let mut bounds: Vec<usize> = wordcraft_doc::cluster::cluster_starts(shape_text);
+            let mut bounds: Vec<usize> = englat_doc::cluster::cluster_starts(shape_text);
             if expands {
                 // The capitals drawn for one character (the two S of ß) are one cluster: the
                 // caret, selection and line breaking never stop inside the character.
@@ -1000,11 +1000,11 @@ impl<'a> Builder<'a> {
         start: usize,
         end: usize,
         rc: &Arc<ResolvedChar>,
-        align: wordcraft_doc::eq::OAlign,
+        align: englat_doc::eq::OAlign,
         width: f32,
         dy: f32,
     ) -> Option<usize> {
-        use wordcraft_doc::eq::OAlign;
+        use englat_doc::eq::OAlign;
         let (c0, s0) = (self.clusters.len(), self.shown.len());
         for t in texts {
             self.shape_atomic(t, start, end, rc);
@@ -1048,20 +1048,20 @@ impl<'a> Builder<'a> {
 
 /// Lay out an `EQ \o` field (ECMA-376 Part 1 §17.16.5.20): its arguments drawn on top of one
 /// another, as one cluster. An enclosure symbol among them (○ □ △ ◇, see
-/// [`wordcraft_doc::eq::EncloseShape`]) is drawn as a shape around the text rather than as a
+/// [`englat_doc::eq::EncloseShape`]) is drawn as a shape around the text rather than as a
 /// glyph, so it never depends on the font: "shrink text" scales the text to fit inside a shape
 /// one em high, "enlarge symbol" grows the shape around text at its own size.
 fn overstrike(
     b: &mut Builder,
-    o: &wordcraft_doc::eq::Overstrike,
+    o: &englat_doc::eq::Overstrike,
     instr: &str,
     start: usize,
     end: usize,
     rc: &Arc<ResolvedChar>,
     enclosures: &mut Vec<(usize, Enclosed)>,
 ) {
-    use wordcraft_doc::eq::{EncloseShape, EncloseStyle, Enclosure};
-    use wordcraft_doc::para::ShapeKind;
+    use englat_doc::eq::{EncloseShape, EncloseStyle, Enclosure};
+    use englat_doc::para::ShapeKind;
     let shapes: Vec<EncloseShape> = o.args.iter().filter_map(|a| EncloseShape::from_symbol(a)).collect();
     let texts: Vec<&str> = o.args.iter().filter(|a| !a.is_empty() && EncloseShape::from_symbol(a).is_none()).map(String::as_str).collect();
     let Some(shape) = shapes.first().copied() else {
@@ -1201,7 +1201,7 @@ pub fn layout_para(p: &Paragraph, env: &ParaEnv) -> ParaLayout {
     let doc = env.doc;
     let mut rp = doc.styles.resolve_para_in(&p.props, env.table.map(|t| &t.para));
     if let Some(spacing) = env.read_line_spacing.filter(|s| s.is_finite() && (1.0..=2.0).contains(s)) {
-        rp.line_spacing = wordcraft_doc::props::LineSpacing::Multiple(spacing);
+        rp.line_spacing = englat_doc::props::LineSpacing::Multiple(spacing);
     }
     let para_style = p.props.style.as_deref();
     let table_chr = env.table.map(|t| &t.chr);
@@ -1353,7 +1353,7 @@ pub fn layout_para(p: &Paragraph, env: &ParaEnv) -> ParaLayout {
                         Some(o) if o.is_drawing() => {
                             // A hidden one takes no room, and with no height its line doesn't draw it.
                             if let Some((w, h, float)) = o.frame()
-                                && float.wrap == wordcraft_doc::para::Wrap::Inline
+                                && float.wrap == englat_doc::para::Wrap::Inline
                                 && !float.hidden
                             {
                                 // A picture wider than the line keeps its size, as in Word: it runs past
@@ -1379,7 +1379,7 @@ pub fn layout_para(p: &Paragraph, env: &ParaEnv) -> ParaLayout {
                                 }
                                 b.shape_atomic(&field_code_text(instr), start, end, &Arc::new(shaded));
                             } else {
-                                match wordcraft_doc::eq::parse_overstrike(instr) {
+                                match englat_doc::eq::parse_overstrike(instr) {
                                     Some(o) => overstrike(&mut b, &o, instr, start, end, &rc, &mut enclosures),
                                     None => {
                                         let (t, page_dep) = field_text_on(instr, result, env.fields, env.fields.page_at(start));
@@ -1400,7 +1400,7 @@ pub fn layout_para(p: &Paragraph, env: &ParaEnv) -> ParaLayout {
                                 custom.clone()
                             };
                             let mut sup = (*rc).clone();
-                            sup.vert_align = wordcraft_doc::props::VertAlign::Superscript;
+                            sup.vert_align = englat_doc::props::VertAlign::Superscript;
                             b.shape_atomic(&num, start, end, &Arc::new(sup));
                             notes.push((b.clusters.len().saturating_sub(1), *id));
                         }
@@ -1438,7 +1438,7 @@ pub fn layout_para(p: &Paragraph, env: &ParaEnv) -> ParaLayout {
                             let mut rr = (*resolve(&props.clone().overlaid(ruby_props))).clone();
                             let size = if size.is_finite() { size.clamp(1.0, 1584.0) } else { rc.size * 0.5 };
                             (rr.size, rr.size_cs, rr.position) = (size, size, 0.0);
-                            rr.vert_align = wordcraft_doc::props::VertAlign::Baseline;
+                            rr.vert_align = englat_doc::props::VertAlign::Baseline;
                             let raise = if raise.is_finite() { raise.clamp(0.0, 1584.0) } else { rc.size };
                             if let Some(r) = b.ruby(base, ruby, *align, raise, start, end, &rc, &Arc::new(rr)) {
                                 rubies.push(r);
@@ -1493,7 +1493,7 @@ pub fn layout_para(p: &Paragraph, env: &ParaEnv) -> ParaLayout {
     }
     // Myanmar has no spaces between words: it wraps between syllables.
     if text.chars().any(|c| matches!(u32::from(c), 0x1000..=0x109F | 0xA9E0..=0xA9FF | 0xAA60..=0xAA7F)) {
-        found.extend(wordcraft_doc::cluster::myanmar_breaks(&text));
+        found.extend(englat_doc::cluster::myanmar_breaks(&text));
         found.sort_unstable();
         found.dedup();
     }
@@ -1513,7 +1513,7 @@ pub fn layout_para(p: &Paragraph, env: &ParaEnv) -> ParaLayout {
         let rc = resolve(&lc);
         // A Symbol/Wingdings bullet (U+F0B7…) is drawn as its Unicode equivalent when the font
         // isn't installed (shaping maps it); the label's text reads as that character too.
-        let shown = |t: &str| -> String { wordcraft_doc::symbol_fonts::map_text(&rc.font, t) };
+        let shown = |t: &str| -> String { englat_doc::symbol_fonts::map_text(&rc.font, t) };
         let before_c = b.clusters.len();
         let before_g = b.glyphs.len();
         b.shape_with(text, 0, &rc, None, false);
@@ -1533,7 +1533,7 @@ pub fn layout_para(p: &Paragraph, env: &ParaEnv) -> ParaLayout {
         for c in &cl {
             style = c.style;
             if let Some(st) = b.styles.get(style as usize) {
-                let a = wordcraft_fonts::word::line_metrics(&st.face).0 * st.size as f64 / st.face.upem.max(1.0);
+                let a = englat_fonts::word::line_metrics(&st.face).0 * st.size as f64 / st.face.upem.max(1.0);
                 ascent = ascent.max(a as f32 + st.shift.max(0.0));
             }
             let g0 = glyphs.len();
@@ -1621,7 +1621,7 @@ fn break_lines(pl: &mut ParaLayout, env: &ParaEnv, mark_style: u32, level: Optio
     let first_left = rp.indent_left + rp.indent_first;
     // Word 2013+ (compatibility mode 15) fits more text on a justified line by shrinking its
     // spaces, up to MAX_SPACE_SHRINK of their width; never on lines with tabs.
-    let shrink_spaces = rp.align == Align::Justify && env.doc.settings.compat_mode >= wordcraft_doc::COMPAT_MODE_CURRENT;
+    let shrink_spaces = rp.align == Align::Justify && env.doc.settings.compat_mode >= englat_doc::COMPAT_MODE_CURRENT;
     let hanging_at = if rp.indent_first < 0.0 { Some(rp.indent_left) } else { None };
     // Hyphenation Options: the zone, and how many lines in a row may end with a hyphen.
     let zone = Some(env.doc.settings.hyphenation_zone).filter(|z| z.is_finite() && *z >= 0.0).unwrap_or(HYPHENATION_ZONE).min(1584.0);
@@ -2362,7 +2362,7 @@ fn row_spans(exclusions: &[Exclusion], top: f32, h: f32, lo: f32, hi: f32) -> Re
 }
 
 /// Word's default hyphenation zone (0.25"), points.
-const HYPHENATION_ZONE: f32 = wordcraft_doc::DEFAULT_HYPHENATION_ZONE;
+const HYPHENATION_ZONE: f32 = englat_doc::DEFAULT_HYPHENATION_ZONE;
 
 /// How much of their width the spaces of a justified line may give up to fit more text (Word
 /// 2013+, compatibility mode 15).
@@ -2406,7 +2406,7 @@ fn hyphen_glyph(pl: &ParaLayout, style: u32, cache: &mut Vec<(u32, u32, f32)>) -
         .styles
         .get(style as usize)
         .and_then(|st| {
-            let g = wordcraft_fonts::shape(&st.face, "-", &[], |c| c).into_iter().next()?;
+            let g = englat_fonts::shape(&st.face, "-", &[], |c| c).into_iter().next()?;
             let k = st.size / st.face.upem.max(1.0) as f32 * st.rc.scale / 100.0;
             Some((style, g.gid, g.x_advance as f32 * k))
         })
@@ -2424,8 +2424,8 @@ fn hyphenation_points(text: &str, to_para: impl Fn(usize) -> Option<usize>, pl: 
     let mut bytes: Vec<usize> = text.char_indices().filter(|(_, c)| *c == SOFT_HYPHEN).map(|(i, c)| i + c.len_utf8()).collect();
     // Vietnamese words are single syllables and never take a hyphen: no automatic hyphenation in
     // a Vietnamese paragraph, nor in a word written with a Vietnamese-only letter (`Nguyễn`).
-    if auto && !wordcraft_proof::vi::looks_vietnamese(text) {
-        let lim = wordcraft_proof::hyphen::Limits::default();
+    if auto && !englat_proof::vi::looks_vietnamese(text) {
+        let lim = englat_proof::hyphen::Limits::default();
         let mut start: Option<usize> = None;
         for (i, c) in text.char_indices().chain(std::iter::once((text.len(), ' '))) {
             let word_char = c.is_alphabetic() || c == '\'' || c == '\u{2019}';
@@ -2437,15 +2437,15 @@ fn hyphenation_points(text: &str, to_para: impl Fn(usize) -> Option<usize>, pl: 
                     let all_caps = |w: &str| w.chars().filter(|c| c.is_alphabetic()).all(char::is_uppercase);
                     if let Some(w) = text.get(a..i)
                         && w.chars().count() >= lim.min_word
-                        && !w.chars().any(wordcraft_fonts::is_rtl)
-                        && !wordcraft_proof::vi::is_vietnamese_word(w)
+                        && !w.chars().any(englat_fonts::is_rtl)
+                        && !englat_proof::vi::is_vietnamese_word(w)
                         && (caps || !all_caps(w))
                     {
                         // The word's language: its first letter's run, found by its place in `p.text`.
                         let first = w.chars().next().map_or(1, char::len_utf8);
                         let lang = to_para(a + first).map(|e| lang_at(runs, e.saturating_sub(first))).unwrap_or_default();
                         let offs: Vec<usize> = w.char_indices().map(|(o, _)| o).collect();
-                        for pt in wordcraft_proof::hyphen::hyphen_points_in(w, &lim, lang) {
+                        for pt in englat_proof::hyphen::hyphen_points_in(w, &lim, lang) {
                             if let Some(o) = offs.get(pt) {
                                 bytes.push(a + o);
                             }
@@ -2639,13 +2639,13 @@ impl ParaLayout {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProofRun {
     pub range: std::ops::Range<usize>,
-    pub lang: wordcraft_proof::ProofLang,
+    pub lang: englat_proof::ProofLang,
     pub skip: bool,
 }
 
 impl ProofRun {
     fn of(range: std::ops::Range<usize>, rc: &ResolvedChar) -> ProofRun {
-        ProofRun { range, lang: wordcraft_proof::ProofLang::from_tag(rc.lang.as_deref()), skip: rc.no_proof || rc.hidden || rc.link.is_some() }
+        ProofRun { range, lang: englat_proof::ProofLang::from_tag(rc.lang.as_deref()), skip: rc.no_proof || rc.hidden || rc.link.is_some() }
     }
 }
 
@@ -2657,38 +2657,38 @@ pub fn proof_runs(doc: &Document, p: &Paragraph, table: Option<&CharProps>) -> V
 }
 
 /// The language of the run holding byte `off` (English past the last run).
-fn lang_at(runs: &[ProofRun], off: usize) -> wordcraft_proof::ProofLang {
+fn lang_at(runs: &[ProofRun], off: usize) -> englat_proof::ProofLang {
     let k = runs.partition_point(|r| r.range.end <= off);
     runs.get(k).filter(|r| r.range.start <= off).map(|r| r.lang).unwrap_or_default()
 }
 
 /// Spelling and grammar issues in a paragraph, in order: each word in its run's language
-/// ([`wordcraft_proof::check_text_with`]: what spelling skips, and grammar only with `grammar`),
+/// ([`englat_proof::check_text_with`]: what spelling skips, and grammar only with `grammar`),
 /// and none touching a run left unchecked.
-pub fn paragraph_issues(p: &Paragraph, runs: &[ProofRun], spelling: &wordcraft_proof::Options, grammar: bool) -> Vec<wordcraft_proof::Issue> {
+pub fn paragraph_issues(p: &Paragraph, runs: &[ProofRun], spelling: &englat_proof::Options, grammar: bool) -> Vec<englat_proof::Issue> {
     if p.text.trim().is_empty() || p.text.len() > 100_000 {
         return Vec::new();
     }
     let text = proof_text(p);
-    let spans: Vec<(std::ops::Range<usize>, wordcraft_proof::ProofLang)> = runs.iter().map(|r| (r.range.clone(), r.lang)).collect();
+    let spans: Vec<(std::ops::Range<usize>, englat_proof::ProofLang)> = runs.iter().map(|r| (r.range.clone(), r.lang)).collect();
     let skip = |a: usize, b: usize| runs.iter().any(|r| r.skip && r.range.start < b && a < r.range.end);
-    wordcraft_proof::check_text_with(&text, &spans, spelling, grammar).into_iter().filter(|i| !skip(i.start, i.end)).collect()
+    englat_proof::check_text_with(&text, &spans, spelling, grammar).into_iter().filter(|i| !skip(i.start, i.end)).collect()
 }
 
 /// Spelling and grammar issues in a paragraph as squiggles: (start, end, is grammar).
 fn proof_issues(p: &Paragraph, runs: &[ProofRun], opts: &crate::ProofOptions) -> Vec<(usize, usize, bool)> {
     paragraph_issues(p, runs, &opts.spelling, opts.grammar)
         .into_iter()
-        .map(|i| (i.start, i.end, i.kind == wordcraft_proof::IssueKind::Grammar))
+        .map(|i| (i.start, i.end, i.kind == englat_proof::IssueKind::Grammar))
         .collect()
 }
 
 /// Text for proofing with the same byte offsets: inline objects and tracked deletions become
 /// U+0001 bytes (neither words nor spaces).
-pub fn proof_text(p: &wordcraft_doc::Paragraph) -> String {
+pub fn proof_text(p: &englat_doc::Paragraph) -> String {
     let mut out = String::with_capacity(p.text.len());
     for (i, c) in p.text.char_indices() {
-        let deleted = c == wordcraft_doc::para::OBJ || p.props_of_char(i).del.is_some();
+        let deleted = c == englat_doc::para::OBJ || p.props_of_char(i).del.is_some();
         if deleted {
             for _ in 0..c.len_utf8() {
                 out.push('\u{1}');

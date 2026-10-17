@@ -1,16 +1,16 @@
 [package]
-name = "wordcraft-docbin"
+name = "englat-docbin"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "WordCraft reader for the Word 97-2003 binary file format (.doc, [MS-DOC])"
+description = "ENGLAT Editor reader for the Word 97-2003 binary file format (.doc, [MS-DOC])"
 
 [lints]
 workspace = true
 
 [dependencies]
-wordcraft-doc = { workspace = true }
-wordcraft-geom = { workspace = true }
+englat-doc = { workspace = true }
+englat-geom = { workspace = true }
 cfb = { workspace = true }
 image = { workspace = true }
 miniz_oxide = { workspace = true }

@@ -1,16 +1,16 @@
 [package]
-name = "wordcraft-docx"
+name = "englat-docx"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "WordCraft DOCX (OOXML WordprocessingML) reader and writer"
+description = "ENGLAT Editor DOCX (OOXML WordprocessingML) reader and writer"
 
 [lints]
 workspace = true
 
 [dependencies]
-wordcraft-doc = { workspace = true }
-wordcraft-geom = { workspace = true }
+englat-doc = { workspace = true }
+englat-geom = { workspace = true }
 quick-xml = { workspace = true }
 zip = { workspace = true }
 thiserror = { workspace = true }

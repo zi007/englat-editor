@@ -7,7 +7,7 @@
   </a>
 </p>
 
-<h1 align="center">WordCraft</h1>
+<h1 align="center">ENGLAT Editor</h1>
 
 <p align="center">
   <b>Writing and document design; an open-source, clean-room reimplementation of Microsoft Word, rebuilt in pure Rust.</b>
@@ -32,7 +32,7 @@
 </p>
 
 <p align="center">
-  <a href="https://getartcraft.com/apps/wordcraft"><b>WordCraft on getartcraft.com</b></a> ·
+  <a href="https://github.com/zi007/englat-editor"><b>ENGLAT Editor on getartcraft.com</b></a> ·
   <a href="https://getartcraft.com/">ArtCraft</a> ·
   <a href="https://getartcraft.com/apps">All Crafting Apps</a>
 </p>
@@ -40,8 +40,8 @@
 <br>
 
 <p align="center">
-  <img src="docs/images/hero.png" alt="WordCraft with the Home tab of the ribbon open over a two-page document titled The Open Studio Handbook. The Navigation pane on the left lists the document's headings, the Styles gallery shows live previews of Normal, Heading 1, Title and Subtitle, and a word in the first paragraph is selected." width="100%">
-  <br><sub><b>The Open Studio Handbook</b>, WordCraft's built-in sample: the ribbon, live Styles gallery, rulers and the Navigation pane.</sub>
+  <img src="docs/images/hero.png" alt="ENGLAT Editor with the Home tab of the ribbon open over a two-page document titled The Open Studio Handbook. The Navigation pane on the left lists the document's headings, the Styles gallery shows live previews of Normal, Heading 1, Title and Subtitle, and a word in the first paragraph is selected." width="100%">
+  <br><sub><b>The Open Studio Handbook</b>, ENGLAT Editor's built-in sample: the ribbon, live Styles gallery, rulers and the Navigation pane.</sub>
 </p>
 
 > [!NOTE]
@@ -51,7 +51,7 @@
 
 <p align="center">
   <a href="#a-tour">A tour</a> ·
-  <a href="#why-wordcraft">Why WordCraft</a> ·
+  <a href="#why-englat-editor">Why ENGLAT Editor</a> ·
   <a href="#what-works-today">What works today</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#for-agents-cli-and-mcp">For agents</a> ·
@@ -64,8 +64,8 @@
 
 ## A tour
 
-Every screenshot below is WordCraft itself, rendered offscreen by its own UI test harness
-(`cargo run -p wordcraft-ui-egui --example ui_shot`).
+Every screenshot below is ENGLAT Editor itself, rendered offscreen by its own UI test harness
+(`cargo run -p englat-ui-egui --example ui_shot`).
 
 <table>
 <tr>
@@ -74,7 +74,7 @@ Every screenshot below is WordCraft itself, rendered offscreen by its own UI tes
 </tr>
 <tr>
 <td width="50%" valign="top"><img src="docs/images/design.png" alt="The Design tab showing style-set previews; the document is set in a serif theme with plum headings underlined by thin rules and a pale diagonal DRAFT watermark behind the text" width="100%"><p align="center"><sub><b>Design.</b> Themes, style sets, paragraph spacing, watermarks, page colour and borders.</sub></p></td>
-<td width="50%" valign="top"><img src="docs/images/dark.png" alt="WordCraft in dark mode with the Insert tab open and formatting marks shown: pilcrows at paragraph ends and dots for spaces" width="100%"><p align="center"><sub><b>Dark mode</b> with formatting marks, and the Insert tab: tables, pictures, shapes, links, headers, footers, fields and symbols.</sub></p></td>
+<td width="50%" valign="top"><img src="docs/images/dark.png" alt="ENGLAT Editor in dark mode with the Insert tab open and formatting marks shown: pilcrows at paragraph ends and dots for spaces" width="100%"><p align="center"><sub><b>Dark mode</b> with formatting marks, and the Insert tab: tables, pictures, shapes, links, headers, footers, fields and symbols.</sub></p></td>
 </tr>
 <tr>
 <td colspan="2"><img src="docs/images/layout.png" alt="The Layout tab at 80% zoom: the first paragraph opens with a three-line drop cap E, a dark blue circle sits beside the second section with its paragraph wrapping around it and hyphenating art-ist at the line end, every line is numbered in the left margin and a thin blue border surrounds the page" width="100%"><p align="center"><sub><b>Layout.</b> Drop caps, text wrapping around pictures and shapes, automatic hyphenation, line numbers and page borders.</sub></p></td>
@@ -84,7 +84,7 @@ Every screenshot below is WordCraft itself, rendered offscreen by its own UI tes
 </tr>
 </table>
 
-## Why WordCraft
+## Why ENGLAT Editor
 
 - **Familiar.** Word's ribbon tabs, groups, shortcuts and behaviour: Enter continues a list,
   Tab demotes it, Ctrl/⌘+B bolds the word under the caret, the Styles gallery previews styles live,
@@ -127,33 +127,33 @@ The honest picture, area by area, is in [ROADMAP.md](ROADMAP.md), the
 ## Quick start
 
 ```sh
-git clone https://github.com/storytold/wordcraft
-cd wordcraft
-cargo run --release -p wordcraft -- --sample        # the desktop app with the sample document
-cargo run --release -p wordcraft -- report.docx     # open a document
+git clone https://github.com/zi007/englat-editor
+cd englat-editor
+cargo run --release -p englat-editor -- --sample        # the desktop app with the sample document
+cargo run --release -p englat-editor -- report.docx     # open a document
 ```
 
 Command line:
 
 ```sh
-wordcraft-cli convert report.docx report.pdf        # docx, pdf, odt, rtf, html, md, tex, txt, png
-wordcraft-cli text report.docx                      # plain text
-wordcraft-cli inspect report.docx                   # structure as JSON
-wordcraft-cli run --template sample \
+englat-editor-cli convert report.docx report.pdf        # docx, pdf, odt, rtf, html, md, tex, txt, png
+englat-editor-cli text report.docx                      # plain text
+englat-editor-cli inspect report.docx                   # structure as JSON
+englat-editor-cli run --template sample \
   --cmd 'select.text={"text":"Membership"}' --cmd format.bold --save out.docx
 ```
 
-Web: `cd apps/wordcraft-web && trunk serve`, then open <http://127.0.0.1:8771/?sample>.
+Web: `cd apps/englat-editor-web && trunk serve`, then open <http://127.0.0.1:8771/?sample>.
 
 ## For agents: CLI and MCP
 
-WordCraft was designed to be driven by people *and* by AI agents.
+ENGLAT Editor was designed to be driven by people *and* by AI agents.
 
 ```sh
-claude mcp add wordcraft -- wordcraft-cli mcp                  # headless documents
-# confine the agent to folders: wordcraft-cli mcp --automation-read-root DIR --automation-write-root DIR
-wordcraft --control 7981 &                                     # or drive the running app…
-claude mcp add wordcraft-app -- wordcraft-cli mcp --connect 127.0.0.1:7981
+claude mcp add englat-editor -- englat-editor-cli mcp                  # headless documents
+# confine the agent to folders: englat-editor-cli mcp --automation-read-root DIR --automation-write-root DIR
+englat-editor --control 7981 &                                     # or drive the running app…
+claude mcp add englat-app -- englat-editor-cli mcp --connect 127.0.0.1:7981
 ```
 
 Tools include `list_commands`, `execute`, `batch`, `type_text`, `select_text`, `inspect_document`,
@@ -164,42 +164,42 @@ play it back (`tools.recordMacro`, `tools.macros`).
 
 ## Logs
 
-The desktop app writes its log records to standard error and to `logs/wordcraft.log` next to its
-preferences: on Linux `$XDG_CONFIG_HOME/wordcraft/logs/` (by default `~/.config/wordcraft/logs/`),
-on macOS `~/Library/Application Support/WordCraft/logs/`, on Windows `%APPDATA%\WordCraft\logs\`.
+The desktop app writes its log records to standard error and to `logs/englat-editor.log` next to its
+preferences: on Linux `$XDG_CONFIG_HOME/englat-editor/logs/` (by default `~/.config/englat-editor/logs/`),
+on macOS `~/Library/Application Support/ENGLAT Editor/logs/`, on Windows `%APPDATA%\ENGLAT Editor\logs\`.
 A start from a desktop menu or the Dock has no terminal, so this file is what to attach to a bug
 report: unreadable parts of a .docx, pictures or fonts a PDF export had to leave out and panics the
-command guard recovered from land there. Each launch moves the previous log to `wordcraft.1.log`
-(and that one to `wordcraft.2.log`), so the log of a run that crashed survives the next start; a
-log stops growing at 16 MiB. `--version` writes no file, and runs with `WORDCRAFT_NO_PREFS` (agents'
+command guard recovered from land there. Each launch moves the previous log to `englat-editor.1.log`
+(and that one to `englat-editor.2.log`), so the log of a run that crashed survives the next start; a
+log stops growing at 16 MiB. `--version` writes no file, and runs with `ENGLAT_EDITOR_NO_PREFS` (agents'
 test runs) log to standard error only. Document text is never logged; a panic message leaves out
 the text it quotes.
 
-By default WordCraft's own crates log at `info` and everything else at `warn`. `RUST_LOG` replaces
+By default ENGLAT Editor's own crates log at `info` and everything else at `warn`. `RUST_LOG` replaces
 that with env_logger-style directives, for example `RUST_LOG=debug`,
-`RUST_LOG=warn,wordcraft_docx=trace` or `RUST_LOG=info,wgpu_core=warn`; a directive ending in `*`
-covers every target starting with it (`wordcraft*=debug`). The logger is
-`apps/wordcraft/src/logging.rs`.
+`RUST_LOG=warn,englat_docx=trace` or `RUST_LOG=info,wgpu_core=warn`; a directive ending in `*`
+covers every target starting with it (`englat-editor*=debug`). The logger is
+`apps/englat-editor/src/logging.rs`.
 
 ## Architecture
 
 | Layer | Crate | Job |
 |---|---|---|
-| L0 | `wordcraft-geom` | units and measurements |
-| L1 | `wordcraft-doc`, `wordcraft-fonts`, `wordcraft-proof` | document model and editing; fonts and shaping; spelling, grammar, hyphenation |
-| L2 | `wordcraft-layout`, `wordcraft-docx`, `wordcraft-formats` | line breaking, pagination, tables, notes, hit testing; OOXML; ODT/RTF/HTML/Markdown/TXT |
-| L3 | `wordcraft-render`, `wordcraft-pdf` | rasteriser (vello_cpu); PDF ([craft-pdf](docs/shared-pdf.md), Krilla) |
-| L4 | `wordcraft-engine` | session, undo, 422 commands, Word feature catalog |
-| L5 | `wordcraft-mcp` | MCP server |
-| L6 | `wordcraft-ui-egui` | the Word-style front end (swappable) |
-| apps | `wordcraft`, `wordcraft-cli`, `wordcraft-web` | desktop, command line, browser |
+| L0 | `englat-geom` | units and measurements |
+| L1 | `englat-doc`, `englat-fonts`, `englat-proof` | document model and editing; fonts and shaping; spelling, grammar, hyphenation |
+| L2 | `englat-layout`, `englat-docx`, `englat-formats` | line breaking, pagination, tables, notes, hit testing; OOXML; ODT/RTF/HTML/Markdown/TXT |
+| L3 | `englat-render`, `englat-pdf` | rasteriser (vello_cpu); PDF ([craft-pdf](docs/shared-pdf.md), Krilla) |
+| L4 | `englat-engine` | session, undo, 422 commands, Word feature catalog |
+| L5 | `englat-mcp` | MCP server |
+| L6 | `englat-ui-egui` | the Word-style front end (swappable) |
+| apps | `englat-editor`, `englat-editor-cli`, `englat-editor-web` | desktop, command line, browser |
 
 `cargo xtask ci` runs formatting, clippy, ~800 tests, the asset-attribution check, the layering
 check and the wasm build. Contributor and agent instructions: [AGENTS.md](AGENTS.md).
 
 ## Roadmap
 
-WordCraft is in **alpha**. It covers 88% of Word's ribbon features with commands today; counting
+ENGLAT Editor is in **alpha**. It covers 88% of Word's ribbon features with commands today; counting
 depth, file fidelity, stability and the rest, we estimate it is about 60% of the way to replacing
 all of Word for real work, about 55% for a typical professional's weekly work and about 63% for
 everyday essentials. Beta needs testing against real-world .docx files, keeping charts and SmartArt
@@ -208,15 +208,15 @@ and estimates: [ROADMAP.md](ROADMAP.md) and [where we fall short](docs/gaps.md).
 
 ## Downloads
 
-**Download WordCraft** from GitHub: the [latest release](https://github.com/storytold/wordcraft/releases/latest) has every build listed below, and [all releases](https://github.com/storytold/wordcraft/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
+**Download ENGLAT Editor** from GitHub: the [latest release](https://github.com/zi007/englat-editor/releases/latest) has every build listed below, and [all releases](https://github.com/zi007/englat-editor/releases) has earlier versions and their notes. `<ver>` in the file names is the version number, and `SHA256SUMS.txt` lists a checksum for every file.
 
 ### Windows
 
 | Build | Installer | Portable |
 |---|---|---|
-| x64 (64-bit Intel/AMD) | `wordcraft-<ver>-windows-x64.msi` | `wordcraft-<ver>-windows-x64-portable.zip` |
-| arm64 (Snapdragon and other ARM PCs) | `wordcraft-<ver>-windows-arm64.msi` | `wordcraft-<ver>-windows-arm64-portable.zip` |
-| x86 (32-bit) | `wordcraft-<ver>-windows-x86.msi` | `wordcraft-<ver>-windows-x86-portable.zip` |
+| x64 (64-bit Intel/AMD) | `englat-<ver>-windows-x64.msi` | `englat-<ver>-windows-x64-portable.zip` |
+| arm64 (Snapdragon and other ARM PCs) | `englat-<ver>-windows-arm64.msi` | `englat-<ver>-windows-arm64-portable.zip` |
+| x86 (32-bit) | `englat-<ver>-windows-x86.msi` | `englat-<ver>-windows-x86-portable.zip` |
 
 Installers and executables are code-signed.
 
@@ -228,7 +228,7 @@ PowerShell, from the folder containing the executable:
 
 ```powershell
 $env:WGPU_BACKEND = "vulkan"
-& .\wordcraft.exe
+& .\englat-editor.exe
 Remove-Item Env:WGPU_BACKEND                     # restore the default for later launches
 ```
 
@@ -240,15 +240,15 @@ Windows, creating a DirectX 12 graphics pipeline fails immediately and the app e
 window appears. `WGPU_BACKEND=vulkan` (or `dx12`) still overrides that.
 
 **If the app quits right after its window appears with "Parent device is lost" in the log:**
-WordCraft compiles DirectX 12 shaders with FXC, the compiler built into Windows, so it needs no
+ENGLAT Editor compiles DirectX 12 shaders with FXC, the compiler built into Windows, so it needs no
 `dxcompiler.dll`/`dxil.dll` and ignores any copy another program put on `PATH` (#603).
 `WGPU_DX12_COMPILER` (`fxc`, `dxc`, `auto`) overrides this; with `dxc`, a matching
-`dxcompiler.dll` *and* `dxil.dll` must sit next to `wordcraft.exe`. `WGPU_BACKEND = "vulkan"`
+`dxcompiler.dll` *and* `dxil.dll` must sit next to `englat-editor.exe`. `WGPU_BACKEND = "vulkan"`
 also avoids DirectX 12 altogether.
 
 **If the app is slow on an older Windows PC:** when DirectX 12 finds no graphics card with a
 driver for it (for example Intel 4th-generation graphics on Windows 11), it only offers Microsoft's
-software renderer, which draws every frame on the processor. In that case WordCraft uses OpenGL
+software renderer, which draws every frame on the processor. In that case ENGLAT Editor uses OpenGL
 instead, without setting anything. The log file records the choice (lines starting with
 `graphics:`). `WGPU_BACKEND` still overrides it, e.g. `$env:WGPU_BACKEND = "gl"` or `"dx12"`.
 
@@ -256,69 +256,69 @@ instead, without setting anything. The log file records the choice (lines starti
 
 | Build | File | Notes |
 |---|---|---|
-| App, universal (Apple silicon + Intel) | `wordcraft-<ver>-macos-universal.dmg` | Signed and notarized |
-| Command-line tool, universal | `wordcraft-cli-<ver>-macos-universal.zip` | Signed and notarized |
+| App, universal (Apple silicon + Intel) | `englat-<ver>-macos-universal.dmg` | Signed and notarized |
+| Command-line tool, universal | `englat-editor-cli-<ver>-macos-universal.zip` | Signed and notarized |
 
 ### Linux
 
 | Format | x86_64 | aarch64 (ARM64) | Notes |
 |---|---|---|---|
-| AppImage | `wordcraft-<ver>-linux-x86_64.AppImage` | `wordcraft-<ver>-linux-aarch64.AppImage` | Runs anywhere; updates itself with [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate) (`.zsync` files) |
-| Flatpak | `wordcraft-<ver>-linux-x86_64.flatpak` | `wordcraft-<ver>-linux-aarch64.flatpak` | Sandboxed; `flatpak install --user <file>` |
-| Debian/Ubuntu | `wordcraft-<ver>-linux-x86_64.deb` | `wordcraft-<ver>-linux-aarch64.deb` | |
-| Fedora/RHEL/openSUSE | `wordcraft-<ver>-linux-x86_64.rpm` | `wordcraft-<ver>-linux-aarch64.rpm` | |
-| Tarball | `wordcraft-<ver>-linux-x86_64.tar.gz` | `wordcraft-<ver>-linux-aarch64.tar.gz` | Unpack anywhere |
+| AppImage | `englat-<ver>-linux-x86_64.AppImage` | `englat-<ver>-linux-aarch64.AppImage` | Runs anywhere; updates itself with [AppImageUpdate](https://github.com/AppImageCommunity/AppImageUpdate) (`.zsync` files) |
+| Flatpak | `englat-<ver>-linux-x86_64.flatpak` | `englat-<ver>-linux-aarch64.flatpak` | Sandboxed; `flatpak install --user <file>` |
+| Debian/Ubuntu | `englat-<ver>-linux-x86_64.deb` | `englat-<ver>-linux-aarch64.deb` | |
+| Fedora/RHEL/openSUSE | `englat-<ver>-linux-x86_64.rpm` | `englat-<ver>-linux-aarch64.rpm` | |
+| Tarball | `englat-<ver>-linux-x86_64.tar.gz` | `englat-<ver>-linux-aarch64.tar.gz` | Unpack anywhere |
 
-RISC-V (riscv64): `wordcraft-<ver>-linux-riscv64.tar.gz`, a tarball cross-compiled for glibc 2.39+
+RISC-V (riscv64): `englat-<ver>-linux-riscv64.tar.gz`, a tarball cross-compiled for glibc 2.39+
 (Ubuntu 24.04, Debian 13 and newer).
 
 **Wayland:** on a Wayland desktop the app runs through XWayland when it is available, because
 winit (the windowing library) supports dragging files into the window only on X11. To use the
 native Wayland backend instead (for example for sharper text with fractional scaling, at the cost
-of file drag-and-drop), start it with `WORDCRAFT_WAYLAND=1`:
+of file drag-and-drop), start it with `ENGLAT_EDITOR_WAYLAND=1`:
 
 ```sh
-WORDCRAFT_WAYLAND=1 wordcraft
+ENGLAT_EDITOR_WAYLAND=1 englat-editor
 ```
 
 **Arch Linux (AUR).** Community members maintain three AUR packages; the project doesn't publish
 to the AUR itself. Install one of them:
 | Package | What it installs | Choose it when |
 |---|---|---|
-| [`wordcraft-bin`](https://aur.archlinux.org/packages/wordcraft-bin) | The release tarball above, prebuilt (x86_64, aarch64) | You want the latest release without compiling (quickest) |
-| [`wordcraft`](https://aur.archlinux.org/packages/wordcraft) | The latest release, built from source with `cargo` | You prefer to build releases yourself |
-| [`wordcraft-git`](https://aur.archlinux.org/packages/wordcraft-git) | The current `main` branch, built from source | You want unreleased changes and accept an occasional broken build |
-For example `yay -S wordcraft-bin` or `paru -S wordcraft-bin`.
+| [`englat-bin`](https://aur.archlinux.org/packages/englat-bin) | The release tarball above, prebuilt (x86_64, aarch64) | You want the latest release without compiling (quickest) |
+| [`englat-editor`](https://aur.archlinux.org/packages/englat-editor) | The latest release, built from source with `cargo` | You prefer to build releases yourself |
+| [`englat-git`](https://aur.archlinux.org/packages/englat-git) | The current `main` branch, built from source | You want unreleased changes and accept an occasional broken build |
+For example `yay -S englat-bin` or `paru -S englat-bin`.
 
 #### Community packages
 
-These packages are maintained by community members, not by the WordCraft team.
+These packages are maintained by community members, not by the ENGLAT Editor team.
 
 On Gentoo, the [::snakebyte overlay](https://github.com/switch87/snakebyte-overlay) packages the
-Linux release as `app-office/wordcraft-bin` (prebuilt) and `app-office/wordcraft` (built from source):
+Linux release as `app-office/englat-bin` (prebuilt) and `app-office/englat-editor` (built from source):
 
 ```sh
 eselect repository add snakebyte git https://github.com/switch87/snakebyte-overlay.git
 emaint sync -r snakebyte
-echo 'app-office/wordcraft-bin ~amd64' >> /etc/portage/package.accept_keywords/wordcraft
-emerge --ask app-office/wordcraft-bin
+echo 'app-office/englat-bin ~amd64' >> /etc/portage/package.accept_keywords/englat-editor
+emerge --ask app-office/englat-bin
 ```
 
 ### FreeBSD
 
 | Build | File |
 |---|---|
-| x86_64 | `wordcraft-<ver>-freebsd-x86_64.tar.gz` |
+| x86_64 | `englat-<ver>-freebsd-x86_64.tar.gz` |
 
 ### Web (WebAssembly)
 
 | Build | File | Notes |
 |---|---|---|
-| Static site | `wordcraft-web-<ver>.zip` | Runs in a modern browser; host it on any static server |
+| Static site | `englat-editor-web-<ver>.zip` | Runs in a modern browser; host it on any static server |
 
 ## The Crafting Apps
 
-WordCraft is one of the **Crafting Apps**: free, open-source creative tools from the
+ENGLAT Editor is one of the **Crafting Apps**: free, open-source creative tools from the
 [ArtCraft](https://getartcraft.com/) team, each written from scratch in Rust and each able to
 stand on its own.
 
@@ -331,7 +331,7 @@ stand on its own.
 | <img src="https://raw.githubusercontent.com/storytold/pdfcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.pdfcraft.png" alt="" width="32" height="32"> | **PdfCraft** | Reading, organizing and protecting PDFs | [GitHub](https://github.com/storytold/pdfcraft) | [Website](https://getartcraft.com/apps/pdfcraft) |
 | <img src="https://raw.githubusercontent.com/storytold/effectcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.effectcraft.png" alt="" width="32" height="32"> | **EffectCraft** | Motion graphics and visual effects | [GitHub](https://github.com/storytold/effectcraft) | [Website](https://getartcraft.com/apps/effectcraft) |
 | <img src="https://raw.githubusercontent.com/storytold/designcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.designcraft.png" alt="" width="32" height="32"> | **DesignCraft** | Page layout and publishing | [GitHub](https://github.com/storytold/designcraft) | [Website](https://getartcraft.com/apps/designcraft) |
-| <img src="https://raw.githubusercontent.com/storytold/wordcraft/main/assets/app-icon/hicolor/64x64/apps/ai.storyteller.wordcraft.png" alt="" width="32" height="32"> | **WordCraft** | **Writing and document design · you are here** | [GitHub](https://github.com/storytold/wordcraft) | [Website](https://getartcraft.com/apps/wordcraft) |
+| <img src="https://raw.githubusercontent.com/storytold/englat-editor/main/assets/app-icon/hicolor/64x64/apps/com.englat.editor.png" alt="" width="32" height="32"> | **ENGLAT Editor** | **Writing and document design · you are here** | [GitHub](https://github.com/zi007/englat-editor) | [Website](https://github.com/zi007/englat-editor) |
 
 And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video studio for artists who want real control.
 
@@ -354,12 +354,12 @@ And [**ArtCraft**](https://getartcraft.com/) itself, our AI image and video stud
   <a href="https://discord.gg/artcraft"><b>discord.gg/artcraft</b></a> ·
   <a href="https://getartcraft.com/">getartcraft.com</a> ·
   <a href="https://getartcraft.com/apps">The Crafting Apps</a> ·
-  <a href="https://getartcraft.com/apps/wordcraft">WordCraft</a>
+  <a href="https://github.com/zi007/englat-editor">ENGLAT Editor</a>
 </p>
 
 ## License and credits
 
-WordCraft is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
+ENGLAT Editor is dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
 Copyright (c) 2026 ArtCraft Team and the WordCraft contributors. Required notices are in [NOTICE](NOTICE).
 
 Bundled fonts, icons, images and other assets keep their own open licenses; each one is listed
@@ -368,14 +368,14 @@ with its author, source and license in [ATTRIBUTION.md](ATTRIBUTION.md).
 The English spelling dictionary and hyphenation come from Grady Ward's public-domain Moby
 Hyphenator II word list. Polish spelling reads the Hunspell `pl_PL` dictionary installed on the system (not bundled) and
 Polish hyphenation the TeX patterns by Hanna Kołodziejska, Bogusław Jackowski and Marek Ryćko (MIT
-option). The sample documents and templates are original text written for WordCraft.
+option). The sample documents and templates are original text written for ENGLAT Editor.
 
 The ArtCraft name, wordmark and logos in [`docs/brand/`](docs/brand/) are trademarks of the
 ArtCraft Team and are not covered by this license. They may be used only unmodified, and only as
-part of this repository and WordCraft, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
+part of this repository and ENGLAT Editor, under [`docs/brand/LICENSE-brand.txt`](docs/brand/LICENSE-brand.txt).
 Forks and modified versions must remove them.
 
-<sub>Microsoft and Microsoft Word are trademarks of the Microsoft group of companies. Adobe, Photoshop, Illustrator, Premiere Pro, Lightroom, Acrobat, After Effects and InDesign are trademarks or registered trademarks of Adobe Inc. in the United States and/or other countries. WordCraft is an independent, open-source project and is not affiliated with, sponsored by or endorsed by Microsoft Corporation or Adobe Inc.; these names are used only to describe the workflows it is compatible with.</sub>
+<sub>Microsoft and Microsoft Word are trademarks of the Microsoft group of companies. Adobe, Photoshop, Illustrator, Premiere Pro, Lightroom, Acrobat, After Effects and InDesign are trademarks or registered trademarks of Adobe Inc. in the United States and/or other countries. ENGLAT Editor is an independent, open-source project and is not affiliated with, sponsored by or endorsed by Microsoft Corporation or Adobe Inc.; these names are used only to describe the workflows it is compatible with.</sub>
 
 <p align="center">
   <a href="https://getartcraft.com/"><img alt="ArtCraft" src="docs/brand/artcraft-mark.svg" width="28"></a><br>

@@ -1,11 +1,11 @@
-//! Zotero's fields and preferences as WordCraft stores them (the Word plugin's layout).
+//! Zotero's fields and preferences as ENGLAT Editor stores them (the Word plugin's layout).
 //!
 //! A citation is a range field with code `ADDIN ZOTERO_ITEM CSL_CITATION {…}`; Zotero itself
 //! sees the code without the `ADDIN ZOTERO_` prefix (`ITEM CSL_CITATION {…}`). Fields in
 //! footnotes and endnotes are listed at their note reference, with the note's number.
 
-use wordcraft_doc::para::{NoteKind, OBJ};
-use wordcraft_doc::{Document, InlineObject, PartKind, Pos, StoryRef};
+use englat_doc::para::{NoteKind, OBJ};
+use englat_doc::{Document, InlineObject, PartKind, Pos, StoryRef};
 
 /// The stored code prefix.
 pub const PREFIX: &str = "ADDIN ZOTERO_";

@@ -1,4 +1,4 @@
-//! WordCraft rasteriser: draws a page's display list with vello_cpu.
+//! ENGLAT Editor rasteriser: draws a page's display list with vello_cpu.
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
 use std::collections::HashMap;
@@ -7,14 +7,14 @@ use std::sync::{Arc, Mutex};
 use vello_cpu::kurbo::{self, Affine, BezPath, Shape};
 use vello_cpu::peniko;
 use vello_cpu::{Pixmap, RenderContext, Resources};
-use wordcraft_doc::Document;
-use wordcraft_doc::para::ShapeKind;
-use wordcraft_doc::props::Rgb;
-use wordcraft_fonts::FontDb;
-use wordcraft_layout::Page;
-use wordcraft_layout::display::{DisplayOptions, Draw, Stroke, page_display};
-use wordcraft_layout::wordart::ArtPaint;
-use wordcraft_metafile::{Item, Picture, PlacedItem, Seg};
+use englat_doc::Document;
+use englat_doc::para::ShapeKind;
+use englat_doc::props::Rgb;
+use englat_fonts::FontDb;
+use englat_layout::Page;
+use englat_layout::display::{DisplayOptions, Draw, Stroke, page_display};
+use englat_layout::wordart::ArtPaint;
+use englat_metafile::{Item, Picture, PlacedItem, Seg};
 
 mod color_glyph;
 pub mod icon_lib;
@@ -216,10 +216,10 @@ pub fn image_size(bytes: &[u8]) -> Option<(u32, u32)> {
 /// extension it is stored under (`"wmf"` or `"emf"`), or None for anything else (#802). Very large
 /// frames are scaled down to 22 inches on the longer side, keeping the shape.
 pub fn metafile_size(bytes: &[u8]) -> Option<(f32, f32, &'static str)> {
-    if !wordcraft_metafile::is_metafile(bytes) {
+    if !englat_metafile::is_metafile(bytes) {
         return None;
     }
-    let pic = wordcraft_metafile::parse(bytes).ok()?;
+    let pic = englat_metafile::parse(bytes).ok()?;
     let (w, h) = (pic.width, pic.height);
     if !(w.is_finite() && h.is_finite() && w > 0.0 && h > 0.0) {
         return None;
@@ -258,7 +258,7 @@ impl Vector {
 /// the caller falls back to the raster path (and the grey box).
 fn vector_for(doc: &Document, key: &str) -> Option<Arc<Vector>> {
     let bytes = doc.media.get(key)?;
-    if !wordcraft_metafile::is_metafile(bytes) {
+    if !englat_metafile::is_metafile(bytes) {
         return None;
     }
     if let Some(v) = lock(vectors()).get(key, bytes) {
@@ -275,7 +275,7 @@ fn vector_for(doc: &Document, key: &str) -> Option<Arc<Vector>> {
 
 /// Parses a metafile and decodes its bitmaps. None when the picture has no usable size.
 fn build_vector(bytes: &[u8]) -> Option<Vector> {
-    let mut pic = wordcraft_metafile::parse(bytes).ok()?;
+    let mut pic = englat_metafile::parse(bytes).ok()?;
     if !pic.has_size() {
         return None;
     }
@@ -529,12 +529,12 @@ pub fn background_at(doc: &Document, page: &Page, opts: &RenderOptions, x: f32, 
     }
     let mut bg = [paper.0 as f32, paper.1 as f32, paper.2 as f32];
     let items = page_display(doc, page, &opts.display);
-    blend_backgrounds(&items, wordcraft_geom::Point::new(x, y), opts, &mut bg, 0);
+    blend_backgrounds(&items, englat_geom::Point::new(x, y), opts, &mut bg, 0);
     let c = |v: f32| v.round().clamp(0.0, 255.0) as u8;
     Rgb(c(bg[0]), c(bg[1]), c(bg[2]))
 }
 
-fn blend_backgrounds(items: &[Draw], p: wordcraft_geom::Point, opts: &RenderOptions, bg: &mut [f32; 3], depth: u32) {
+fn blend_backgrounds(items: &[Draw], p: englat_geom::Point, opts: &RenderOptions, bg: &mut [f32; 3], depth: u32) {
     if depth > 16 {
         return;
     }
@@ -573,7 +573,7 @@ fn blend_backgrounds(items: &[Draw], p: wordcraft_geom::Point, opts: &RenderOpti
 /// `scale` pixels per point, starting `margin` points in with the baseline `margin` + the face's
 /// ascent down: a font list entry. Outlines come straight from the face, not the shared outline
 /// cache, so a face read just for the preview leaves nothing behind once dropped (#848).
-pub fn render_text_line(face: &wordcraft_fonts::FontFace, text: &str, size: f32, w: f32, h: f32, margin: f32, scale: f32) -> Rendered {
+pub fn render_text_line(face: &englat_fonts::FontFace, text: &str, size: f32, w: f32, h: f32, margin: f32, scale: f32) -> Rendered {
     let fin = |v: f32, d: f32| if v.is_finite() && v >= 0.0 { v } else { d };
     let (size, w, h, margin) = (fin(size, 12.0).min(1000.0) as f64, fin(w, 1.0), fin(h, 1.0), fin(margin, 0.0).min(1000.0) as f64);
     let scale = if scale.is_finite() && scale > 0.0 { scale.min(16.0) } else { 1.0 };
@@ -590,7 +590,7 @@ pub fn render_text_line(face: &wordcraft_fonts::FontFace, text: &str, size: f32,
     let baseline = margin + ascent * k;
     let mut x = margin;
     let colour = face.has_color_glyphs();
-    for g in wordcraft_fonts::shape(face, text, &[], |c| c) {
+    for g in englat_fonts::shape(face, text, &[], |c| c) {
         let at = view * Affine::translate((x + g.x_offset as f64 * k, baseline - g.y_offset as f64 * k)) * Affine::scale(k);
         if colour && let Some(d) = color_glyph::drawable(face, g.gid, size * scale as f64, false) {
             color_glyph::draw(&mut ctx, &d, at, upem, color(Rgb(0, 0, 0), 1.0), 1.0);
@@ -613,10 +613,10 @@ pub fn render_text_line(face: &wordcraft_fonts::FontFace, text: &str, size: f32,
     Rendered { width: w16 as u32, height: h16 as u32, pixels }
 }
 
-fn draw_watermark(ctx: &mut RenderContext, view: Affine, page: &Page, wm: &wordcraft_doc::Watermark, opts: &RenderOptions) {
-    let r = wordcraft_fonts::word::resolve(&wm.font, false, false);
+fn draw_watermark(ctx: &mut RenderContext, view: Affine, page: &Page, wm: &englat_doc::Watermark, opts: &RenderOptions) {
+    let r = englat_fonts::word::resolve(&wm.font, false, false);
     let face = r.face;
-    let glyphs = wordcraft_fonts::shape(&face, &wm.text, &[], |c| c);
+    let glyphs = englat_fonts::shape(&face, &wm.text, &[], |c| c);
     let upem = face.upem.max(1.0);
     let raw_w: f64 = glyphs.iter().map(|g| g.x_advance as f64).sum::<f64>() / upem;
     if raw_w <= 0.0 {
@@ -774,11 +774,11 @@ fn draw(ctx: &mut RenderContext, doc: &Document, it: &Draw, view: Affine, visibl
             }
         }
         Draw::Mark { x, baseline, size, ch, color: mark } => {
-            let face = wordcraft_fonts::word::resolve("Source Sans 3", false, false).face;
+            let face = englat_fonts::word::resolve("Source Sans 3", false, false).face;
             let gid = face.glyph_for(*ch);
             let face = if gid == 0 {
                 match FontDb::global().fallback_for(*ch, face.id()) {
-                    Some(f) => wordcraft_fonts::FaceRef::of(&f),
+                    Some(f) => englat_fonts::FaceRef::of(&f),
                     None => return,
                 }
             } else {
@@ -792,7 +792,7 @@ fn draw(ctx: &mut RenderContext, doc: &Document, it: &Draw, view: Affine, visibl
             ctx.fill_path(&o);
         }
         Draw::MarkText { x, baseline, size, text } => {
-            let base_face = wordcraft_fonts::word::resolve("Source Sans 3", false, false).face;
+            let base_face = englat_fonts::word::resolve("Source Sans 3", false, false).face;
             ctx.set_paint(color(opts.ink(opts.mark_color), 0.9));
             let mut gx = *x as f64;
             for ch in text.chars() {
@@ -800,7 +800,7 @@ fn draw(ctx: &mut RenderContext, doc: &Document, it: &Draw, view: Affine, visibl
                 if face.glyph_for(ch) == 0
                     && let Some(f) = FontDb::global().fallback_for(ch, face.id())
                 {
-                    face = wordcraft_fonts::FaceRef::of(&f);
+                    face = englat_fonts::FaceRef::of(&f);
                 }
                 let gid = face.glyph_for(ch);
                 let k = *size as f64 / face.upem.max(1.0);
@@ -850,7 +850,7 @@ fn draw(ctx: &mut RenderContext, doc: &Document, it: &Draw, view: Affine, visibl
             }
         }
         Draw::Path { segs, fill, stroke, stroke_width } => {
-            let path = wordcraft_layout::display::seg_path(segs);
+            let path = englat_layout::display::seg_path(segs);
             if path.elements().is_empty() {
                 return;
             }
@@ -868,12 +868,12 @@ fn draw(ctx: &mut RenderContext, doc: &Document, it: &Draw, view: Affine, visibl
             }
         }
         Draw::Art { path, fx, color: c, alpha } => {
-            let Some(b) = wordcraft_layout::wordart::path_box(path) else { return };
+            let Some(b) = englat_layout::wordart::path_box(path) else { return };
             if !b.inflate(200.0, 200.0).overlaps(*visible) {
                 return;
             }
             ctx.set_transform(view);
-            for l in wordcraft_layout::wordart::art_layers(path, fx, *c, *alpha) {
+            for l in englat_layout::wordart::art_layers(path, fx, *c, *alpha) {
                 match &l.paint {
                     ArtPaint::Solid(c, a) => ctx.set_paint(color(opts.ink(*c), *a)),
                     ArtPaint::Linear { p0, p1, stops } => {
@@ -928,13 +928,13 @@ fn draw(ctx: &mut RenderContext, doc: &Document, it: &Draw, view: Affine, visibl
                 };
                 if let Some(sh) = fx.shadow {
                     let (dx, dy) = sh.offset();
-                    for (g, a) in wordcraft_doc::effects::bands(-sh.blur / 2.0, sh.blur / 2.0, sh.opacity()) {
+                    for (g, a) in englat_doc::effects::bands(-sh.blur / 2.0, sh.blur / 2.0, sh.opacity()) {
                         ctx.set_paint(color(opts.ink(sh.color), a));
                         silhouette(ctx, g, kurbo::Vec2::new(dx as f64, dy as f64));
                     }
                 }
                 if let Some(gl) = fx.glow {
-                    for (g, a) in wordcraft_doc::effects::bands(0.0, gl.size, gl.opacity()) {
+                    for (g, a) in englat_doc::effects::bands(0.0, gl.size, gl.opacity()) {
                         ctx.set_paint(color(opts.ink(gl.color), a));
                         silhouette(ctx, g, kurbo::Vec2::ZERO);
                     }
@@ -943,7 +943,7 @@ fn draw(ctx: &mut RenderContext, doc: &Document, it: &Draw, view: Affine, visibl
             // Soft edges: the fill fades out toward the outline (which fades with it).
             if let (Some(rad), Some(f), true) = (fx.soft_edge, fill, can_fill) {
                 let rad = rad.min(rect.w.min(rect.h) / 2.0).max(0.0);
-                for (g, a) in wordcraft_doc::effects::bands(-rad, 0.0, 1.0) {
+                for (g, a) in englat_doc::effects::bands(-rad, 0.0, 1.0) {
                     let rr = r.inflate(g as f64, g as f64);
                     if rr.width() > 0.0 && rr.height() > 0.0 {
                         ctx.set_paint(color(opts.ink(*f), a));
@@ -1015,7 +1015,7 @@ fn ink_path(pts: &[(f32, f32)]) -> Option<BezPath> {
 }
 
 /// Outline of a basic shape in a rectangle; `corner` is a rounded rectangle's
-/// ([`wordcraft_doc::connector::ShapeExtra::corner`]).
+/// ([`englat_doc::connector::ShapeExtra::corner`]).
 pub fn shape_path(kind: ShapeKind, r: kurbo::Rect, corner: Option<u32>) -> BezPath {
     let (cx, cy) = (r.center().x, r.center().y);
     let poly = |pts: &[(f64, f64)]| {
@@ -1034,7 +1034,7 @@ pub fn shape_path(kind: ShapeKind, r: kurbo::Rect, corner: Option<u32>) -> BezPa
         // A freeform is drawn from its own paths; without them, its frame.
         ShapeKind::Rectangle | ShapeKind::TextBox | ShapeKind::Freeform => r.to_path(0.1),
         ShapeKind::RoundedRectangle => {
-            let radius = wordcraft_doc::connector::corner_radius(corner, r.width() as f32, r.height() as f32);
+            let radius = englat_doc::connector::corner_radius(corner, r.width() as f32, r.height() as f32);
             kurbo::RoundedRect::from_rect(r, f64::from(radius)).to_path(0.1)
         }
         ShapeKind::Ellipse => kurbo::Ellipse::from_rect(r).to_path(0.1),
@@ -1131,14 +1131,14 @@ pub fn render_items(doc: &Document, items: &[Draw], x: f32, y: f32, w: f32, h: f
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wordcraft_layout::{LayoutCache, LayoutOptions, layout};
+    use englat_layout::{LayoutCache, LayoutOptions, layout};
 
     /// #299: the caret's background is the page colour, a highlight, or the dark page.
     #[test]
     fn background_at_caret_follows_page_colour_highlight_and_dark_mode() {
-        use wordcraft_doc::Pos;
-        use wordcraft_doc::props::Highlight;
-        let mut d = Document::from_text("Hello WordCraft");
+        use englat_doc::Pos;
+        use englat_doc::props::Highlight;
+        let mut d = Document::from_text("Hello ENGLAT Editor");
         let mid = |d: &Document, off: usize| {
             let l = layout(d, &mut LayoutCache::new(), &LayoutOptions::default());
             let c = l.caret_on(&Pos::body(0, off), 0).unwrap();
@@ -1167,7 +1167,7 @@ mod tests {
     fn background_follows_a_shapes_outline_not_its_box() {
         let opts = RenderOptions::default();
         let ellipse = Draw::Shape {
-            rect: wordcraft_geom::Rect::new(100.0, 100.0, 200.0, 100.0),
+            rect: englat_geom::Rect::new(100.0, 100.0, 200.0, 100.0),
             kind: ShapeKind::Ellipse,
             fill: Some(Rgb::BLACK),
             stroke: None,
@@ -1177,7 +1177,7 @@ mod tests {
         };
         let at = |x: f32, y: f32| {
             let mut bg = [255.0; 3];
-            blend_backgrounds(std::slice::from_ref(&ellipse), wordcraft_geom::Point::new(x, y), &opts, &mut bg, 0);
+            blend_backgrounds(std::slice::from_ref(&ellipse), englat_geom::Point::new(x, y), &opts, &mut bg, 0);
             bg
         };
         assert_eq!(at(200.0, 150.0), [0.0; 3], "the centre is the fill");
@@ -1187,7 +1187,7 @@ mod tests {
 
     #[test]
     fn renders_text_dark_pixels() {
-        let d = Document::from_text("Hello WordCraft");
+        let d = Document::from_text("Hello ENGLAT Editor");
         let l = layout(&d, &mut LayoutCache::new(), &LayoutOptions::default());
         let img = render_page(&d, &l.pages[0], 1.0, &RenderOptions::default());
         assert_eq!((img.width, img.height), (612, 792));
@@ -1202,13 +1202,13 @@ mod tests {
     /// cell, not across it.
     #[test]
     fn turned_cell_text_is_painted_turned() {
-        use wordcraft_doc::props::TextDirection;
+        use englat_doc::props::TextDirection;
         let ink = |dir: TextDirection| {
             let mut d = Document::from_text("before\nafter");
-            let mut t = wordcraft_doc::Table::new(1, 2, 400.0);
-            t.rows[0].cells[0].blocks = vec![wordcraft_doc::para_block(wordcraft_doc::Paragraph::with_text("WWWWWWWWWWWW", Default::default()))];
+            let mut t = englat_doc::Table::new(1, 2, 400.0);
+            t.rows[0].cells[0].blocks = vec![englat_doc::para_block(englat_doc::Paragraph::with_text("WWWWWWWWWWWW", Default::default()))];
             t.rows[0].cells[0].props.text_direction = dir;
-            d.insert_block(wordcraft_doc::StoryRef::Body, &wordcraft_doc::Path::top(1), wordcraft_doc::Block::Table(t)).unwrap();
+            d.insert_block(englat_doc::StoryRef::Body, &englat_doc::Path::top(1), englat_doc::Block::Table(t)).unwrap();
             let l = layout(&d, &mut LayoutCache::new(), &LayoutOptions::default());
             let img = render_page(&d, &l.pages[0], 1.0, &RenderOptions::default());
             // Dark pixels inside the first cell (x 72..272, clear of its borders), well below
@@ -1224,8 +1224,8 @@ mod tests {
     /// cast to, and none on the other; a glow surrounds it.
     #[test]
     fn shape_shadow_is_cast_offset_from_the_shape() {
-        use wordcraft_doc::effects::{Glow, Shadow, ShapeEffects};
-        use wordcraft_doc::para::InlineObject;
+        use englat_doc::effects::{Glow, Shadow, ShapeEffects};
+        use englat_doc::para::InlineObject;
         let draw = |effects: ShapeEffects| {
             let mut d = Document::from_text("");
             let shape = InlineObject::Shape {
@@ -1241,7 +1241,7 @@ mod tests {
                 effects,
                 extra: Default::default(),
             };
-            let at = wordcraft_doc::Pos { story: wordcraft_doc::StoryRef::Body, path: wordcraft_doc::Path::top(0), off: 0 };
+            let at = englat_doc::Pos { story: englat_doc::StoryRef::Body, path: englat_doc::Path::top(0), off: 0 };
             d.insert_object(&at, shape, &Default::default()).unwrap();
             let l = layout(&d, &mut LayoutCache::new(), &LayoutOptions::default());
             render_page(&d, &l.pages[0], 1.0, &RenderOptions::default())
@@ -1318,7 +1318,7 @@ mod tests {
         let mut d = Document::new();
         d.media.insert("bg.png".into(), Arc::new(png));
         for kind in ["tile", "frame"] {
-            d.settings.page_picture = Some(wordcraft_doc::PagePicture { media: "bg.png".into(), fill_type: kind.into(), title: String::new() });
+            d.settings.page_picture = Some(englat_doc::PagePicture { media: "bg.png".into(), fill_type: kind.into(), title: String::new() });
             let l = layout(&d, &mut LayoutCache::new(), &LayoutOptions::default());
             let img = render_page(&d, &l.pages[0], 1.0, &RenderOptions::default());
             let i = ((300 * img.width + 300) * 4) as usize;
@@ -1350,8 +1350,8 @@ mod tests {
             .write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
             .unwrap();
         let media = d.add_media(png, "png");
-        let mut hp = wordcraft_doc::Paragraph::new();
-        let obj = wordcraft_doc::para::InlineObject::Image {
+        let mut hp = englat_doc::Paragraph::new();
+        let obj = englat_doc::para::InlineObject::Image {
             media,
             w: 40.0,
             h: 40.0,
@@ -1361,7 +1361,7 @@ mod tests {
             ole: None,
         };
         hp.insert_object(0, obj, &Default::default()).unwrap();
-        let id = d.add_part(wordcraft_doc::PartKind::Header, vec![wordcraft_doc::para_block(hp)]);
+        let id = d.add_part(englat_doc::PartKind::Header, vec![englat_doc::para_block(hp)]);
         d.last_section.headers.default = Some(id);
         let l = layout(&d, &mut LayoutCache::new(), &LayoutOptions::default());
         let opts = RenderOptions::default();
@@ -1377,7 +1377,7 @@ mod tests {
         // Pure hues keep their colour; dark blue turns light blue.
         assert_eq!(invert_lightness(Rgb(255, 0, 0)), Rgb(255, 0, 0));
         assert_eq!(invert_lightness(Rgb(0, 0, 0x80)), Rgb(0x7F, 0x7F, 0xFF));
-        let d = Document::from_text("Hello WordCraft");
+        let d = Document::from_text("Hello ENGLAT Editor");
         let l = layout(&d, &mut LayoutCache::new(), &LayoutOptions::default());
         let opts = RenderOptions { dark: true, ..Default::default() };
         assert_eq!(opts.ink(Rgb::WHITE), Rgb(DARK_PAPER, DARK_PAPER, DARK_PAPER));
@@ -1389,10 +1389,10 @@ mod tests {
     }
 
     /// A document whose only text is a yellow-highlighted run.
-    fn yellow_highlight_doc() -> (Document, wordcraft_layout::DocLayout) {
-        let cp = wordcraft_doc::CharProps { highlight: Some(wordcraft_doc::props::Highlight::Yellow), size: Some(24.0), ..Default::default() };
+    fn yellow_highlight_doc() -> (Document, englat_layout::DocLayout) {
+        let cp = englat_doc::CharProps { highlight: Some(englat_doc::props::Highlight::Yellow), size: Some(24.0), ..Default::default() };
         let mut d = Document::from_text("x");
-        d.body = vec![wordcraft_doc::para_block(wordcraft_doc::Paragraph::with_text("HHHH HHHH", cp))];
+        d.body = vec![englat_doc::para_block(englat_doc::Paragraph::with_text("HHHH HHHH", cp))];
         let l = layout(&d, &mut LayoutCache::new(), &LayoutOptions::default());
         (d, l)
     }
@@ -1424,8 +1424,8 @@ mod tests {
     /// (Automatic and explicit black text both draw white); a light page is the identity.
     #[test]
     fn dark_page_text_backgrounds_keep_text_readable() {
-        use wordcraft_doc::props::{Highlight, TextColor};
-        use wordcraft_layout::display::text_color;
+        use englat_doc::props::{Highlight, TextColor};
+        use englat_layout::display::text_color;
         let dark = RenderOptions { dark: true, ..Default::default() };
         let light = RenderOptions::default();
         let colours: Vec<Rgb> = Highlight::ALL.iter().filter_map(|h| h.rgb()).collect();
@@ -1453,7 +1453,7 @@ mod tests {
     /// dimmed highlight still reaches 4.5:1 on a dark page.
     #[test]
     fn dark_page_coloured_text_on_highlights_reads() {
-        use wordcraft_doc::props::Highlight;
+        use englat_doc::props::Highlight;
         let dark = RenderOptions { dark: true, ..Default::default() };
         let colours: Vec<Rgb> = Highlight::ALL.iter().filter_map(|h| h.rgb()).collect();
         let texts: Vec<Rgb> = [Rgb(0, 0, 255), Rgb(255, 0, 0)].into_iter().chain(colours.iter().copied()).collect();
@@ -1471,11 +1471,11 @@ mod tests {
     /// like the text it underlines, not the dark grey plain inversion gives white.
     #[test]
     fn dark_page_underline_on_a_dark_highlight_reads() {
-        use wordcraft_doc::props::{Highlight, Underline};
+        use englat_doc::props::{Highlight, Underline};
         let cp =
-            wordcraft_doc::CharProps { highlight: Some(Highlight::Black), underline: Some(Underline::Thick), size: Some(24.0), ..Default::default() };
+            englat_doc::CharProps { highlight: Some(Highlight::Black), underline: Some(Underline::Thick), size: Some(24.0), ..Default::default() };
         let mut d = Document::from_text("x");
-        d.body = vec![wordcraft_doc::para_block(wordcraft_doc::Paragraph::with_text("HHHH HHHH", cp))];
+        d.body = vec![englat_doc::para_block(englat_doc::Paragraph::with_text("HHHH HHHH", cp))];
         let l = layout(&d, &mut LayoutCache::new(), &LayoutOptions::default());
         let items = page_display(&d, &l.pages[0], &DisplayOptions::default());
         let (x0, x1, y, w) = items
@@ -1525,8 +1525,8 @@ mod tests {
     fn metafile_picture_is_drawn_as_vectors() {
         let mut d = Document::new();
         let media = d.add_media(red_right_half_emf(), "emf");
-        let mut p = wordcraft_doc::Paragraph::new();
-        let obj = wordcraft_doc::para::InlineObject::Image {
+        let mut p = englat_doc::Paragraph::new();
+        let obj = englat_doc::para::InlineObject::Image {
             media,
             w: 70.0,
             h: 70.0,
@@ -1536,7 +1536,7 @@ mod tests {
             ole: None,
         };
         p.insert_object(0, obj, &Default::default()).unwrap();
-        d.body = vec![wordcraft_doc::para_block(p)];
+        d.body = vec![englat_doc::para_block(p)];
         let l = layout(&d, &mut LayoutCache::new(), &LayoutOptions::default());
         let opts = RenderOptions::default();
         let rect = page_display(&d, &l.pages[0], &opts.display)
@@ -1561,8 +1561,8 @@ mod tests {
         emf.extend([emf_rec(27, &le32(&[0, 50])), emf_rec(54, &le32(&[100, 50])), emf_rec(14, &[0; 12])].concat());
         let mut d = Document::new();
         let media = d.add_media(emf, "emf");
-        let mut p = wordcraft_doc::Paragraph::new();
-        let obj = wordcraft_doc::para::InlineObject::Image {
+        let mut p = englat_doc::Paragraph::new();
+        let obj = englat_doc::para::InlineObject::Image {
             media,
             w: 70.0,
             h: 70.0,
@@ -1572,7 +1572,7 @@ mod tests {
             ole: None,
         };
         p.insert_object(0, obj, &Default::default()).unwrap();
-        d.body = vec![wordcraft_doc::para_block(p)];
+        d.body = vec![englat_doc::para_block(p)];
         let l = layout(&d, &mut LayoutCache::new(), &LayoutOptions::default());
         let opts = RenderOptions::default();
         let rect = page_display(&d, &l.pages[0], &opts.display)
@@ -1595,8 +1595,8 @@ mod tests {
         let mut d = Document::new();
         // The header alone has no records, so the metafile does not parse.
         let media = d.add_media(red_right_half_emf()[..88].to_vec(), "emf");
-        let mut p = wordcraft_doc::Paragraph::new();
-        let obj = wordcraft_doc::para::InlineObject::Image {
+        let mut p = englat_doc::Paragraph::new();
+        let obj = englat_doc::para::InlineObject::Image {
             media,
             w: 70.0,
             h: 70.0,
@@ -1606,7 +1606,7 @@ mod tests {
             ole: None,
         };
         p.insert_object(0, obj, &Default::default()).unwrap();
-        d.body = vec![wordcraft_doc::para_block(p)];
+        d.body = vec![englat_doc::para_block(p)];
         let l = layout(&d, &mut LayoutCache::new(), &LayoutOptions::default());
         let opts = RenderOptions::default();
         let rect = page_display(&d, &l.pages[0], &opts.display)
@@ -1647,26 +1647,26 @@ mod tests {
     /// square, left white with the default corner; turned a quarter, the same.
     #[test]
     fn rendered_rounded_rectangles_follow_their_corner() {
-        use wordcraft_doc::para::{Anchor, Float, ShapeKind, Wrap};
+        use englat_doc::para::{Anchor, Float, ShapeKind, Wrap};
         let rendered = |corner: Option<u32>, rot: f32| {
             let float = Float { wrap: Wrap::InFrontOfText, h_rel: Anchor::Page, v_rel: Anchor::Page, x: 100.0, y: 100.0, rot, ..Default::default() };
-            let shape = wordcraft_doc::para::InlineObject::Shape {
+            let shape = englat_doc::para::InlineObject::Shape {
                 kind: ShapeKind::RoundedRectangle,
                 w: 200.0,
                 h: 200.0,
-                fill: Some(wordcraft_doc::props::Rgb(0, 0, 0)),
+                fill: Some(englat_doc::props::Rgb(0, 0, 0)),
                 stroke: None,
                 stroke_width: 0.0,
                 float,
                 story: None,
                 freeform: None,
                 effects: Default::default(),
-                extra: wordcraft_doc::connector::ShapeExtra { corner, ..Default::default() },
+                extra: englat_doc::connector::ShapeExtra { corner, ..Default::default() },
             };
-            let mut p = wordcraft_doc::Paragraph::new();
+            let mut p = englat_doc::Paragraph::new();
             p.insert_object(0, shape, &Default::default()).unwrap();
             let mut d = Document::new();
-            d.body = vec![wordcraft_doc::para_block(p)];
+            d.body = vec![englat_doc::para_block(p)];
             let l = layout(&d, &mut LayoutCache::new(), &LayoutOptions::default());
             render_page(&d, &l.pages[0], 1.0, &RenderOptions::default())
         };

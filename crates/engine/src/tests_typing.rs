@@ -3,13 +3,13 @@
 //! results are what Word produces for the same keys.
 
 use serde_json::json;
-use wordcraft_doc::props::{BorderStyle, VertAlign};
-use wordcraft_doc::{Pos, StoryRef};
+use englat_doc::props::{BorderStyle, VertAlign};
+use englat_doc::{Pos, StoryRef};
 
 use crate::Session;
 
 fn s() -> Session {
-    Session::new(wordcraft_doc::Document::new())
+    Session::new(englat_doc::Document::new())
 }
 
 fn run(s: &mut Session, id: &str, v: serde_json::Value) {
@@ -118,7 +118,7 @@ fn sample_text_preserves_typing_and_paragraph_formatting() {
     run(&mut s, "para.alignCenter", json!({}));
     typ(&mut s, "=rand(2,1)\n");
     for p in s.doc.body.iter().filter_map(|b| b.as_para()).take(2) {
-        assert_eq!(p.props.align, Some(wordcraft_doc::props::Align::Center));
+        assert_eq!(p.props.align, Some(englat_doc::props::Align::Center));
         assert_eq!(p.props_at(0).bold, Some(true));
     }
 }
@@ -239,7 +239,7 @@ fn list_autoformat_triggers() {
     assert_eq!(paras(&s), vec![para("Alpha", Some(0)), para("beta", Some(0))]);
     assert_eq!(label_at(&s, 0), "%1.");
     let n = s.doc.para_at(&Pos::body(0, 0)).and_then(|p| p.props.numbering).unwrap();
-    assert_eq!(s.doc.numbering.level(n.num, 0).map(|l| l.format), Some(wordcraft_doc::section::NumFormat::LowerLetter));
+    assert_eq!(s.doc.numbering.level(n.num, 0).map(|l| l.format), Some(englat_doc::section::NumFormat::LowerLetter));
 }
 
 #[test]
@@ -322,11 +322,11 @@ fn autocorrect_replacement_list_follows_the_texts_language() {
 fn autocorrect_options_change_what_typing_does() {
     let mut s = s();
     // A user entry, a deleted built-in entry, an added exception; names of days.
-    run(&mut s, "tools.autocorrect", json!({"add": {"from": "wc", "to": "WordCraft"}}));
+    run(&mut s, "tools.autocorrect", json!({"add": {"from": "wc", "to": "ENGLAT Editor"}}));
     run(&mut s, "tools.autocorrect", json!({"delete": "teh"}));
     run(&mut s, "tools.autocorrect", json!({"addException": "approx."}));
     typ(&mut s, "wc ships on monday. teh end is approx. three weeks ");
-    assert_eq!(s.doc.plain_text(StoryRef::Body), "WordCraft ships on Monday. Teh end is approx. three weeks ");
+    assert_eq!(s.doc.plain_text(StoryRef::Body), "ENGLAT Editor ships on Monday. Teh end is approx. three weeks ");
     // AutoFormat options off: straight quotes, no dashes, no list; sentences not capitalised.
     let mut s = self::s();
     run(&mut s, "tools.autocorrect", json!({"smartQuotes": false, "dashes": false, "bullets": false, "capSentences": false, "capDays": false}));
@@ -406,7 +406,7 @@ fn undo_right_after_a_border_line_brings_the_characters_back() {
 #[test]
 fn plus_and_hyphen_line_becomes_a_table() {
     let mut s = typed("+--+------+\nA");
-    let Some(wordcraft_doc::Block::Table(t)) = s.doc.body.first().map(|b| &**b) else { panic!("no table: {:?}", paras(&s)) };
+    let Some(englat_doc::Block::Table(t)) = s.doc.body.first().map(|b| &**b) else { panic!("no table: {:?}", paras(&s)) };
     assert_eq!(t.rows.len(), 1);
     assert_eq!(t.grid.len(), 2);
     assert!((t.grid[1] / t.grid[0] - 3.0).abs() < 0.01, "widths follow the hyphens: {:?}", t.grid);
@@ -445,7 +445,7 @@ fn smileys_are_replaced_inside_words_too() {
 
 #[test]
 fn a_large_mixed_document_types_like_word() {
-    // The corpus typed into Word and WordCraft side by side; the paragraph structure must match.
+    // The corpus typed into Word and ENGLAT Editor side by side; the paragraph structure must match.
     let mut s = s();
     let prose = "The keeper's log runs to four hundred pages, and almost every one begins with the weather. ";
     typ(&mut s, &format!("Notes\n{}\n", prose.repeat(20)));
@@ -614,7 +614,7 @@ fn undoing_bold_at_the_caret_turns_bold_typing_off_again() {
     assert_eq!(p.text, "abc");
     assert_ne!(p.props_of_char(0).bold, Some(true));
     // Redo brings bold typing back.
-    let mut s = Session::new(wordcraft_doc::Document::new());
+    let mut s = Session::new(englat_doc::Document::new());
     run(&mut s, "format.bold", json!({"value": true}));
     run(&mut s, "edit.undo", json!({}));
     run(&mut s, "edit.redo", json!({}));
@@ -738,7 +738,7 @@ fn down_and_up_from_a_line_start_beside_a_table_go_into_it() {
     let cell = |r: u32, c: u32| {
         let mut p = table.0.clone();
         p.extend([r, c, 0]);
-        wordcraft_doc::Path(p)
+        englat_doc::Path(p)
     };
     // From the start of the line above, left of the cells' text: the first cell, then the one
     // below, not the paragraph after the table.
@@ -888,7 +888,7 @@ fn shift_f5_goes_back_through_the_last_edits() {
     assert_eq!(back(), Pos::body(1, 3));
     assert_eq!(back(), Pos::body(0, 3));
     assert_eq!(back(), Pos::body(2, 5), "then round again");
-    assert!(Session::new(wordcraft_doc::Document::new()).run("edit.goBack", &json!({})).is_err(), "nothing edited yet");
+    assert!(Session::new(englat_doc::Document::new()).run("edit.goBack", &json!({})).is_err(), "nothing edited yet");
 }
 
 #[test]
@@ -909,7 +909,7 @@ fn shift_right_at_the_end_of_a_cell_selects_the_cell_first() {
     // In an empty cell the first press takes it.
     let mut empty = table.0.clone();
     empty.extend([1, 0, 0]);
-    let pos = Pos { story: StoryRef::Body, path: wordcraft_doc::Path(empty), off: 0 };
+    let pos = Pos { story: StoryRef::Body, path: englat_doc::Path(empty), off: 0 };
     run(&mut s, "caret.set", json!({"pos": pos}));
     assert_eq!(shift_right(&mut s), Some(((1, 1), (0, 0))));
 }
@@ -1059,7 +1059,7 @@ fn typing_rtl_letters_into_an_empty_paragraph_makes_it_rtl() {
     let s = typed("سلام\nHello");
     assert_eq!(bidi(&s, 1), Some(true), "Enter carries the paragraph's direction on, as in Word");
     // A style that sets left-to-right wins.
-    let mut doc = Session::new(wordcraft_doc::Document::new());
+    let mut doc = Session::new(englat_doc::Document::new());
     if let Some(st) = doc.doc.styles.get_mut("Normal") {
         st.para.bidi = Some(false);
     }
@@ -1119,9 +1119,9 @@ fn select_all_then_delete_removes_tables() {
 /// of into its result (Zotero then reports the citation as edited by hand).
 #[test]
 fn typing_after_a_citation_goes_outside_its_field() {
-    use wordcraft_doc::props::CharProps;
-    use wordcraft_doc::{InlineObject, Path};
-    let mut doc = wordcraft_doc::Document::from_text("Cats purr ");
+    use englat_doc::props::CharProps;
+    use englat_doc::{InlineObject, Path};
+    let mut doc = englat_doc::Document::from_text("Cats purr ");
     let c = CharProps::default();
     let p = doc.para_mut(StoryRef::Body, &Path::top(0)).unwrap();
     let start = p.len();
@@ -1137,6 +1137,6 @@ fn typing_after_a_citation_goes_outside_its_field() {
     assert_eq!(s.doc.plain_text(StoryRef::Body), "Cats purr (Smith 2020). Dogs bark.");
     let f = s.doc.field_ranges(StoryRef::Body);
     assert_eq!(f.len(), 1);
-    let inside = Pos { off: f[0].start.off + wordcraft_doc::para::OBJ.len_utf8(), ..f[0].start.clone() };
+    let inside = Pos { off: f[0].start.off + englat_doc::para::OBJ.len_utf8(), ..f[0].start.clone() };
     assert_eq!(s.doc.copy_range(&inside, &f[0].end).plain_text(), "(Smith 2020)");
 }

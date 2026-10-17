@@ -1,0 +1,23 @@
+[package]
+name = "englat-editor-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "ENGLAT Editor command line: convert, inspect, render, run commands, MCP server"
+
+[[bin]]
+name = "englat-editor-cli"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+englat-doc = { workspace = true }
+englat-engine = { workspace = true }
+englat-render = { workspace = true }
+englat-mcp = { workspace = true }
+englat-zotero = { workspace = true }
+serde_json = { workspace = true }
+sys-locale = "0.3"

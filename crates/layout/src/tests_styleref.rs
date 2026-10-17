@@ -1,9 +1,9 @@
 //! STYLEREF fields in headers and footers (#775): each page shows its own result.
 
 use super::*;
-use wordcraft_doc::para::InlineObject;
-use wordcraft_doc::props::{CharProps, NumRef};
-use wordcraft_doc::{ListKind, PartKind, Pos, para_block};
+use englat_doc::para::InlineObject;
+use englat_doc::props::{CharProps, NumRef};
+use englat_doc::{ListKind, PartKind, Pos, para_block};
 
 fn field(instr: &str) -> InlineObject {
     InlineObject::Field { instr: instr.into(), result: "stale".into(), locked: false, dirty: false, code: false, form: String::new() }
@@ -127,7 +127,7 @@ fn style_index_is_reused_until_the_body_or_styles_change() {
     // Rename the first chapter: rebuilt, and the header shows the new title.
     let p = d.para_mut(StoryRef::Body, &Path::top(0)).unwrap();
     p.text = "Openings".into();
-    p.runs = vec![wordcraft_doc::para::Run { len: p.text.len(), props: Default::default() }];
+    p.runs = vec![englat_doc::para::Run { len: p.text.len(), props: Default::default() }];
     let after = pages(&d, &mut c);
     assert!(!Arc::ptr_eq(&first, &index(&c)), "an edited heading rebuilds it");
     assert!(after[0].iter().any(|t| t.contains("Openings")), "{after:?}");

@@ -12,8 +12,8 @@ use egui::{Sense, Ui, vec2};
 use serde::Serialize;
 use serde_json::{Value, json};
 
-use wordcraft_engine::Password;
-use wordcraft_engine::cmd::mailings::{FilterOp, FilterRule, SortKey};
+use englat_engine::Password;
+use englat_engine::cmd::mailings::{FilterOp, FilterRule, SortKey};
 
 use crate::WordApp;
 use crate::options::MeasureExt;
@@ -264,7 +264,7 @@ pub enum Dialog {
         /// Why OK didn't apply (the margins don't fit the paper).
         message: String,
         /// Vertical alignment (`layout.verticalAlign`, applied only if changed).
-        valign: wordcraft_doc::section::PageVAlign,
+        valign: englat_doc::section::PageVAlign,
     },
     Link {
         url: String,
@@ -534,7 +534,7 @@ pub enum Dialog {
 }
 
 /// The Table Properties dialog's fields. Lengths are in the interface unit
-/// ([`wordcraft_geom::Unit`], inches by default).
+/// ([`englat_geom::Unit`], inches by default).
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TableForm {
@@ -560,14 +560,14 @@ pub struct TableForm {
 impl TableForm {
     /// The caret's table, row, column and cell as the dialog shows them.
     pub fn read(app: &WordApp) -> Option<TableForm> {
-        use wordcraft_doc::props::{Align, HeightRule, VAlign};
+        use englat_doc::props::{Align, HeightRule, VAlign};
         let s = &app.session;
         let (tp, r, c) = s.sel.focus.path.cell()?;
         let t = s.doc.table(s.sel.focus.story, &tp)?;
         let k = crate::options::unit().pt_per_unit();
         let row = t.rows.get(r).map(|x| x.props.clone()).unwrap_or_default();
         let cell = t.rows.get(r).and_then(|x| x.cells.get(c)).map(|x| x.props.clone()).unwrap_or_default();
-        let tw = wordcraft_engine::cmd::page::sect(s).text_width();
+        let tw = englat_engine::cmd::page::sect(s).text_width();
         let width = t.props.width_pct.filter(|p| *p > 0.0).map(|p| tw * p.min(100.0) / 100.0).or(t.props.width.filter(|w| *w > 0.0));
         let fin = |v: f32| if v.is_finite() { v } else { 0.0 };
         Some(TableForm {
@@ -718,7 +718,7 @@ fn op_id<S: serde::Serializer>(op: &FilterOp, s: S) -> Result<S::Ok, S::Error> {
 
 impl RecipientFilter {
     /// The session's current filter and sort.
-    pub fn from_session(m: &wordcraft_engine::cmd::mailings::MergeState) -> Self {
+    pub fn from_session(m: &englat_engine::cmd::mailings::MergeState) -> Self {
         let mut sort: [(String, bool); 3] = Default::default();
         for (slot, k) in sort.iter_mut().zip(&m.sort) {
             *slot = (k.field.clone(), k.descending);
@@ -754,17 +754,17 @@ impl RecipientFilter {
 }
 
 /// A colour menu: a swatch with the colour grid and No Color. `value` is hex, empty for none.
-pub(crate) fn color_menu(ui: &mut Ui, theme: &[wordcraft_doc::Rgb], value: &mut String) {
+pub(crate) fn color_menu(ui: &mut Ui, theme: &[englat_doc::Rgb], value: &mut String) {
     color_field(ui, theme, value, "No Color", "");
 }
 
 /// A colour field: a swatch and a drop-down with `none_label` (which sets `none_value`), the
 /// colour grid, Recent Colors and More Colors… (#606). `value` is hex or `none_value`.
-pub(crate) fn color_field(ui: &mut Ui, theme: &[wordcraft_doc::Rgb], value: &mut String, none_label: &str, none_value: &str) {
+pub(crate) fn color_field(ui: &mut Ui, theme: &[englat_doc::Rgb], value: &mut String, none_label: &str, none_value: &str) {
     ui.horizontal(|ui| {
         let id = ui.id().with("colorField");
         crate::colors::take_field(ui.ctx(), id, value);
-        let c = wordcraft_doc::Rgb::parse(value);
+        let c = englat_doc::Rgb::parse(value);
         let (r, _) = ui.allocate_exact_size(vec2(16.0, 16.0), Sense::hover());
         let t = Tokens::get(ui.ctx());
         match c {
@@ -920,10 +920,10 @@ impl Dialog {
                 let tab = if name == "asianTypography" { 2 } else { 0 };
                 let s = &app.session;
                 let story = s.sel.focus.story;
-                let of = |props: &wordcraft_doc::props::ParaProps| paragraph_dialog(&s.doc.styles.resolve_para(props), tab);
+                let of = |props: &englat_doc::props::ParaProps| paragraph_dialog(&s.doc.styles.resolve_para(props), tab);
                 // Every selected paragraph as the dialog would show it: what they all share is
                 // shown, and what OK compares with; the rest shows blank (#1346).
-                let mut each = wordcraft_engine::cmd::selected_paths(s).into_iter().filter_map(|path| s.doc.para(story, &path)).map(|p| of(&p.props));
+                let mut each = englat_engine::cmd::selected_paths(s).into_iter().filter_map(|path| s.doc.para(story, &path)).map(|p| of(&p.props));
                 let mut d = each.next().or_else(|| s.doc.para_at(&s.sel.focus).map(|p| of(&p.props)))?;
                 let fields = para_fields(&d);
                 let mut shared = fields.clone();
@@ -980,8 +980,8 @@ impl Dialog {
             },
             "insertTable" => Dialog::InsertTable { rows: 2, cols: 5 },
             "pageSetup" => {
-                let sp = wordcraft_engine::cmd::page::sect(&app.session);
-                use wordcraft_doc::section::DocGridType;
+                let sp = englat_engine::cmd::page::sect(&app.session);
+                use englat_doc::section::DocGridType;
                 let kind = match sp.doc_grid.map(|g| g.kind) {
                     Some(DocGridType::Lines) => 1,
                     Some(DocGridType::LinesAndChars) => 2,
@@ -1014,7 +1014,7 @@ impl Dialog {
             "zoom" => Dialog::Zoom { percent: (app.session.view.zoom * 100.0).round() },
             "watermark" => Dialog::Watermark { text: "CONFIDENTIAL".into(), diagonal: true },
             "phonetic" => {
-                let v = wordcraft_engine::cmd::phonetic::state(&app.session);
+                let v = englat_engine::cmd::phonetic::state(&app.session);
                 let f = |k: &str| v.get(k).and_then(Value::as_f64).unwrap_or(0.0) as f32;
                 let s = |k: &str| v.get(k).and_then(Value::as_str).unwrap_or("").to_string();
                 Dialog::Phonetic {
@@ -1037,7 +1037,7 @@ impl Dialog {
             }
             "enclose" => {
                 // The selection's text and its enclosure, if it has one.
-                let t = wordcraft_engine::cmd::format::enclose_target(&app.session).ok();
+                let t = englat_engine::cmd::format::enclose_target(&app.session).ok();
                 let cur = t.as_ref().and_then(|t| t.current.clone());
                 Dialog::Enclose {
                     style: cur.as_ref().map_or("shrink", |e| e.style.name()).into(),
@@ -1074,7 +1074,7 @@ impl Dialog {
             "findRecipient" => Dialog::FindRecipient { text: String::new(), message: String::new() },
             "fieldCode" => Dialog::FieldCode { code: String::new(), edit: false, message: String::new() },
             "editFieldCode" => {
-                let field = wordcraft_engine::cmd::fields::selected(&app.session).into_iter().next()?;
+                let field = englat_engine::cmd::fields::selected(&app.session).into_iter().next()?;
                 Dialog::FieldCode { code: field.instr, edit: true, message: String::new() }
             }
             "encryptPassword" => Dialog::EncryptPassword { password: Password::default(), confirm: Password::default(), message: String::new() },
@@ -1116,9 +1116,9 @@ impl Dialog {
         })
     }
 
-    /// Paste Special for a clipboard payload (`text`, `html`, `rtf`; empty = WordCraft's own copy).
+    /// Paste Special for a clipboard payload (`text`, `html`, `rtf`; empty = ENGLAT Editor's own copy).
     pub fn paste_special(app: &WordApp, payload: &Value) -> Dialog {
-        let formats: Vec<String> = wordcraft_engine::cmd::paste::available(&app.session, payload).into_iter().map(str::to_string).collect();
+        let formats: Vec<String> = englat_engine::cmd::paste::available(&app.session, payload).into_iter().map(str::to_string).collect();
         let mut kept = json!({});
         for k in ["text", "html", "rtf", "picture"] {
             if let Some(t) = payload.get(k).and_then(Value::as_str) {
@@ -1132,13 +1132,13 @@ impl Dialog {
     pub fn modify_style(app: &WordApp, id: &str) -> Option<Dialog> {
         let st = app.session.doc.styles.get(id)?;
         let rc = app.session.doc.styles.resolve_char(
-            if st.kind == wordcraft_doc::StyleKind::Paragraph { Some(id) } else { None },
-            &wordcraft_doc::CharProps {
-                style: if st.kind == wordcraft_doc::StyleKind::Character { Some(id.into()) } else { None },
+            if st.kind == englat_doc::StyleKind::Paragraph { Some(id) } else { None },
+            &englat_doc::CharProps {
+                style: if st.kind == englat_doc::StyleKind::Character { Some(id.into()) } else { None },
                 ..Default::default()
             },
         );
-        let rp = app.session.doc.styles.resolve_para(&wordcraft_doc::ParaProps { style: Some(id.into()), ..Default::default() });
+        let rp = app.session.doc.styles.resolve_para(&englat_doc::ParaProps { style: Some(id.into()), ..Default::default() });
         Some(Dialog::ModifyStyle {
             back: false,
             resume: None,
@@ -1149,8 +1149,8 @@ impl Dialog {
             bold: rc.bold,
             italic: rc.italic,
             color: match rc.color {
-                wordcraft_doc::TextColor::Rgb(c) => c.hex(),
-                wordcraft_doc::TextColor::Auto => "auto".into(),
+                englat_doc::TextColor::Rgb(c) => c.hex(),
+                englat_doc::TextColor::Auto => "auto".into(),
             },
             before: rp.space_before,
             after: rp.space_after,
@@ -1263,8 +1263,8 @@ pub fn show(app: &mut WordApp, ctx: &egui::Context) {
         Dialog::Refs(d) => d.title(),
         Dialog::Icons { .. } => "Icons",
         Dialog::PasteSpecial { .. } => "Paste Special",
-        Dialog::About { .. } => "About WordCraft",
-        Dialog::SaveChanges { .. } => "WordCraft",
+        Dialog::About { .. } => "About ENGLAT Editor",
+        Dialog::SaveChanges { .. } => "ENGLAT Editor",
         Dialog::DiscardRecovery { .. } => "Discard recovery copy",
         Dialog::RecipientList { .. } => "Recipient List",
         Dialog::SelectTable { .. } => "Select Table",
@@ -1324,7 +1324,7 @@ pub(crate) struct PaperLabels {
 /// custom size.
 pub(crate) fn paper_entry(paper: (f32, f32)) -> Option<&'static str> {
     let ppu = crate::options::unit().pt_per_unit();
-    wordcraft_geom::paper_name(paper.0 * ppu, paper.1 * ppu)
+    englat_geom::paper_name(paper.0 * ppu, paper.1 * ppu)
 }
 
 /// The commands Page Setup's OK runs for the paper, orientation and margins (#1433), all in the
@@ -1340,7 +1340,7 @@ fn page_layout_commands(
     landscape: bool,
     (top, bottom, left, right): (f32, f32, f32, f32),
 ) -> Result<Vec<(&'static str, Value)>, &'static str> {
-    use wordcraft_engine::cmd::page::{MARGINS_DONT_FIT, margins_fit, sect};
+    use englat_engine::cmd::page::{MARGINS_DONT_FIT, margins_fit, sect};
     let ppu = crate::options::unit().pt_per_unit();
     let (paper, was) = ((paper.0 * ppu, paper.1 * ppu), (was.0 * ppu, was.1 * ppu));
     let m = (top * ppu, bottom * ppu, left * ppu, right * ppu);
@@ -1398,7 +1398,7 @@ fn page_paper_group(ui: &mut Ui, paper: &mut (f32, f32), landscape: &mut bool, c
         let entry = paper_entry(*paper).filter(|_| !*custom);
         let shown = tl!(entry.unwrap_or(l.custom));
         let combo = egui::ComboBox::from_id_salt("ps_paper_size").width(180.0).height(400.0).selected_text(shown).show_ui(ui, |ui| {
-            for (n, w, h) in wordcraft_geom::PAPER_SIZES {
+            for (n, w, h) in englat_geom::PAPER_SIZES {
                 if ui.selectable_label(entry == Some(*n), tl!(n)).clicked() {
                     let (w, h) = (w / ppu, h / ppu);
                     *paper = if *landscape { (w.max(h), w.min(h)) } else { (w.min(h), w.max(h)) };
@@ -1413,7 +1413,7 @@ fn page_paper_group(ui: &mut Ui, paper: &mut (f32, f32), landscape: &mut bool, c
         combo.response.labelled_by(label.id);
     });
     egui::Grid::new("ps_paper").num_columns(4).show(ui, |ui| {
-        use wordcraft_engine::cmd::page::{MAX_PAGE_SIDE, MIN_PAGE_SIDE};
+        use englat_engine::cmd::page::{MAX_PAGE_SIDE, MIN_PAGE_SIDE};
         let range = MIN_PAGE_SIDE / ppu..=MAX_PAGE_SIDE / ppu;
         ui.label(tl!(l.width));
         let w = ui.add(egui::DragValue::new(&mut paper.0).speed(3.6 / ppu).range(range.clone()).measure(unit).max_decimals(2));
@@ -1476,7 +1476,7 @@ fn font_props(d: &Dialog) -> serde_json::Map<String, Value> {
     if let Ok(s) = size.trim().parse::<f64>() {
         props.insert("size".into(), json!(s));
     }
-    if let Some(c) = wordcraft_doc::Rgb::parse(color) {
+    if let Some(c) = englat_doc::Rgb::parse(color) {
         props.insert("color".into(), json!({"Rgb": [c.0, c.1, c.2]}));
     } else if color.eq_ignore_ascii_case("auto") {
         // Automatic, from the colour field's drop-down (#606).
@@ -1542,7 +1542,7 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
         Dialog::Font { font, font_ea, asian, size, bold, italic, underline, strike, sup, sub, small_caps, caps, hidden, color, spacing, .. } => {
             // Build the sample text format for the preview pane below.
             let preview_size = size.trim().parse::<f32>().unwrap_or(12.0).clamp(6.0, 72.0);
-            let preview_color = wordcraft_doc::Rgb::parse(color).map(crate::theme::c32).unwrap_or_else(|| ui.visuals().text_color());
+            let preview_color = englat_doc::Rgb::parse(color).map(crate::theme::c32).unwrap_or_else(|| ui.visuals().text_color());
             let mut fmt = egui::TextFormat {
                 font_id: egui::FontId::new(preview_size, egui::FontFamily::Proportional),
                 color: preview_color,
@@ -1995,10 +1995,10 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                             }
                             commands.push(("layout.documentGrid", v));
                         }
-                        if *rtl != wordcraft_engine::cmd::page::sect(&app.session).rtl {
+                        if *rtl != englat_engine::cmd::page::sect(&app.session).rtl {
                             commands.push(("layout.sectionRtl", json!({"value": *rtl})));
                         }
-                        if *valign != wordcraft_engine::cmd::page::sect(&app.session).valign {
+                        if *valign != englat_engine::cmd::page::sect(&app.session).valign {
                             commands.push(("layout.verticalAlign", json!({"value": page_valign_value(*valign)})));
                         }
                         run_as_one_step(app, commands)
@@ -2267,7 +2267,7 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
             let (ok, cancel) = buttons(ui, tl!("OK"));
             if ok {
                 let mut chr = json!({"font": font, "size": *size, "bold": *bold, "italic": *italic});
-                if let Some(c) = wordcraft_doc::Rgb::parse(color) {
+                if let Some(c) = englat_doc::Rgb::parse(color) {
                     chr["color"] = json!({"Rgb": [c.0, c.1, c.2]});
                 }
                 let _ =
@@ -2297,7 +2297,7 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
             r.request_focus();
             let reg = app.session.registry.clone();
             // An empty box suggests a few common commands, as Word's Search does.
-            let mut hits: Vec<&wordcraft_engine::CommandSpec> = if query.trim().is_empty() {
+            let mut hits: Vec<&englat_engine::CommandSpec> = if query.trim().is_empty() {
                 ui.label(egui::RichText::new(tl!("Suggested")).font(semibold(12.5)));
                 SEARCH_SUGGESTIONS.iter().filter_map(|id| reg.get(id)).collect()
             } else {
@@ -2342,7 +2342,7 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                 ui.label(egui::RichText::new(text).weak());
             }
             for (i, f) in formats.iter().enumerate() {
-                let label = wordcraft_engine::cmd::paste::FORMATS.iter().find(|(id, _)| id == f).map(|(_, l)| *l).unwrap_or(f.as_str());
+                let label = englat_engine::cmd::paste::FORMATS.iter().find(|(id, _)| id == f).map(|(_, l)| *l).unwrap_or(f.as_str());
                 ui.radio_value(choice, i, tl!(label));
             }
             if let Some(f) = formats.get(*choice) {
@@ -2380,16 +2380,16 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                 1 => crate::credits::contributors_ui(ui),
                 2 => crate::credits::models_ui(ui),
                 _ => {
-                    ui.label(egui::RichText::new(tl!("WordCraft")).font(semibold(22.0)));
-                    let build = option_env!("WORDCRAFT_BUILD_SHA").map(|s| s.get(..8).unwrap_or(s)).unwrap_or(tl!("development build"));
+                    ui.label(egui::RichText::new(tl!("ENGLAT Editor")).font(semibold(22.0)));
+                    let build = option_env!("ENGLAT_EDITOR_BUILD_SHA").map(|s| s.get(..8).unwrap_or(s)).unwrap_or(tl!("development build"));
                     ui.label(crate::i18n::fmt(tl!("Version {version} ({build})"), &[("version", env!("CARGO_PKG_VERSION")), ("build", build)]));
                     ui.label(tl!(
                         "A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team."
                     ));
                     ui.add_space(6.0);
-                    ui.hyperlink_to(tl!("getartcraft.com/apps/wordcraft"), "https://getartcraft.com/apps/wordcraft");
+                    ui.hyperlink_to(tl!("github.com/zi007/englat-editor"), "https://github.com/zi007/englat-editor");
                     ui.hyperlink_to(tl!("Join us on Discord: discord.gg/artcraft"), "https://discord.gg/artcraft");
-                    ui.hyperlink_to(tl!("Source code: github.com/storytold/wordcraft"), "https://github.com/storytold/wordcraft");
+                    ui.hyperlink_to(tl!("Source code: github.com/zi007/englat-editor"), "https://github.com/zi007/englat-editor");
                     ui.add_space(6.0);
                     ui.label(
                         egui::RichText::new(tl!("MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors."))
@@ -2524,7 +2524,7 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                         app.ui.backstage = false;
                         return true;
                     }
-                    Err(e) if wordcraft_engine::io::wrong_password(&e) => {
+                    Err(e) if englat_engine::io::wrong_password(&e) => {
                         *message = tl!("That password isn't right. Check it (passwords are case-sensitive) and try again.").to_string();
                         password.as_mut_string().clear();
                     }
@@ -2549,7 +2549,7 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
             });
             ui.label(
                 egui::RichText::new(tl!(
-                    "Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password."
+                    "Keep the password somewhere safe: without it nobody, ENGLAT Editor included, can open the document. Leave both boxes empty to remove the password."
                 ))
                 .small()
                 .weak(),
@@ -2761,7 +2761,7 @@ fn recipient_list(
     let order: Option<Vec<Option<usize>>> = (!filter.is_empty()).then(|| {
         let (rules, sort) = filter.engine();
         let mut order = vec![None; rows.len()];
-        for (k, i) in wordcraft_engine::cmd::mailings::select_records(fields, rows, &rules, &sort).into_iter().enumerate() {
+        for (k, i) in englat_engine::cmd::mailings::select_records(fields, rows, &rules, &sort).into_iter().enumerate() {
             if let Some(slot) = order.get_mut(i) {
                 *slot = Some(k + 1);
             }
@@ -2958,7 +2958,7 @@ fn recipient_filter(ui: &mut Ui, fields: &[String], filter: &mut RecipientFilter
 /// The Table Properties dialog's fields: Table, Row, Column and Cell sections.
 fn table_properties(ui: &mut Ui, f: &mut TableForm) {
     let unit = crate::options::unit();
-    fn len(v: &mut f32, lo: f32, unit: wordcraft_geom::Unit) -> egui::DragValue<'_> {
+    fn len(v: &mut f32, lo: f32, unit: englat_geom::Unit) -> egui::DragValue<'_> {
         egui::DragValue::new(v).speed(0.01).range(lo..=22.0).measure(unit).max_decimals(2)
     }
     let heading = |ui: &mut Ui, s: &str| {
@@ -3025,9 +3025,9 @@ fn table_properties(ui: &mut Ui, f: &mut TableForm) {
 }
 
 /// The Paragraph dialog as one paragraph's formatting fills it, on page `tab`.
-fn paragraph_dialog(rp: &wordcraft_doc::resolve::ResolvedPara, tab: u8) -> Dialog {
+fn paragraph_dialog(rp: &englat_doc::resolve::ResolvedPara, tab: u8) -> Dialog {
     let line = match rp.line_spacing {
-        wordcraft_doc::props::LineSpacing::Multiple(m) => m,
+        englat_doc::props::LineSpacing::Multiple(m) => m,
         _ => 1.0,
     };
     let (vl, vr) = rp.visual_indents();
@@ -3146,20 +3146,20 @@ fn apply_paragraph(app: &mut WordApp, d: &Dialog) {
 
 /// The innermost bookmark around the caret, which the Bookmark dialog opens on (as Word does);
 /// empty when the caret is in none.
-fn bookmark_at_caret(s: &wordcraft_engine::Session) -> String {
+fn bookmark_at_caret(s: &englat_engine::Session) -> String {
     let at = &s.sel.focus;
     s.doc
         .bookmarks()
         .into_iter()
         .rev()
-        .find(|(name, start)| !name.starts_with('_') && start <= at && *at <= wordcraft_engine::cmd::insert::bookmark_span(&s.doc, name, start).1)
+        .find(|(name, start)| !name.starts_with('_') && start <= at && *at <= englat_engine::cmd::insert::bookmark_span(&s.doc, name, start).1)
         .map(|(name, _)| name)
         .unwrap_or_default()
 }
 
 /// The bookmarks the Bookmark dialog lists: by name or in document order, the hidden ones
 /// (`_Toc…`, `_Ref…`) only when asked for.
-fn bookmark_names(doc: &wordcraft_doc::Document, by_location: bool, hidden: bool) -> Vec<String> {
+fn bookmark_names(doc: &englat_doc::Document, by_location: bool, hidden: bool) -> Vec<String> {
     let mut names: Vec<String> = doc.bookmarks().into_iter().map(|(n, _)| n).filter(|n| hidden || !n.starts_with('_')).collect();
     if !by_location {
         names.sort_by_key(|n| n.to_lowercase());
@@ -3194,7 +3194,7 @@ fn bookmark(app: &mut WordApp, ui: &mut Ui, name: &mut String, by_location: &mut
             ui.add_space(18.0);
             let listed = marks.iter().any(|n| n == name.trim());
             let w = vec2(90.0, 0.0);
-            add = ui.add_enabled(wordcraft_engine::cmd::insert::bookmark_name_ok(name.trim()), egui::Button::new(tl!("Add")).min_size(w)).clicked();
+            add = ui.add_enabled(englat_engine::cmd::insert::bookmark_name_ok(name.trim()), egui::Button::new(tl!("Add")).min_size(w)).clicked();
             delete = ui.add_enabled(listed, egui::Button::new(tl!("Delete")).min_size(w)).clicked();
             go_to = ui.add_enabled(listed, egui::Button::new(tl!("Go To")).min_size(w)).clicked();
         });
@@ -3209,7 +3209,7 @@ fn bookmark(app: &mut WordApp, ui: &mut Ui, name: &mut String, by_location: &mut
     });
     ui.checkbox(hidden, tl!("Hidden bookmarks"));
     let enter = ui.input(|i| i.key_pressed(egui::Key::Enter));
-    if add || (enter && wordcraft_engine::cmd::insert::bookmark_name_ok(name.trim())) {
+    if add || (enter && englat_engine::cmd::insert::bookmark_name_ok(name.trim())) {
         let _ = app.run("insert.bookmark", json!({"name": name.trim()}));
         return true;
     }
@@ -3233,7 +3233,7 @@ fn bookmark(app: &mut WordApp, ui: &mut Ui, name: &mut String, by_location: &mut
 /// Manage Styles' body. Reads the list from `styles.manage`'s data (never re-running the command,
 /// which would ask to open this dialog again) and acts through commands.
 fn manage_styles(app: &mut WordApp, ui: &mut Ui, alphabetical: &mut bool, selected: &mut String) -> bool {
-    let list = wordcraft_engine::cmd::para::manage_list(&app.session, *alphabetical);
+    let list = englat_engine::cmd::para::manage_list(&app.session, *alphabetical);
     let list = list.as_array().cloned().unwrap_or_default();
     let str_of = |v: &Value, k: &str| v.get(k).and_then(Value::as_str).unwrap_or("").to_string();
     if !list.iter().any(|x| str_of(x, "id") == *selected) {
@@ -3417,7 +3417,7 @@ fn swallow_shortcut_text(swallow: &mut bool, e: &egui::Event) -> bool {
 
 /// Search's filter: every word of the query is in the command's label, location or id, in English
 /// or in the interface language, so "insert table" finds Insert › Tables › Table (#819).
-fn command_matches(c: &wordcraft_engine::CommandSpec, query: &str) -> bool {
+fn command_matches(c: &englat_engine::CommandSpec, query: &str) -> bool {
     if query.trim().is_empty() {
         return false;
     }
@@ -3529,7 +3529,7 @@ fn goto_page(text: &str) -> Option<Value> {
 
 /// path data; Insert (or a double click) runs `insert.icon`. Returns true to close.
 fn icons_body(app: &mut WordApp, ui: &mut Ui, query: &mut String, category: &mut String, selected: &mut String) -> bool {
-    use wordcraft_render::icon_lib::{self, Category};
+    use englat_render::icon_lib::{self, Category};
     let t = Tokens::get(ui.ctx());
     ui.set_width(560.0);
     // Typing goes to the search box (never to the document behind the dialog).
@@ -3633,8 +3633,8 @@ fn enclose_preview(ui: &mut Ui, style: &str, text: &str, shape: &str) {
 }
 
 /// Page Setup's "Vertical alignment:" box (Word's Layout tab).
-fn page_valign_combo(ui: &mut egui::Ui, valign: &mut wordcraft_doc::section::PageVAlign) {
-    use wordcraft_doc::section::PageVAlign;
+fn page_valign_combo(ui: &mut egui::Ui, valign: &mut englat_doc::section::PageVAlign) {
+    use englat_doc::section::PageVAlign;
     const CHOICES: [(PageVAlign, &str); 4] =
         [(PageVAlign::Top, "Top"), (PageVAlign::Center, "Center"), (PageVAlign::Justify, "Justified"), (PageVAlign::Bottom, "Bottom")];
     ui.horizontal(|ui| {
@@ -3649,8 +3649,8 @@ fn page_valign_combo(ui: &mut egui::Ui, valign: &mut wordcraft_doc::section::Pag
 }
 
 /// `layout.verticalAlign`'s name for a value.
-fn page_valign_value(v: wordcraft_doc::section::PageVAlign) -> &'static str {
-    use wordcraft_doc::section::PageVAlign;
+fn page_valign_value(v: englat_doc::section::PageVAlign) -> &'static str {
+    use englat_doc::section::PageVAlign;
     match v {
         PageVAlign::Top => "top",
         PageVAlign::Center => "center",
@@ -3662,9 +3662,9 @@ fn page_valign_value(v: wordcraft_doc::section::PageVAlign) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wordcraft_doc::Pos;
-    use wordcraft_doc::props::Align;
-    use wordcraft_engine::Session;
+    use englat_doc::Pos;
+    use englat_doc::props::Align;
+    use englat_engine::Session;
 
     /// Go To's page box (#712): a number, +n / -n from the current page (a typographic minus
     /// too), empty for the next page; anything else is refused.
@@ -3742,12 +3742,12 @@ mod tests {
     }
 
     fn app_with(text: &str) -> WordApp {
-        let mut app = WordApp::new(Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut app = WordApp::new(Session::new(englat_doc::Document::new()), crate::Services::default());
         let _ = app.run("document.setText", json!({"text": text}));
         app
     }
 
-    fn props(app: &WordApp) -> wordcraft_doc::props::ParaProps {
+    fn props(app: &WordApp) -> englat_doc::props::ParaProps {
         app.session.doc.para_at(&app.session.sel.focus).map(|p| p.props.clone()).unwrap_or_default()
     }
 
@@ -3854,8 +3854,8 @@ mod tests {
     }
 
     /// The `i`th paragraph's own formatting.
-    fn para_props(app: &WordApp, i: usize) -> wordcraft_doc::props::ParaProps {
-        app.session.doc.para(wordcraft_doc::StoryRef::Body, &wordcraft_doc::Path::top(i)).map(|p| p.props.clone()).unwrap_or_default()
+    fn para_props(app: &WordApp, i: usize) -> englat_doc::props::ParaProps {
+        app.session.doc.para(englat_doc::StoryRef::Body, &englat_doc::Path::top(i)).map(|p| p.props.clone()).unwrap_or_default()
     }
 
     /// Three paragraphs, the first centred, indented, 30 pt after, kept with the next and with a
@@ -3890,7 +3890,7 @@ mod tests {
         });
         assert_eq!(app.session.undo_depth(), depth + 1, "one undo step");
         for (i, was) in was.iter().enumerate() {
-            assert_eq!(para_props(&app, i), wordcraft_doc::props::ParaProps { space_before: Some(6.0), ..was.clone() }, "paragraph {i}");
+            assert_eq!(para_props(&app, i), englat_doc::props::ParaProps { space_before: Some(6.0), ..was.clone() }, "paragraph {i}");
         }
         let _ = app.run("edit.undo", json!({}));
         assert_eq!((0..3).map(|i| para_props(&app, i)).collect::<Vec<_>>(), was, "undo takes all of it back");
@@ -3941,7 +3941,7 @@ mod tests {
         assert_eq!(p.iter().map(|p| p.keep_next).collect::<Vec<_>>(), [Some(true); 3]);
         assert_eq!(p.iter().map(|p| p.align).collect::<Vec<_>>(), [Some(Align::Center), None, None], "alignment untouched");
         assert_eq!(p.iter().map(|p| p.space_after).collect::<Vec<_>>(), [Some(30.0), None, None], "spacing untouched");
-        assert_eq!(p[0].line_spacing, Some(wordcraft_doc::props::LineSpacing::Multiple(6.0)), "line spacing untouched");
+        assert_eq!(p[0].line_spacing, Some(englat_doc::props::LineSpacing::Multiple(6.0)), "line spacing untouched");
     }
 
     #[test]
@@ -3992,7 +3992,7 @@ mod tests {
 
     #[test]
     fn paragraph_dialog_keeps_fixed_line_spacing() {
-        use wordcraft_doc::props::LineSpacing;
+        use englat_doc::props::LineSpacing;
         for (cmd, rule) in [(json!({"exactly": 24}), LineSpacing::Exactly(24.0)), (json!({"atLeast": 24}), LineSpacing::AtLeast(24.0))] {
             // OK without changes, and OK after changing only Keep with next (#467).
             let mut app = app_with("Example");
@@ -4119,17 +4119,17 @@ mod tests {
             *size = "14".into();
         }
         apply_font(&mut app, &d);
-        let c = app.session.doc.para_at(&wordcraft_doc::Pos::body(0, 0)).map(|p| p.props_of_char(0).clone()).unwrap_or_default();
+        let c = app.session.doc.para_at(&englat_doc::Pos::body(0, 0)).map(|p| p.props_of_char(0).clone()).unwrap_or_default();
         assert_eq!(c.size, Some(14.0));
         assert_eq!((c.small_caps, c.caps, c.hidden, c.spacing), (Some(true), Some(true), Some(true), Some(2.0)));
-        assert_eq!(c.underline, Some(wordcraft_doc::props::Underline::Double));
+        assert_eq!(c.underline, Some(englat_doc::props::Underline::Double));
         // A field the user does change still applies.
         let Some(mut d) = Dialog::open("font", &mut app) else { panic!("no font dialog") };
         if let Dialog::Font { small_caps, .. } = &mut d {
             *small_caps = false;
         }
         apply_font(&mut app, &d);
-        let c = app.session.doc.para_at(&wordcraft_doc::Pos::body(0, 0)).map(|p| p.props_of_char(0).clone()).unwrap_or_default();
+        let c = app.session.doc.para_at(&englat_doc::Pos::body(0, 0)).map(|p| p.props_of_char(0).clone()).unwrap_or_default();
         assert_eq!((c.small_caps, c.caps, c.size), (Some(false), Some(true), Some(14.0)));
     }
 
@@ -4154,7 +4154,7 @@ mod tests {
             app,
         );
         h.run_steps(3);
-        h.get(By::new().role(egui::accesskit::Role::TextInput).value(wordcraft_doc::styles::BODY_FONT)).focus();
+        h.get(By::new().role(egui::accesskit::Role::TextInput).value(englat_doc::styles::BODY_FONT)).focus();
         h.step();
         let key = |key, modifiers| egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers };
         h.event(key(egui::Key::A, egui::Modifiers::COMMAND));
@@ -4165,8 +4165,8 @@ mod tests {
         h.event(key(egui::Key::Enter, egui::Modifiers::NONE));
         h.run_steps(2);
         assert!(h.state().dialog.is_none(), "Enter pressed OK");
-        let rc = h.state().session.doc.styles.resolve_char(Some("Normal"), &wordcraft_doc::CharProps::default());
-        assert_eq!(rc.font, wordcraft_doc::styles::HEADING_FONT);
+        let rc = h.state().session.doc.styles.resolve_char(Some("Normal"), &englat_doc::CharProps::default());
+        assert_eq!(rc.font, englat_doc::styles::HEADING_FONT);
     }
 
     /// A dialog was pinned by its anchor, so dragging its title bar did nothing (#732).
@@ -4231,10 +4231,10 @@ mod tests {
     #[test]
     fn page_setup_reads_the_paper_size() {
         let mut app = app_with("Page");
-        let sect = |app: &WordApp| wordcraft_engine::cmd::page::sect(&app.session);
+        let sect = |app: &WordApp| englat_engine::cmd::page::sect(&app.session);
         let ((w, h), entry) = opened_paper(&mut app);
         assert!((w - sect(&app).page_w).abs() < 0.01 && (h - sect(&app).page_h).abs() < 0.01, "{w}×{h}");
-        assert_eq!(entry, wordcraft_geom::paper_name(w, h));
+        assert_eq!(entry, englat_geom::paper_name(w, h));
         assert!(entry.is_some(), "a new document has a named size");
         let _ = app.run("layout.size", json!({"name": "A4"}));
         let _ = app.run("layout.orientation", json!({"value": "landscape"}));
@@ -4254,7 +4254,7 @@ mod tests {
         let ppu = crate::options::unit().pt_per_unit();
         let size_steps = |app: &WordApp| app.session.undo_labels().iter().filter(|l| l.as_str() == "Size").count();
         let sect = |app: &WordApp| {
-            let s = wordcraft_engine::cmd::page::sect(&app.session);
+            let s = englat_engine::cmd::page::sect(&app.session);
             (s.page_w.round(), s.page_h.round(), s.landscape)
         };
         // OK on an unchanged dialog leaves the size alone.
@@ -4327,7 +4327,7 @@ mod tests {
         assert_eq!(combo(&h).as_deref(), Some("A4"));
         h.get_by_label("OK").click();
         h.run_steps(3);
-        let sect = wordcraft_engine::cmd::page::sect(&h.state().session);
+        let sect = englat_engine::cmd::page::sect(&h.state().session);
         assert_eq!(((sect.page_w * 100.0).round() / 100.0, (sect.page_h * 100.0).round() / 100.0, sect.landscape), (841.89, 595.28, true));
 
         // Portrait A4 again; a width wider than the height turns it to Landscape, Custom size.
@@ -4364,7 +4364,7 @@ mod tests {
         use egui_kittest::kittest::Queryable;
         let ppu = crate::options::unit().pt_per_unit();
         let mut h = app_harness(app_with("Page"));
-        let before = wordcraft_engine::cmd::page::sect(&h.state().session);
+        let before = englat_engine::cmd::page::sect(&h.state().session);
         let undo = h.state().session.undo_depth();
         h.state_mut().run("ui.dialog", json!({"name": "pageSetup"})).unwrap();
         h.run_steps(2);
@@ -4378,7 +4378,7 @@ mod tests {
             matches!(&h.state().dialog, Some(Dialog::PageSetup { message, .. }) if message.contains("margins don't fit")),
             "stays open with a message"
         );
-        assert_eq!((wordcraft_engine::cmd::page::sect(&h.state().session), h.state().session.undo_depth()), (before, undo), "nothing applied");
+        assert_eq!((englat_engine::cmd::page::sect(&h.state().session), h.state().session.undo_depth()), (before, undo), "nothing applied");
 
         if let Some(Dialog::PageSetup { top, bottom, left, right, .. }) = h.state_mut().dialog.as_mut() {
             (*top, *bottom, *left, *right) = (18.0 / ppu, 18.0 / ppu, 18.0 / ppu, 18.0 / ppu);
@@ -4387,7 +4387,7 @@ mod tests {
         h.get_by_label("OK").click();
         h.run_steps(3);
         assert!(h.state().dialog.is_none());
-        let s = wordcraft_engine::cmd::page::sect(&h.state().session);
+        let s = englat_engine::cmd::page::sect(&h.state().session);
         assert_eq!((s.page_w.round(), s.page_h.round(), s.margin_left.round(), s.margin_top.round()), (100.0, 500.0, 18.0, 18.0));
     }
 
@@ -4411,7 +4411,7 @@ mod tests {
     /// size first; the margins first; margins of 0 in between), and Undo restores the section.
     #[test]
     fn page_setup_ok_is_one_undo_step() {
-        let sect = |h: &egui_kittest::Harness<'_, WordApp>| wordcraft_engine::cmd::page::sect(&h.state().session);
+        let sect = |h: &egui_kittest::Harness<'_, WordApp>| englat_engine::cmd::page::sect(&h.state().session);
         // Size first, then orientation and margins.
         let mut h = app_harness(app_with("Page"));
         let (before, depth) = (sect(&h), h.state().session.undo_depth());
@@ -4476,7 +4476,7 @@ mod tests {
     #[test]
     fn page_setup_dialog_sets_vertical_alignment() {
         use egui_kittest::kittest::Queryable;
-        use wordcraft_doc::section::PageVAlign;
+        use englat_doc::section::PageVAlign;
         let mut app = app_with("Some text");
         let _ = app.run("layout.verticalAlign", json!({"value": "bottom"}));
         app.dialog = Dialog::open("pageSetup", &mut app);
@@ -4500,6 +4500,6 @@ mod tests {
         for _ in 0..4 {
             h.step();
         }
-        assert_eq!(wordcraft_engine::cmd::page::sect(&h.state().session).valign, PageVAlign::Justify);
+        assert_eq!(englat_engine::cmd::page::sect(&h.state().session).valign, PageVAlign::Justify);
     }
 }

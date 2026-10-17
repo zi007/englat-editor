@@ -3,8 +3,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde_json::{Value, json};
-use wordcraft_doc::para::InlineObject;
-use wordcraft_doc::{Comment, Paragraph, PartKind, Pos, StoryRef, para_block};
+use englat_doc::para::InlineObject;
+use englat_doc::{Comment, Paragraph, PartKind, Pos, StoryRef, para_block};
 
 use super::{fmt_revisions, now_iso, pos_json, sel_result};
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -70,11 +70,11 @@ pub fn specs() -> Vec<CommandSpec> {
                 return Err(CmdError::Params("no word".into()));
             }
             // The same rule as loading the dictionary file, so a word added is never dropped later.
-            if wordcraft_proof::custom_word(&w).is_none() {
-                let max = wordcraft_proof::MAX_CUSTOM_WORD_CHARS;
+            if englat_proof::custom_word(&w).is_none() {
+                let max = englat_proof::MAX_CUSTOM_WORD_CHARS;
                 return Err(CmdError::Params(format!("{w:?} isn't a single word of at most {max} characters")));
             }
-            wordcraft_proof::add_word(w.trim());
+            englat_proof::add_word(w.trim());
             s.persist_user_dictionary(&[]);
             s.relayout();
             Ok(json!({"added": w}))
@@ -90,7 +90,7 @@ pub fn specs() -> Vec<CommandSpec> {
             };
             // For this session only, as in Word: not added to (or saved with) the dictionary.
             if !w.trim().is_empty() {
-                wordcraft_proof::ignore_word(w.trim());
+                englat_proof::ignore_word(w.trim());
             }
             s.relayout();
             Ok(json!({"ignored": w}))
@@ -163,7 +163,7 @@ fn reply(s: &mut Session, v: &Value) -> CmdResult {
 /// An id no comment has: one past the largest, or the lowest free one once a file used `u32::MAX`.
 fn comment_id(s: &Session) -> Result<u32, CmdError> {
     let ids = &s.doc.comments;
-    wordcraft_doc::free_id(ids.keys().next_back().copied(), ids.keys().copied(), 0).ok_or_else(|| CmdError::Failed("no free comment id".into()))
+    englat_doc::free_id(ids.keys().next_back().copied(), ids.keys().copied(), 0).ok_or_else(|| CmdError::Failed("no free comment id".into()))
 }
 
 /// Replace a comment's (or reply's) text; each line becomes a paragraph.
@@ -227,7 +227,7 @@ fn remove_anchors(s: &mut Session, ids: &BTreeSet<u32>) -> Result<(), CmdError> 
             }
             let para = s.doc.para_mut(story, &path)?;
             for o in offs.into_iter().rev() {
-                para.delete(o, o + wordcraft_doc::para::OBJ.len_utf8())?;
+                para.delete(o, o + englat_doc::para::OBJ.len_utf8())?;
             }
         }
     }
@@ -325,7 +325,7 @@ fn nav_comment(s: &mut Session, dir: i32) -> CmdResult {
 fn resolve_para(
     s: &mut Session,
     story: StoryRef,
-    path: &wordcraft_doc::Path,
+    path: &englat_doc::Path,
     from: usize,
     to: usize,
     mark: bool,
@@ -385,7 +385,7 @@ fn resolve_para(
 
 /// Accept or reject the changes of the table cell `path` is in: the table's, its row's and the
 /// cell's own. Returns whether there were any.
-fn resolve_cell(s: &mut Session, story: StoryRef, path: &wordcraft_doc::Path, accept: bool) -> Result<bool, CmdError> {
+fn resolve_cell(s: &mut Session, story: StoryRef, path: &englat_doc::Path, accept: bool) -> Result<bool, CmdError> {
     let Some((tp, r, c)) = path.cell() else { return Ok(false) };
     let has = s.doc.table(story, &tp).is_some_and(|t| {
         let row = t.rows.get(r);
@@ -425,7 +425,7 @@ impl Change {
 
 /// The tracked paragraph mark at the end of the paragraph at `path`, as a change range: from
 /// the paragraph's end to the start of the next paragraph (or the end itself when none follows).
-fn mark_change(s: &Session, story: StoryRef, path: &wordcraft_doc::Path) -> Option<Change> {
+fn mark_change(s: &Session, story: StoryRef, path: &englat_doc::Path) -> Option<Change> {
     let p = s.doc.para(story, path)?;
     let kind = run_kind(&s.doc, p.mark.ins, p.mark.del);
     if kind.is_empty() {
@@ -438,7 +438,7 @@ fn mark_change(s: &Session, story: StoryRef, path: &wordcraft_doc::Path) -> Opti
 
 /// The kind of an insertion / deletion change: `insert`, `delete`, or for one end of a move
 /// `moveTo` / `moveFrom`; empty when neither.
-fn run_kind(doc: &wordcraft_doc::Document, ins: Option<u32>, del: Option<u32>) -> &'static str {
+fn run_kind(doc: &englat_doc::Document, ins: Option<u32>, del: Option<u32>) -> &'static str {
     match (ins, del) {
         (Some(_), _) if doc.move_name(ins).is_some() => "moveTo",
         (Some(_), _) => "insert",
@@ -580,7 +580,7 @@ fn resolve_sel(s: &mut Session, accept: bool) -> CmdResult {
 
 fn changes(s: &Session) -> Vec<Change> {
     let mut out: Vec<Change> = Vec::new();
-    let mk = |path: &wordcraft_doc::Path, off| Pos { story: StoryRef::Body, path: path.clone(), off };
+    let mk = |path: &englat_doc::Path, off| Pos { story: StoryRef::Body, path: path.clone(), off };
     for path in s.doc.para_paths(StoryRef::Body) {
         let Some(p) = s.doc.para(StoryRef::Body, &path) else { continue };
         // A table's, row's and cell's changes sit at the start of the cell's first paragraph.
@@ -648,7 +648,7 @@ pub fn format_changes(s: &Session) -> Vec<(Pos, String, Vec<Value>)> {
 }
 
 /// Whether the document has any tracked formatting change (cheap: stops at the first).
-pub fn has_format_changes(doc: &wordcraft_doc::Document) -> bool {
+pub fn has_format_changes(doc: &englat_doc::Document) -> bool {
     if doc.last_section.fmt_change.is_some() {
         return true;
     }
@@ -687,7 +687,7 @@ const MAX_DELETION_BALLOONS: usize = 500;
 pub fn deletion_balloons(s: &Session) -> Vec<DeletionBalloon> {
     let doc = &s.doc;
     let author = |rev: u32| doc.revisions.get(rev as usize).map(|r| r.author.clone()).unwrap_or_default();
-    let mk = |path: &wordcraft_doc::Path, off| Pos { story: StoryRef::Body, path: path.clone(), off };
+    let mk = |path: &englat_doc::Path, off| Pos { story: StoryRef::Body, path: path.clone(), off };
     let mut out = Vec::new();
     for path in doc.para_paths(StoryRef::Body) {
         let Some(p) = doc.para(StoryRef::Body, &path) else { continue };
@@ -725,8 +725,8 @@ fn push_deletion(out: &mut Vec<(DeletionBalloon, Pos, usize)>, at: Pos, end: Pos
         }
         let c = match c {
             // Pictures, fields and other objects show no text of their own.
-            wordcraft_doc::para::OBJ => continue,
-            '\t' | wordcraft_doc::para::LINE_BREAK | wordcraft_doc::para::PAGE_BREAK | wordcraft_doc::para::COLUMN_BREAK => ' ',
+            englat_doc::para::OBJ => continue,
+            '\t' | englat_doc::para::LINE_BREAK | englat_doc::para::PAGE_BREAK | englat_doc::para::COLUMN_BREAK => ' ',
             c if c.is_control() => continue,
             c => c,
         };
@@ -737,13 +737,13 @@ fn push_deletion(out: &mut Vec<(DeletionBalloon, Pos, usize)>, at: Pos, end: Pos
 
 /// A deletion revision that is not the source of a move (`w:moveFrom` is a deletion revision
 /// with a move name).
-fn plain_deletion(doc: &wordcraft_doc::Document, del: Option<u32>) -> Option<u32> {
+fn plain_deletion(doc: &englat_doc::Document, del: Option<u32>) -> Option<u32> {
     del.filter(|_| doc.move_name(del).is_none())
 }
 
 /// Whether the body has any tracked deletion other than a move's source (cheap: stops at the
 /// first).
-pub fn has_deletions(doc: &wordcraft_doc::Document) -> bool {
+pub fn has_deletions(doc: &englat_doc::Document) -> bool {
     doc.para_paths(StoryRef::Body).iter().any(|path| {
         doc.para(StoryRef::Body, path)
             .is_some_and(|p| plain_deletion(doc, p.mark.del).is_some() || p.runs.iter().any(|r| plain_deletion(doc, r.props.del).is_some()))
@@ -804,7 +804,7 @@ fn word_count(s: &mut Session, v: &Value) -> CmdResult {
     let words = if s.sel.is_collapsed() || super::objects::object_selection(s).is_some() {
         stories.iter().map(|st| s.doc.story_word_count(*st)).sum()
     } else {
-        wordcraft_doc::count_words(&text)
+        englat_doc::count_words(&text)
     };
     let chars = text.chars().filter(|c| *c != '\n').count();
     let chars_no_spaces = text.chars().filter(|c| !c.is_whitespace()).count();
@@ -815,7 +815,7 @@ fn word_count(s: &mut Session, v: &Value) -> CmdResult {
             .iter()
             .flat_map(|p| p.items.iter())
             .map(|it| {
-                if let wordcraft_layout::Placed::Lines { l0, l1, story, .. } = it
+                if let englat_layout::Placed::Lines { l0, l1, story, .. } = it
                     && stories.contains(story)
                 {
                     l1 - l0
@@ -834,26 +834,26 @@ fn word_count(s: &mut Session, v: &Value) -> CmdResult {
 
 /// Issues (spelling + grammar) in one paragraph as positions, each in its run's language and
 /// skipping text left unchecked — the same issues the layout underlines.
-fn para_issues(s: &Session, story: StoryRef, path: &wordcraft_doc::Path) -> Vec<(Pos, Pos, wordcraft_proof::Issue)> {
+fn para_issues(s: &Session, story: StoryRef, path: &englat_doc::Path) -> Vec<(Pos, Pos, englat_proof::Issue)> {
     let Some(p) = s.doc.para(story, path) else { return Vec::new() };
-    let runs = wordcraft_layout::para::proof_runs(&s.doc, p, None);
-    wordcraft_layout::para::paragraph_issues(p, &runs, &s.prefs.spelling(), true)
+    let runs = englat_layout::para::proof_runs(&s.doc, p, None);
+    englat_layout::para::paragraph_issues(p, &runs, &s.prefs.spelling(), true)
         .into_iter()
         .map(|i| (Pos { story, path: path.clone(), off: i.start }, Pos { story, path: path.clone(), off: i.end }, i))
         .collect()
 }
 
 /// The issue under a position.
-fn issue_at(s: &Session, at: &Pos) -> Option<(Pos, Pos, wordcraft_proof::Issue)> {
+fn issue_at(s: &Session, at: &Pos) -> Option<(Pos, Pos, englat_proof::Issue)> {
     para_issues(s, at.story, &at.path).into_iter().find(|(a, b, _)| a.off <= at.off && at.off <= b.off)
 }
 
-fn issue_json(s: &Session, a: &Pos, b: &Pos, i: &wordcraft_proof::Issue) -> Value {
+fn issue_json(s: &Session, a: &Pos, b: &Pos, i: &englat_proof::Issue) -> Value {
     let word = s.doc.para_at(a).and_then(|p| p.text.get(a.off..b.off)).unwrap_or("").to_string();
-    let sugg = if i.kind == wordcraft_proof::IssueKind::Spelling { wordcraft_proof::suggest_in(&word, 6, i.lang) } else { i.suggestions.clone() };
+    let sugg = if i.kind == englat_proof::IssueKind::Spelling { englat_proof::suggest_in(&word, 6, i.lang) } else { i.suggestions.clone() };
     json!({
         "start": pos_json(a), "end": pos_json(b), "text": word,
-        "kind": if i.kind == wordcraft_proof::IssueKind::Spelling { "spelling" } else { "grammar" },
+        "kind": if i.kind == englat_proof::IssueKind::Spelling { "spelling" } else { "grammar" },
         "message": i.message, "suggestions": sugg, "lang": i.lang.code(),
     })
 }
@@ -948,8 +948,8 @@ fn thesaurus(s: &mut Session, v: &Value) -> CmdResult {
 
 /// Track Changes Options: change the fields given, return them all. A per-user preference.
 fn tracking_options(s: &mut Session, v: &Value) -> CmdResult {
-    use wordcraft_doc::Rgb;
-    use wordcraft_layout::display::{BalloonMode, ChangeBar, CommentDisplay, DeleteMark, InsertMark};
+    use englat_doc::Rgb;
+    use englat_layout::display::{BalloonMode, ChangeBar, CommentDisplay, DeleteMark, InsertMark};
     let mut m = s.prefs.markup.clone();
     let color = |k: &str, auto: &str, cur: Option<Rgb>| -> Result<Option<Rgb>, CmdError> {
         match p::str(v, k) {
@@ -997,8 +997,8 @@ fn tracking_options(s: &mut Session, v: &Value) -> CmdResult {
 }
 
 /// The Track Changes Options as `review.trackingOptions` takes them.
-pub fn tracking_json(m: &wordcraft_layout::display::MarkupOptions) -> Value {
-    let hex = |c: Option<wordcraft_doc::Rgb>, auto: &str| c.map(|c| c.hex()).unwrap_or_else(|| auto.to_string());
+pub fn tracking_json(m: &englat_layout::display::MarkupOptions) -> Value {
+    let hex = |c: Option<englat_doc::Rgb>, auto: &str| c.map(|c| c.hex()).unwrap_or_else(|| auto.to_string());
     json!({
         "comments": m.comments,
         "ink": m.ink,
@@ -1019,8 +1019,8 @@ pub fn tracking_json(m: &wordcraft_layout::display::MarkupOptions) -> Value {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use wordcraft_doc::Document;
-    use wordcraft_layout::display::{DisplayOptions, Draw, page_display};
+    use englat_doc::Document;
+    use englat_layout::display::{DisplayOptions, Draw, page_display};
 
     use crate::Session;
 
@@ -1032,7 +1032,7 @@ mod tests {
         (page_display(&s.doc, page, &opts), page.body.x)
     }
 
-    fn glyph_colors(d: &[Draw]) -> Vec<(wordcraft_doc::Rgb, bool)> {
+    fn glyph_colors(d: &[Draw]) -> Vec<(englat_doc::Rgb, bool)> {
         d.iter().filter_map(|x| if let Draw::Glyphs { color, synth_bold, .. } = x { Some((*color, *synth_bold)) } else { None }).collect()
     }
 
@@ -1061,7 +1061,7 @@ mod tests {
         assert_eq!(bars.len(), 1, "one changed line, one bar in the left margin");
         let horizontal = lines(&d).into_iter().filter(|(_, y0, _, y1)| y0 == y1).count();
         assert_eq!(horizontal, 2, "an underline and a strikethrough: {:?}", lines(&d));
-        let author = glyph_colors(&d).iter().filter(|(c, _)| *c != wordcraft_doc::Rgb::BLACK).count();
+        let author = glyph_colors(&d).iter().filter(|(c, _)| *c != englat_doc::Rgb::BLACK).count();
         assert!(author >= 2, "insertion and deletion in the author's colour");
 
         // Bold, fixed-colour insertions; hidden deletions; no bars.
@@ -1074,7 +1074,7 @@ mod tests {
         assert_eq!((r["insertMark"].as_str(), r["deleteColor"].as_str(), r["balloons"].as_str()), (Some("bold"), Some("byAuthor"), Some("inline")));
         let (d, _) = draws(&mut s);
         assert!(lines(&d).is_empty(), "no underline, no strikethrough, no bar: {:?}", lines(&d));
-        assert!(glyph_colors(&d).contains(&(wordcraft_doc::Rgb(0, 0xAA, 0), true)), "a bold green insertion");
+        assert!(glyph_colors(&d).contains(&(englat_doc::Rgb(0, 0xAA, 0), true)), "a bold green insertion");
         let text: String = d.iter().filter_map(|x| if let Draw::Glyphs { text, .. } = x { Some(text.as_str()) } else { None }).collect();
         assert!(!text.contains("gone"), "the deletion takes no room: {text:?}");
 
@@ -1086,7 +1086,7 @@ mod tests {
     /// #1055: comments show in the margin as in Word unless the option says otherwise.
     #[test]
     fn comment_display_defaults_to_margin_and_is_validated() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(englat_doc::Document::new());
         assert_eq!(s.run("review.trackingOptions", &json!({})).unwrap()["commentDisplay"], "margin");
         assert_eq!(s.run("review.trackingOptions", &json!({"commentDisplay": "selected"})).unwrap()["commentDisplay"], "selected");
         assert_eq!(s.run("review.trackingOptions", &json!({})).unwrap()["commentDisplay"], "selected");
@@ -1097,7 +1097,7 @@ mod tests {
     /// #1055: the caret's own comment is the one whose range holds it, not any in its paragraph.
     #[test]
     fn comment_range_at_caret_needs_the_caret_inside_the_range() {
-        let mut s = Session::new(wordcraft_doc::Document::from_text("one two three"));
+        let mut s = Session::new(englat_doc::Document::from_text("one two three"));
         s.run("select.text", &json!({"text": "two"})).unwrap();
         let id = s.run("review.newComment", &json!({"text": "note"})).unwrap()["id"].as_u64().unwrap() as u32;
         s.run("select.text", &json!({"text": "two"})).unwrap();
@@ -1138,11 +1138,11 @@ mod tests {
         let horizontal = lines(&d).into_iter().filter(|(_, y0, _, y1)| y0 == y1).count();
         assert_eq!(horizontal, 0, "no strikethrough left behind: {:?}", lines(&d));
         assert_eq!(lines(&d).into_iter().filter(|(x0, _, x1, _)| x0 == x1 && *x0 < body_x).count(), 1, "the changed line keeps its bar");
-        let at = wordcraft_doc::Pos::body(0, 5);
+        let at = englat_doc::Pos::body(0, 5);
         assert_eq!(deletion_balloons(&s), vec![DeletionBalloon { at: at.clone(), author: "Ana".into(), text: "gone ".into() }]);
         // The balloon's anchor is where the deletion was: between "keep " and "stay".
         let l = s.layout();
-        let (anchor, stay) = (l.caret(&at).unwrap().x, l.caret(&wordcraft_doc::Pos::body(0, 10)).unwrap().x);
+        let (anchor, stay) = (l.caret(&at).unwrap().x, l.caret(&englat_doc::Pos::body(0, 10)).unwrap().x);
         assert!((anchor - stay).abs() < 0.01, "the deletion takes no room: {anchor} vs {stay}");
 
         // No balloons beside the page while the Comments pane lists comments: inline again.
@@ -1177,7 +1177,7 @@ mod tests {
         let b = deletion_balloons(&s);
         let got: Vec<(&str, &str)> = b.iter().map(|d| (d.author.as_str(), d.text.as_str())).collect();
         assert_eq!(got, vec![("Ana", "two¶three"), ("Bo", " four")]);
-        assert_eq!(b[0].at, wordcraft_doc::Pos::body(0, 4));
+        assert_eq!(b[0].at, englat_doc::Pos::body(0, 4));
 
         // A deletion far longer than a balloon shows: its first characters and an ellipsis.
         let mut s = Session::new(Document::new());
@@ -1198,7 +1198,7 @@ mod tests {
     #[test]
     fn a_moves_source_gets_no_deletion_balloon() {
         use super::{DeletionBalloon, deletion_balloons, has_deletions, move_changes};
-        use wordcraft_doc::Pos;
+        use englat_doc::Pos;
         let mut s = Session::new(Document::new());
         s.run("document.setText", &json!({"text": "First one.\nSecond one.\nThird one."})).unwrap();
         s.run("file.setAuthor", &json!({"name": "Ana"})).unwrap();
@@ -1231,7 +1231,7 @@ mod tests {
     #[test]
     fn deletions_outside_the_body_stay_inline_when_revisions_go_in_balloons() {
         use super::{DeletionBalloon, deletion_balloons};
-        use wordcraft_doc::{Path, Pos, StoryRef};
+        use englat_doc::{Path, Pos, StoryRef};
         let mut s = Session::new(Document::new());
         s.view.proofing = false;
         s.author = "Ana".into();
@@ -1285,8 +1285,8 @@ mod tests {
         assert_eq!(deletion_balloons(&s), vec![DeletionBalloon { at: Pos::body(0, at), author: "Ana".into(), text: "zeta".into() }]);
     }
 
-    fn body_para(s: &Session) -> &wordcraft_doc::Paragraph {
-        s.doc.para(wordcraft_doc::StoryRef::Body, &wordcraft_doc::Path::top(0)).unwrap()
+    fn body_para(s: &Session) -> &englat_doc::Paragraph {
+        s.doc.para(englat_doc::StoryRef::Body, &englat_doc::Path::top(0)).unwrap()
     }
 
     /// A comment inside a tracked insertion splits it into several runs; Accept and Reject at the
@@ -1307,7 +1307,7 @@ mod tests {
             let p = body_para(&s);
             assert!(p.runs.iter().all(|r| r.props.ins.is_none()), "no tracked insertion is left");
             // The comment's anchors are objects in the text; read past them.
-            let shown: String = p.text.chars().filter(|c| *c != wordcraft_doc::para::OBJ).collect();
+            let shown: String = p.text.chars().filter(|c| *c != englat_doc::para::OBJ).collect();
             assert_eq!(shown.contains("hello"), accept, "{:?}", p.text);
         }
     }
@@ -1340,7 +1340,7 @@ mod tests {
         let ch = p.props_of_char(6).fmt_change.as_deref().expect("a formatting change on \"words\"");
         assert_eq!((ch.old.bold, ch.old.size), (None, None), "the formatting before the first change is kept");
         let rev = &s.doc.revisions[ch.rev as usize];
-        assert_eq!((rev.kind, rev.author.as_str()), (wordcraft_doc::RevisionKind::Format, "Ana"));
+        assert_eq!((rev.kind, rev.author.as_str()), (englat_doc::RevisionKind::Format, "Ana"));
         assert!(p.props_of_char(0).fmt_change.is_none() && p.props_of_char(13).fmt_change.is_none());
         assert_eq!(p.props.fmt_change.as_deref().map(|c| c.old.align), Some(None));
 
@@ -1380,15 +1380,15 @@ mod tests {
         assert!(p.props.fmt_change.is_some(), "the paragraph's change is still there");
         s.run("review.acceptAll", &json!({})).unwrap();
         let p = body_para(&s);
-        assert_eq!((p.props.align, p.props.fmt_change.is_none()), (Some(wordcraft_doc::props::Align::Center), true));
+        assert_eq!((p.props.align, p.props.fmt_change.is_none()), (Some(englat_doc::props::Align::Center), true));
         assert!(s.run("review.changes", &json!({})).unwrap().as_array().unwrap().is_empty());
     }
 
     /// Comment anchors left in any story (the body, headers, footers, notes and text boxes), with
     /// the story each sits in.
-    fn anchors(s: &Session) -> Vec<(wordcraft_doc::StoryRef, u32)> {
-        use wordcraft_doc::StoryRef;
-        use wordcraft_doc::para::InlineObject;
+    fn anchors(s: &Session) -> Vec<(englat_doc::StoryRef, u32)> {
+        use englat_doc::StoryRef;
+        use englat_doc::para::InlineObject;
         let stories = std::iter::once(StoryRef::Body).chain(s.doc.parts.keys().map(|k| StoryRef::Part(*k)));
         let mut ids = Vec::new();
         for story in stories {
@@ -1414,7 +1414,7 @@ mod tests {
         let hdr = s.run("insert.header", &json!({"text": "Header text"})).unwrap()["story"].as_u64().unwrap() as u32;
         s.run("select.all", &json!({})).unwrap();
         let id = s.run("review.newComment", &json!({"text": "in the header"})).unwrap()["id"].as_u64().unwrap() as u32;
-        let in_header = vec![(wordcraft_doc::StoryRef::Part(hdr), id); 2];
+        let in_header = vec![(englat_doc::StoryRef::Part(hdr), id); 2];
         assert_eq!(anchors(&s), in_header, "both anchors sit in the header");
         s.run("review.deleteComment", &json!({"id": id})).unwrap();
         assert!(anchors(&s).is_empty(), "no anchor points at the deleted comment");
@@ -1473,7 +1473,7 @@ mod tests {
         let root = s.run("review.newComment", &json!({"text": "root"})).unwrap()["id"].as_u64().unwrap() as u32;
         let template = s.doc.comments.get(&root).unwrap().clone();
         for k in 1..=50_000u32 {
-            s.doc.comments.insert(root + k, wordcraft_doc::Comment { parent: Some(root + k - 1), ..template.clone() });
+            s.doc.comments.insert(root + k, englat_doc::Comment { parent: Some(root + k - 1), ..template.clone() });
         }
         let started = std::time::Instant::now();
         s.run("review.deleteComment", &json!({"id": root})).unwrap();
@@ -1484,17 +1484,17 @@ mod tests {
     #[test]
     fn rtf_tracked_changes_accept_and_reject_after_opening_and_round_trip() {
         // Gap 19: an RTF file's tracked insertions and deletions open as tracked changes, also
-        // after a WordCraft → RTF → WordCraft round trip.
+        // after a ENGLAT Editor → RTF → ENGLAT Editor round trip.
         let rtf: &[u8] = br"{\rtf1\ansi\deff0{\fonttbl{\f0 Arial;}}{\*\revtbl {Unknown;}{Alice;}{Bob;}}
 \pard Keep {\revised\revauth1\revdttm-1480361314 added }text{\deleted\revauthdel2\revdttmdel-2016341499  gone} end{\revised\revauth1\revdttm-1480361314\deleted\revauthdel2\revdttmdel-2016341499  both}.\par}";
-        let opened = wordcraft_formats::rtf::import(rtf).unwrap();
-        let again = wordcraft_formats::rtf::import(wordcraft_formats::rtf::export(&opened).as_bytes()).unwrap();
+        let opened = englat_formats::rtf::import(rtf).unwrap();
+        let again = englat_formats::rtf::import(englat_formats::rtf::export(&opened).as_bytes()).unwrap();
         for doc in [opened, again] {
             for (cmd, want) in [("review.acceptAll", "Keep added text end."), ("review.rejectAll", "Keep text gone end.")] {
                 let mut s = Session::new(doc.clone());
                 assert!(!s.run("review.changes", &json!({})).unwrap().as_array().unwrap().is_empty(), "{cmd}");
                 s.run(cmd, &json!({})).unwrap();
-                assert_eq!(s.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end(), want, "{cmd}");
+                assert_eq!(s.doc.plain_text(englat_doc::StoryRef::Body).trim_end(), want, "{cmd}");
                 assert!(s.run("review.changes", &json!({})).unwrap().as_array().unwrap().is_empty(), "{cmd}");
             }
         }

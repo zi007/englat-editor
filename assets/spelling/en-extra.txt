@@ -231,7 +231,7 @@ wifi
 wiki
 wikipedia
 wireframe
-wordcraft
+englat-editor
 workaround
 workflow
 workforce

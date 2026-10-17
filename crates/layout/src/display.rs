@@ -1,12 +1,12 @@
 //! Page → draw items, shared by the raster renderer, the PDF exporter and thumbnails.
 
-use wordcraft_doc::graphic::{Graphic, GraphicItem, GraphicKind, PathSeg, TextAlign};
-use wordcraft_doc::para::{InlineObject, ShapeKind};
-use wordcraft_doc::props::{Border, BorderStyle, Rgb, TextColor, TextDirection, Underline};
-use wordcraft_doc::section::SectionStart;
-use wordcraft_doc::{Block, Document, Path, StoryRef};
-use wordcraft_fonts::{BezPath, FaceRef};
-use wordcraft_geom::{Rect, Spin};
+use englat_doc::graphic::{Graphic, GraphicItem, GraphicKind, PathSeg, TextAlign};
+use englat_doc::para::{InlineObject, ShapeKind};
+use englat_doc::props::{Border, BorderStyle, Rgb, TextColor, TextDirection, Underline};
+use englat_doc::section::SectionStart;
+use englat_doc::{Block, Document, Path, StoryRef};
+use englat_fonts::{BezPath, FaceRef};
+use englat_geom::{Rect, Spin};
 
 use crate::math::MItem;
 use crate::para::{ClKind, LineEnd, ParaLayout};
@@ -77,9 +77,9 @@ pub enum Draw {
         fill: Option<Rgb>,
         stroke: Option<Rgb>,
         stroke_width: f32,
-        /// Shadow, glow and soft edges (drawn with [`wordcraft_doc::effects::bands`]).
-        effects: wordcraft_doc::effects::ShapeEffects,
-        /// A rounded rectangle's corner ([`wordcraft_doc::connector::ShapeExtra::corner`]).
+        /// Shadow, glow and soft edges (drawn with [`englat_doc::effects::bands`]).
+        effects: englat_doc::effects::ShapeEffects,
+        /// A rounded rectangle's corner ([`englat_doc::connector::ShapeExtra::corner`]).
         corner: Option<u32>,
     },
     /// An ink stroke: a line through `pts` (page points) with round ends and joins, `width`
@@ -104,7 +104,7 @@ pub enum Draw {
     /// Text drawn from its outlines with WordArt effects (and bent, in a warped text box):
     /// `path` in page coordinates, painted as [`crate::wordart::art_layers`] says. `color` is the
     /// run's own colour, the fill when the effects set none.
-    Art { path: BezPath, fx: Box<wordcraft_doc::wordart::TextEffects>, color: Rgb, alpha: f32 },
+    Art { path: BezPath, fx: Box<englat_doc::wordart::TextEffects>, color: Rgb, alpha: f32 },
     /// A formatting-mark label (a section break's name) in the UI's mark colour, left edge at
     /// `x`, drawn with the same face as [`Draw::Mark`]. Screen only, like every mark.
     MarkText { x: f32, baseline: f32, size: f32, text: String },
@@ -422,7 +422,7 @@ fn cell_clip(clips: &[(StoryRef, Vec<u32>, Rect)], story: StoryRef, path: &[u32]
 
 /// The text boxes among `items` whose text is warped (Text Effects › Transform, drawn bent): their
 /// story, frame and warp. Empty, without a walk of the document, when none is.
-fn warped_boxes(doc: &Document, items: &[Placed]) -> Vec<(u32, Rect, wordcraft_doc::wordart::TextWarp)> {
+fn warped_boxes(doc: &Document, items: &[Placed]) -> Vec<(u32, Rect, englat_doc::wordart::TextWarp)> {
     items
         .iter()
         .filter_map(|it| {
@@ -442,7 +442,7 @@ fn warped_text(
     doc: &Document,
     lines: &[&Placed],
     rect: Rect,
-    warp: &wordcraft_doc::wordart::TextWarp,
+    warp: &englat_doc::wordart::TextWarp,
     opts: &DisplayOptions,
     alpha: f32,
     out: &mut Vec<Draw>,
@@ -452,7 +452,7 @@ fn warped_text(
         item(doc, it, opts, alpha, &mut raw);
     }
     // The letters: runs with effects as they are, plain runs from their glyphs.
-    let mut arts: Vec<(BezPath, Box<wordcraft_doc::wordart::TextEffects>, Rgb, f32)> = Vec::new();
+    let mut arts: Vec<(BezPath, Box<englat_doc::wordart::TextEffects>, Rgb, f32)> = Vec::new();
     let mut hidden = Vec::new();
     for d in &raw {
         match d {
@@ -776,8 +776,8 @@ fn lines(
                     } else if let Some(p) = para {
                         let t = p.text.get(c.start..c.end).unwrap_or("");
                         // Symbol-font characters (Wingdings…) read as the Unicode symbols drawn.
-                        if wordcraft_doc::symbol_fonts::is_symbol_font(&st.rc.font) {
-                            text.push_str(&wordcraft_doc::symbol_fonts::map_text(&st.rc.font, t));
+                        if englat_doc::symbol_fonts::is_symbol_font(&st.rc.font) {
+                            text.push_str(&englat_doc::symbol_fonts::map_text(&st.rc.font, t));
                         } else if st.rc.caps || st.rc.small_caps {
                             // All Caps and Small Caps read as the capitals drawn (#1473), mapped
                             // as drawn, so a glyph never stands for two cases and ß reads as SS (#1581).
@@ -1188,7 +1188,7 @@ pub fn section_break_label(start: SectionStart) -> &'static str {
 
 /// Width of a [`Draw::MarkText`] label.
 pub fn mark_text_width(text: &str, size: f32) -> f32 {
-    let face = wordcraft_fonts::word::resolve("Source Sans 3", false, false).face;
+    let face = englat_fonts::word::resolve("Source Sans 3", false, false).face;
     let k = size / face.upem.max(1.0) as f32;
     text.chars().map(|c| face.advance(face.glyph_for(c)) as f32 * k).sum()
 }
@@ -1342,9 +1342,9 @@ fn shape_draws(
     fill: Option<Rgb>,
     stroke: Option<Rgb>,
     stroke_width: f32,
-    effects: wordcraft_doc::effects::ShapeEffects,
-    freeform: Option<&wordcraft_doc::freeform::Freeform>,
-    extra: &wordcraft_doc::connector::ShapeExtra,
+    effects: englat_doc::effects::ShapeEffects,
+    freeform: Option<&englat_doc::freeform::Freeform>,
+    extra: &englat_doc::connector::ShapeExtra,
     opts: &DisplayOptions,
     out: &mut Vec<Draw>,
 ) {
@@ -1422,11 +1422,11 @@ fn line_draws(
     kind: ShapeKind,
     stroke: Option<Rgb>,
     stroke_width: f32,
-    effects: wordcraft_doc::effects::ShapeEffects,
-    extra: &wordcraft_doc::connector::ShapeExtra,
+    effects: englat_doc::effects::ShapeEffects,
+    extra: &englat_doc::connector::ShapeExtra,
     out: &mut Vec<Draw>,
 ) {
-    use wordcraft_doc::connector::{connector_segs, end_direction};
+    use englat_doc::connector::{connector_segs, end_direction};
     match connector_segs(kind, rect.w, rect.h) {
         Some(segs) => {
             let segs = segs
@@ -1486,15 +1486,15 @@ fn text_glyphs(doc: &Document, r: Rect, it: &GraphicItem, alpha: f32, k: f32) ->
     }
     let family = font.as_deref().filter(|f| !f.is_empty()).unwrap_or(&doc.settings.minor_font);
     let size = size.clamp(1.0, 400.0);
-    let resolved = wordcraft_fonts::word::resolve(family, *bold, false);
+    let resolved = englat_fonts::word::resolve(family, *bold, false);
     let face = resolved.face.get();
-    let shaped = wordcraft_fonts::shape(face, text, &[], |c| c);
+    let shaped = englat_fonts::shape(face, text, &[], |c| c);
     if shaped.is_empty() {
         return None;
     }
     let k = size / face.upem.max(1.0) as f32;
     let width: f32 = shaped.iter().map(|g| g.x_advance as f32 * k).sum();
-    let (ascent, descent) = wordcraft_fonts::word::line_metrics(face);
+    let (ascent, descent) = englat_fonts::word::line_metrics(face);
     let baseline = r.y + r.h / 2.0 + (ascent - descent) as f32 * k / 2.0;
     let mut pen = match align {
         TextAlign::Left => r.x,
@@ -1591,12 +1591,12 @@ fn object_draws(o: &InlineObject, rect: Rect, outer: Spin, alpha: f32, opts: &Di
 /// A shape's `effects` as drawn turned by `spin` (all the turns it is drawn inside): glows and
 /// soft edges turn with the shape, and so does a shadow's offset when it rotates with the shape
 /// (`rotWithShape`); one that doesn't keeps its direction on the page, so its angle is turned back.
-pub(crate) fn effects_in(effects: wordcraft_doc::effects::ShapeEffects, spin: Spin) -> wordcraft_doc::effects::ShapeEffects {
+pub(crate) fn effects_in(effects: englat_doc::effects::ShapeEffects, spin: Spin) -> englat_doc::effects::ShapeEffects {
     let mut e = effects;
     if let Some(s) = e.shadow.as_mut().filter(|s| !s.rot_with_shape && !spin.is_identity()) {
         let a = s.angle.to_radians();
         let (dx, dy) = spin.unapply(0.0, 0.0, a.cos(), a.sin());
-        s.angle = wordcraft_geom::normalize_degrees(dy.atan2(dx).to_degrees());
+        s.angle = englat_geom::normalize_degrees(dy.atan2(dx).to_degrees());
     }
     e
 }
@@ -1610,7 +1610,7 @@ pub(crate) fn inline_rect(obj: Option<&InlineObject>, cx: f32, base: f32, adv: f
     let room = Rect::new(cx + l, base - obj_h + t, (adv - l - r).max(0.0), (obj_h - t - b).max(0.0));
     let Some((w, h, float)) = frame.filter(|(_, _, f)| f.rot != 0.0) else { return room };
     // The room is the rotated bounds of the frame: undo the rotation.
-    let (w, h) = (wordcraft_geom::finite(w).clamp(1.0, 4000.0), wordcraft_geom::finite(h).clamp(1.0, 4000.0));
+    let (w, h) = (englat_geom::finite(w).clamp(1.0, 4000.0), englat_geom::finite(h).clamp(1.0, 4000.0));
     let (bw, _) = float.spin().extent(w, h);
     let k = if bw > 0.0 { room.w / bw } else { 1.0 };
     let (fw, fh) = (w * k, h * k);
@@ -1618,7 +1618,7 @@ pub(crate) fn inline_rect(obj: Option<&InlineObject>, cx: f32, base: f32, adv: f
 }
 
 /// A Drawing Canvas's background and outline over its frame `rect`.
-fn canvas_background(rect: Rect, c: &wordcraft_doc::para::CanvasStyle) -> Draw {
+fn canvas_background(rect: Rect, c: &englat_doc::para::CanvasStyle) -> Draw {
     Draw::Shape {
         rect,
         kind: ShapeKind::Rectangle,

@@ -8,8 +8,8 @@
 //! code instead of the result applies to simple fields; range fields keep showing their result.
 
 use serde_json::{Value, json};
-use wordcraft_doc::para::{InlineObject, OBJ};
-use wordcraft_doc::{Pos, StoryRef};
+use englat_doc::para::{InlineObject, OBJ};
+use englat_doc::{Pos, StoryRef};
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -188,7 +188,7 @@ fn shown_text(s: &mut Session, f: &FieldAt) -> String {
     };
     let l = s.layout();
     let page = l.caret(&f.at).and_then(|c| l.pages.get(c.page));
-    let ctx = wordcraft_layout::fields::FieldCtx {
+    let ctx = englat_layout::fields::FieldCtx {
         page: page.map(|p| p.number).unwrap_or(1),
         pages: u32::try_from(l.pages.len()).unwrap_or(u32::MAX),
         section_pages: u32::try_from(l.pages.len()).unwrap_or(u32::MAX),
@@ -198,7 +198,7 @@ fn shown_text(s: &mut Session, f: &FieldAt) -> String {
         filename: s.path.as_ref().and_then(|p| p.file_name()).map(|n| n.to_string_lossy().to_string()).unwrap_or_default().into(),
         ..Default::default()
     };
-    wordcraft_layout::fields::field_text(&instr, &result, &ctx).0
+    englat_layout::fields::field_text(&instr, &result, &ctx).0
 }
 
 /// Ctrl+Shift+F9: replace the selected fields with what they show (a simple field becomes its
@@ -263,12 +263,12 @@ fn go(s: &mut Session, forward: bool) -> CmdResult {
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use wordcraft_doc::para::InlineObject;
+    use englat_doc::para::InlineObject;
 
     use crate::Session;
 
     fn session_with_fields() -> Session {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(englat_doc::Document::new());
         s.run("text.insert", &json!({"text": "Made by "})).unwrap();
         s.run("insert.field", &json!({"instr": "AUTHOR", "result": "Old"})).unwrap();
         s.run("text.insert", &json!({"text": " on "})).unwrap();
@@ -282,7 +282,7 @@ mod tests {
         let mut out = String::new();
         for page in &l.pages {
             for it in &page.items {
-                if let wordcraft_layout::Placed::Lines { para, .. } = it {
+                if let englat_layout::Placed::Lines { para, .. } = it {
                     for (_, shown, _) in &para.shown {
                         out.push_str(shown);
                         out.push('|');
@@ -324,7 +324,7 @@ mod tests {
     /// other keys, Alt+F1 and Alt+Shift+F1 (and Shift+F11).
     #[test]
     fn f11_is_full_screen_and_alt_f1_walks_fields() {
-        let s = Session::new(wordcraft_doc::Document::new());
+        let s = Session::new(englat_doc::Document::new());
         let key = |k: &str| s.keymap.resolve(&s.registry, k).map(|c| c.id);
         assert_eq!(key("F11"), Some("view.fullScreen"));
         assert_eq!(key("Alt+F1"), Some("fields.next"));
@@ -377,7 +377,7 @@ mod tests {
         // Unlink: the field becomes its text; Undo brings it back.
         s.run("fields.unlink", &json!({})).unwrap();
         assert_eq!(objs(&s).len(), 1);
-        assert!(s.doc.plain_text(wordcraft_doc::StoryRef::Body).starts_with("Made by Changed on "));
+        assert!(s.doc.plain_text(englat_doc::StoryRef::Body).starts_with("Made by Changed on "));
         assert!(s.undo());
         assert_eq!(objs(&s).len(), 2);
         // Nothing selected: an error, not a no-op undo step.

@@ -50,36 +50,36 @@ pub mod rt {
 pub const VBA_PROJECT_PART: &str = "word/vbaProject.bin";
 /// `Document::passthrough` key listing the parts the project relates to (VBA data, signatures…),
 /// one `relationship type \t part name \t content type` line each; each part's bytes are kept
-/// under its part name. Not a package part: WordCraft's own bookkeeping.
-pub const VBA_RELATED: &str = "wordcraft:vbaProject.related";
+/// under its part name. Not a package part: ENGLAT Editor's own bookkeeping.
+pub const VBA_RELATED: &str = "englat-editor:vbaProject.related";
 /// Most parts we carry along with a macro project.
 pub const MAX_VBA_RELATED: usize = 64;
 
 /// `Document::passthrough` key listing the parts that objects read from a file refer to (charts,
-/// SmartArt diagrams, OLE objects: see `wordcraft_doc::graphic::Embedded`), with their content
+/// SmartArt diagrams, OLE objects: see `englat_doc::graphic::Embedded`), with their content
 /// types and own relationships, as [`EmbeddedManifest`] lines. Each part's bytes are kept under its
-/// part name. Not a package part: WordCraft's own bookkeeping.
-pub const EMBEDDED_PARTS: &str = "wordcraft:embedded.parts";
+/// part name. Not a package part: ENGLAT Editor's own bookkeeping.
+pub const EMBEDDED_PARTS: &str = "englat-editor:embedded.parts";
 /// The font table kept from a file (read by `Reader::keep_part_tree`), with the fonts it embeds.
 pub const FONT_TABLE_PART: &str = "word/fontTable.xml";
 /// Custom XML roots kept by the package (P) or main document (D): `owner\ttype\tpart`.
 /// Their opaque bytes and related parts use the same bounded manifest as embedded objects.
-pub const CUSTOM_XML_ROOTS: &str = "wordcraft:customXml.roots";
+pub const CUSTOM_XML_ROOTS: &str = "englat-editor:customXml.roots";
 /// The original `word/settings.xml` when it holds settings the model doesn't (merged into on
-/// save by `write::settings_merge`). Not a package part: WordCraft's own bookkeeping.
-pub const SETTINGS_ORIG: &str = "wordcraft:settings.orig";
+/// save by `write::settings_merge`). Not a package part: ENGLAT Editor's own bookkeeping.
+pub const SETTINGS_ORIG: &str = "englat-editor:settings.orig";
 /// Extended properties (`docProps/app.xml`) the model doesn't hold but a save keeps
-/// ([`APP_KEPT_PROPS`]): `name\tvalue` lines. Not a package part: WordCraft's own bookkeeping.
-pub const APP_KEPT: &str = "wordcraft:app.kept";
+/// ([`APP_KEPT_PROPS`]): `name\tvalue` lines. Not a package part: ENGLAT Editor's own bookkeeping.
+pub const APP_KEPT: &str = "englat-editor:app.kept";
 /// The `docProps/app.xml` properties carried over from the file. Counts (pages, lines,
 /// characters, editing time) and the producing application's version are not: they describe
-/// the file Word saved, not the one WordCraft writes.
+/// the file Word saved, not the one ENGLAT Editor writes.
 pub const APP_KEPT_PROPS: &[&str] =
     &["Template", "Manager", "Company", "HyperlinkBase", "ScaleCrop", "LinksUpToDate", "SharedDoc", "HyperlinksChanged"];
-/// Parts WordCraft doesn't model, carried verbatim: `owner\ttype\tpart` lines (owner `P` for
+/// Parts ENGLAT Editor doesn't model, carried verbatim: `owner\ttype\tpart` lines (owner `P` for
 /// the package, `D` for the main document), with their bytes and relationships in the
-/// [`EmbeddedManifest`]. Not a package part: WordCraft's own bookkeeping.
-pub const UNMODELLED_ROOTS: &str = "wordcraft:unmodelled.roots";
+/// [`EmbeddedManifest`]. Not a package part: ENGLAT Editor's own bookkeeping.
+pub const UNMODELLED_ROOTS: &str = "englat-editor:unmodelled.roots";
 /// Most parts we carry along for a file's embedded objects.
 pub const MAX_EMBEDDED_PARTS: usize = 4096;
 /// Most relationships we keep for one such part.

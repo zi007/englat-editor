@@ -1,23 +1,23 @@
 [package]
-name = "wordcraft-ui-egui"
+name = "englat-ui-egui"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "WordCraft egui front end (Word-style ribbon UI); swappable: nothing below depends on it"
+description = "ENGLAT Editor egui front end (Word-style ribbon UI); swappable: nothing below depends on it"
 
 [lints]
 workspace = true
 
 [dependencies]
 craft-ui = { path = "../../vendor/craft-ui/crates/ui" }
-wordcraft-geom = { workspace = true }
-wordcraft-doc = { workspace = true }
+englat-geom = { workspace = true }
+englat-doc = { workspace = true }
 unicode-bidi = { workspace = true }
-wordcraft-fonts = { workspace = true }
-wordcraft-layout = { workspace = true }
-wordcraft-render = { workspace = true }
-wordcraft-engine = { workspace = true }
-wordcraft-zotero = { workspace = true }
+englat-fonts = { workspace = true }
+englat-layout = { workspace = true }
+englat-render = { workspace = true }
+englat-engine = { workspace = true }
+englat-zotero = { workspace = true }
 egui = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

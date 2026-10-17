@@ -1,8 +1,8 @@
 //! View tab and status bar: views, zoom, show/hide, panes.
 
 use serde_json::{Value, json};
-use wordcraft_doc::{Zoom, ZoomFit};
-use wordcraft_layout::{NumeralMode, ViewMode};
+use englat_doc::{Zoom, ZoomFit};
+use englat_layout::{NumeralMode, ViewMode};
 
 use super::sel_result;
 use crate::{CmdError, CmdResult, CommandSpec, Session, p};

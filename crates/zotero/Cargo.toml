@@ -1,21 +1,21 @@
 [package]
-name = "wordcraft-zotero"
+name = "englat-zotero"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "WordCraft Zotero integration: Zotero's word-processor wire protocol, answered against an engine Session"
+description = "ENGLAT Editor Zotero integration: Zotero's word-processor wire protocol, answered against an engine Session"
 
 [lints]
 workspace = true
 
 [dependencies]
-wordcraft-doc = { workspace = true }
-wordcraft-engine = { workspace = true }
-wordcraft-formats = { workspace = true }
+englat-doc = { workspace = true }
+englat-engine = { workspace = true }
+englat-formats = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 log = { workspace = true }
 
 [dev-dependencies]
-wordcraft-docx = { workspace = true }
+englat-docx = { workspace = true }
 proptest = { workspace = true }

@@ -1,8 +1,8 @@
 //! Built-in sample documents and templates (original text, generated in code).
 
-use wordcraft_doc::para::InlineObject;
-use wordcraft_doc::props::{Align, Border, BorderStyle, Borders, CharProps, NumRef, Rgb, TabAlign, TabLeader, TabStop, TextColor};
-use wordcraft_doc::{Block, Document, ListKind, Paragraph, PartKind, Table, para_block};
+use englat_doc::para::InlineObject;
+use englat_doc::props::{Align, Border, BorderStyle, Borders, CharProps, NumRef, Rgb, TabAlign, TabLeader, TabStop, TextColor};
+use englat_doc::{Block, Document, ListKind, Paragraph, PartKind, Table, para_block};
 
 fn para(text: &str) -> Paragraph {
     Paragraph::with_text(text, CharProps::default())
@@ -30,7 +30,7 @@ fn italic() -> CharProps {
 pub fn sample_document() -> Document {
     let mut d = Document::new();
     d.core.title = "The Open Studio Handbook".into();
-    d.core.creator = "WordCraft".into();
+    d.core.creator = "ENGLAT Editor".into();
     let mut b: Vec<Block> = Vec::new();
     b.push(Block::Para(styled("The Open Studio Handbook", "Title")));
     b.push(Block::Para(styled("How a small community of makers shares space, tools and time", "Subtitle")));
@@ -216,7 +216,7 @@ mod tests {
         assert_eq!(sample_document().word_count(), 361);
         for d in [sample_document(), letter(), resume(), report()] {
             assert!(d.word_count() > 5);
-            let l = wordcraft_layout::layout(&d, &mut wordcraft_layout::LayoutCache::new(), &Default::default());
+            let l = englat_layout::layout(&d, &mut englat_layout::LayoutCache::new(), &Default::default());
             assert!(!l.pages.is_empty());
         }
     }

@@ -1,4 +1,4 @@
-//! WordCraft proofing, per language. A run's language (its BCP 47 tag) picks the tools through
+//! ENGLAT Editor proofing, per language. A run's language (its BCP 47 tag) picks the tools through
 //! [`ProofLang`]; the `*_in` functions take it, the older English-only ones remain.
 //!
 //! - **English** ([`ProofLang::En`]; also text with no language): spelling against the
@@ -63,7 +63,7 @@ use std::sync::{OnceLock, RwLock};
 /// What the spelling check skips (File › Options › Proofing). Word's defaults: all on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Options {
-    /// Words in capitals (`NASA`, `WORDCRAFT`) are taken as correct.
+    /// Words in capitals (`NASA`, `ENGLAT_EDITOR`) are taken as correct.
     pub ignore_uppercase: bool,
     /// Words containing digits (`B2B`, `mp3`) are taken as correct.
     pub ignore_numbers: bool,
@@ -640,7 +640,7 @@ pub fn suggest_in(word: &str, max: usize, lang: ProofLang) -> Vec<String> {
 
 /// Grammar issues in a paragraph of text in `lang`: the English rules, the Polish ones
 /// ([`pl::grammar`]), the Portuguese ones ([`pt::grammar`]), the Italian ones ([`it::grammar`]),
-/// the Turkish ones ([`tr::grammar`]), Czech generic checks ([`cs::grammar`]), or none for a language WordCraft doesn't proof.
+/// the Turkish ones ([`tr::grammar`]), Czech generic checks ([`cs::grammar`]), or none for a language ENGLAT Editor doesn't proof.
 pub fn check_grammar_in(text: &str, lang: ProofLang) -> Vec<Issue> {
     match lang {
         ProofLang::En => check_grammar(text),

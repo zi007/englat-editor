@@ -1,11 +1,11 @@
 //! References tab: table of contents, footnotes/endnotes, captions; field updates.
 
 use serde_json::{Value, json};
-use wordcraft_doc::numbering::{Counters, LevelSuffix};
-use wordcraft_doc::para::{InlineObject, NoteKind, OBJ};
-use wordcraft_doc::props::{CharProps, TabAlign, TabLeader, TabStop};
-use wordcraft_doc::section::NumFormat;
-use wordcraft_doc::{Block, Paragraph, PartKind, Path, Pos, StoryRef, para_block};
+use englat_doc::numbering::{Counters, LevelSuffix};
+use englat_doc::para::{InlineObject, NoteKind, OBJ};
+use englat_doc::props::{CharProps, TabAlign, TabLeader, TabStop};
+use englat_doc::section::NumFormat;
+use englat_doc::{Block, Paragraph, PartKind, Path, Pos, StoryRef, para_block};
 
 use super::{delete_selection, sel_result};
 use crate::{CmdError, CmdResult, CommandSpec, Selection, Session, p};
@@ -289,7 +289,7 @@ fn toc_entries(s: &Session, f: &FieldCode) -> Vec<TocEntry> {
             let l = heading_style_level(p).or_else(|| {
                 s.doc
                     .styles
-                    .resolve_para(&wordcraft_doc::ParaProps { style: p.props.style.clone(), ..Default::default() })
+                    .resolve_para(&englat_doc::ParaProps { style: p.props.style.clone(), ..Default::default() })
                     .outline_level
                     .map(|l| l + 1)
             })?;
@@ -461,7 +461,7 @@ fn insert_toc(s: &mut Session, v: &Value) -> CmdResult {
 /// A hidden `_Toc` bookmark around the heading at body block `i` (after its leading page breaks),
 /// reusing one already there; its name.
 pub(crate) fn toc_bookmark(s: &mut Session, i: usize, lead: usize) -> Result<String, CmdError> {
-    const MARK: usize = wordcraft_doc::para::OBJ.len_utf8();
+    const MARK: usize = englat_doc::para::OBJ.len_utf8();
     let para = s.doc.para(StoryRef::Body, &Path::top(i)).ok_or_else(|| CmdError::Failed("heading is gone".into()))?;
     if let Some(InlineObject::BookmarkStart { name }) = para.object_at(lead)
         && name.starts_with("_Toc")
@@ -583,10 +583,10 @@ fn regenerate_toc(s: &mut Session, leader: Option<TabLeader>) -> Result<(), CmdE
 /// sets before that. Those stops are for a number set off by a tab (`1.1<tab>Title`); with the
 /// number set off by a space, or no number, a short entry's page tab would stop at one of them
 /// (without the leader), and so would the tab on the last line of an entry that wraps.
-fn entry_tabs(s: &Session, props: &wordcraft_doc::ParaProps, text: &str, right: TabStop) -> Vec<TabStop> {
+fn entry_tabs(s: &Session, props: &englat_doc::ParaProps, text: &str, right: TabStop) -> Vec<TabStop> {
     let mut tabs = Vec::new();
     if !text.contains('\t') {
-        let style = s.doc.styles.resolve_para(&wordcraft_doc::ParaProps { style: props.style.clone(), ..Default::default() });
+        let style = s.doc.styles.resolve_para(&englat_doc::ParaProps { style: props.style.clone(), ..Default::default() });
         for t in style.tabs {
             if t.pos < right.pos - 0.5 && !matches!(t.align, TabAlign::Right | TabAlign::Bar) {
                 tabs.push(TabStop { pos: t.pos, align: TabAlign::Clear, leader: TabLeader::None });
@@ -625,7 +625,7 @@ fn note(s: &mut Session, v: &Value, kind: NoteKind) -> CmdResult {
 /// `references.noteOptions`: footnote or endnote placement, number format, start and restart,
 /// for the whole document (each section then follows it) or the selection's sections.
 pub(super) fn note_options(s: &mut Session, v: &Value) -> CmdResult {
-    use wordcraft_doc::section::{MAX_NOTE_START, NotePos, NoteProps, NoteRestart, NumFormat};
+    use englat_doc::section::{MAX_NOTE_START, NotePos, NoteProps, NoteRestart, NumFormat};
     let fmt = |k: &str| -> Result<Option<NumFormat>, CmdError> {
         match p::str(v, k) {
             None => Ok(None),
@@ -685,7 +685,7 @@ pub(super) fn note_options(s: &mut Session, v: &Value) -> CmdResult {
             to.num_restart = if clear { None } else { from.num_restart };
         }
     };
-    fn pick(sect: &mut wordcraft_doc::SectionProps, endnote: bool) -> &mut NoteProps {
+    fn pick(sect: &mut englat_doc::SectionProps, endnote: bool) -> &mut NoteProps {
         if endnote { &mut sect.endnote_pr } else { &mut sect.footnote_pr }
     }
     if change.is_empty() {
@@ -787,14 +787,14 @@ fn caption(s: &mut Session, v: &Value) -> CmdResult {
 
 /// Renumber the body's SEQ fields in document order, honouring `\* format`, `\s level` (restart
 /// after each heading of that level), `\r n` (reset to n), `\c` (repeat) and `\h` (hide), and
-/// fill body STYLEREF fields ([`wordcraft_layout::styleref`]): chapter numbers (`STYLEREF n \s`,
+/// fill body STYLEREF fields ([`englat_layout::styleref`]): chapter numbers (`STYLEREF n \s`,
 /// the last level-n heading's number, or its count when the heading isn't numbered) and the
 /// text or number of the nearest paragraph of a style.
 pub fn update_seq(s: &mut Session) -> Result<(), CmdError> {
     let mut headings = [0u32; 9];
     let mut seq: std::collections::HashMap<String, (u32, u32)> = Default::default();
     // Built on the first STYLEREF (field results don't change what it finds).
-    let mut styles: Option<wordcraft_layout::styleref::StyleIndex> = None;
+    let mut styles: Option<englat_layout::styleref::StyleIndex> = None;
     for path in s.doc.para_paths(StoryRef::Body) {
         let Some(p) = s.doc.para(StoryRef::Body, &path) else { continue };
         if let Some(l) = heading_style_level(p)
@@ -823,13 +823,13 @@ pub fn update_seq(s: &mut Session) -> Result<(), CmdError> {
                     } else if !f.has('c') {
                         n.0 = n.0.saturating_add(1);
                     }
-                    let fmt = wordcraft_layout::fields::format_switch(instr).unwrap_or_default();
+                    let fmt = englat_layout::fields::format_switch(instr).unwrap_or_default();
                     updates.push((k, if f.has('h') { String::new() } else { fmt.format(n.0) }));
                 }
                 "STYLEREF" => {
-                    let ix = styles.get_or_insert_with(|| wordcraft_layout::styleref::StyleIndex::build(&s.doc));
+                    let ix = styles.get_or_insert_with(|| englat_layout::styleref::StyleIndex::build(&s.doc));
                     if let Some(i) = ix.index_of(&path) {
-                        updates.push((k, ix.eval(instr, wordcraft_layout::styleref::At::Body(i))));
+                        updates.push((k, ix.eval(instr, englat_layout::styleref::At::Body(i))));
                     }
                 }
                 _ => {}
@@ -882,7 +882,7 @@ pub fn update_fields(s: &mut Session) -> Result<(), CmdError> {
                 }
                 continue;
             }
-            let name = wordcraft_layout::fields::field_name(instr);
+            let name = englat_layout::fields::field_name(instr);
             match name.as_str() {
                 "DATE" | "TIME" | "CREATEDATE" | "SAVEDATE" | "PRINTDATE" => {
                     let pic = date_picture(instr).unwrap_or_else(|| if name == "TIME" { "h:mm am/pm".into() } else { "M/d/yyyy".into() });
@@ -926,7 +926,7 @@ pub fn update_fields(s: &mut Session) -> Result<(), CmdError> {
 /// are not "now"; `REF`, `PAGEREF`, `TOC` and citations are refreshed on an explicit update
 /// (`fields.updateAll`) and not on open, again as Word does. A field carrying `w:fldLock` keeps
 /// its stored result, which is what the lock is for.
-pub fn refresh_date_fields(doc: &mut wordcraft_doc::Document) {
+pub fn refresh_date_fields(doc: &mut englat_doc::Document) {
     let stories: Vec<StoryRef> = std::iter::once(StoryRef::Body).chain(doc.parts.keys().copied().map(StoryRef::Part)).collect();
     for story in stories {
         for path in doc.para_paths(story) {
@@ -934,7 +934,7 @@ pub fn refresh_date_fields(doc: &mut wordcraft_doc::Document) {
             let mut updates: Vec<(usize, String)> = Vec::new();
             for (k, o) in p.objects.iter().enumerate() {
                 let InlineObject::Field { instr, locked: false, .. } = o else { continue };
-                let name = wordcraft_layout::fields::field_name(instr);
+                let name = englat_layout::fields::field_name(instr);
                 if !matches!(name.as_str(), "DATE" | "TIME") {
                     continue;
                 }
@@ -968,7 +968,7 @@ pub fn date_picture(instr: &str) -> Option<String> {
 
 /// The text a bookmark marks (field results included), up to its end in the same paragraph or
 /// the paragraph's end. `None` when there is no such bookmark.
-pub fn bookmark_text(doc: &wordcraft_doc::Document, name: &str) -> Option<String> {
+pub fn bookmark_text(doc: &englat_doc::Document, name: &str) -> Option<String> {
     let (_, start) = doc.bookmarks().into_iter().find(|(n, _)| n == name)?;
     let para = doc.para(start.story, &start.path)?;
     let end = para
@@ -998,7 +998,7 @@ mod tests {
     /// #775: body STYLEREF fields show the nearest paragraph of the style before them.
     #[test]
     fn body_styleref_finds_the_heading_before_it() {
-        let mut s = Session::new(wordcraft_doc::Document::from_text("Intro\nChapter One\ntext here\nChapter Two\nend"));
+        let mut s = Session::new(englat_doc::Document::from_text("Intro\nChapter One\ntext here\nChapter Two\nend"));
         for t in ["Chapter One", "Chapter Two"] {
             s.run("select.text", &json!({"text": t})).unwrap();
             s.run("styles.apply", &json!({"style": "Heading 1"})).unwrap();
@@ -1012,7 +1012,7 @@ mod tests {
         s.run("insert.field", &json!({"instr": "STYLEREF \"Heading 1\" \\p"})).unwrap();
         s.run("insert.field", &json!({"instr": "STYLEREF \"No Such Style\""})).unwrap();
         let results: Vec<String> = fields(&s).into_iter().map(|f| f.1).collect();
-        assert_eq!(results, ["below", wordcraft_layout::styleref::NO_TEXT, "Chapter One", "above"]);
+        assert_eq!(results, ["below", englat_layout::styleref::NO_TEXT, "Chapter One", "above"]);
     }
 
     /// #775: a template's running header `STYLEREF "heading 1"` (a complex field, opened from
@@ -1060,7 +1060,7 @@ mod tests {
                     p.header
                         .iter()
                         .filter_map(|it| {
-                            if let wordcraft_layout::Placed::Lines { para, .. } = it {
+                            if let englat_layout::Placed::Lines { para, .. } = it {
                                 Some(para.shown.iter().map(|x| x.1.clone()).collect::<String>())
                             } else {
                                 None
@@ -1090,7 +1090,7 @@ mod tests {
     /// (`\p`), or none at all (`\n`).
     #[test]
     fn toc_switches_shape_the_entries() {
-        let mut s = Session::new(wordcraft_doc::Document::from_text("Intro\nPart\nDeep\nNote"));
+        let mut s = Session::new(englat_doc::Document::from_text("Intro\nPart\nDeep\nNote"));
         for (text, style) in [("Intro", "Heading 1"), ("Part", "Heading 2"), ("Deep", "Heading 3"), ("Note", "Quote")] {
             s.run("select.text", &json!({"text": text})).unwrap();
             s.run("styles.apply", &json!({"style": style})).unwrap();
@@ -1123,7 +1123,7 @@ mod tests {
     /// numbers that restart after each Heading 1 (`STYLEREF 1 \s`, `SEQ … \s 1`).
     #[test]
     fn caption_numbering_with_chapters() {
-        let mut s = Session::new(wordcraft_doc::Document::from_text("One\nPic\nPic two\nTwo\nPic three"));
+        let mut s = Session::new(englat_doc::Document::from_text("One\nPic\nPic two\nTwo\nPic three"));
         for t in ["One", "Two"] {
             s.run("select.text", &json!({"text": t})).unwrap();
             s.run("styles.apply", &json!({"style": "Heading 1"})).unwrap();

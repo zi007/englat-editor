@@ -1,6 +1,6 @@
 # Polish (pl) interface catalog. Columns, separated by a TAB:
 #   context <TAB> English source <TAB> translation
-#   context    empty (WordCraft uses no contexts yet)
+#   context    empty (ENGLAT Editor uses no contexts yet)
 #   source     the English text exactly as in the code (tl!(...), ribbon labels, command labels)
 #   escapes    \n  \t  \\  inside a column. `{name}` placeholders must appear in both columns, and a
 #              trailing "…" in one needs one in the other.
@@ -9,17 +9,17 @@
 # Clean room: translated from the meaning of the English labels in this repository into ordinary
 # Polish computing vocabulary. No Microsoft Word (or other product) localisation, string table or
 # translated UI was consulted or copied; add entries the same way.
-# Product, format and technology names (WordCraft, PDF, Markdown, MCP …) stay as they are.
+# Product, format and technology names (ENGLAT Editor, PDF, Markdown, MCP …) stay as they are.
 # Conventions: commands are imperatives (Zapisz, Wstaw), tabs and groups are nouns; counts use
 # a label and a colon ("Słowa: 21") so every number reads grammatically; quotes are „…”.
-# Author: Konrad Witkowski with Claude (AI agent); licensed MIT OR Apache-2.0, like WordCraft.
+# Author: Konrad Witkowski with Claude (AI agent); licensed MIT OR Apache-2.0, like ENGLAT Editor.
 # Not yet reviewed by a second native speaker.
 
 	(no suggestions)	(brak propozycji)
 	1.5 Line Spacing	Interlinia 1,5
 	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	Darmowy edytor tekstu o otwartym kodzie, napisany od podstaw w języku Rust.\nCzęść rodziny Crafting Apps zespołu ArtCraft.
 	About	Informacje
-	About WordCraft	O programie WordCraft
+	About ENGLAT Editor	O programie ENGLAT Editor
 	Accept	Zaakceptuj
 	Accept All Changes	Zaakceptuj wszystkie zmiany
 	Accept This Change	Zaakceptuj tę zmianę
@@ -248,7 +248,7 @@
 	Envelopes	Koperty
 	Eraser	Gumka
 	Even Page	Strona parzysta
-	Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Każde polecenie jest dostępne dla skryptów i agentów AI: uruchom `wordcraft-cli mcp`, aby włączyć serwer MCP, albo uruchom aplikację z opcją `--control <port>`, aby korzystać z kanału sterowania JSON.
+	Every command is available to scripts and AI agents: run `englat-editor-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Każde polecenie jest dostępne dla skryptów i agentów AI: uruchom `englat-editor-cli mcp`, aby włączyć serwer MCP, albo uruchom aplikację z opcją `--control <port>`, aby korzystać z kanału sterowania JSON.
 	Export	Eksportuj
 	Export PDF	Eksportuj do PDF
 	Export Page as PNG	Eksportuj stronę jako PNG
@@ -377,7 +377,7 @@
 	Landscape	Pozioma
 	Language	Język
 	{language} (no dictionary)	{language} (brak słownika)
-	No spelling dictionary for {language} is installed, so it isn't checked. WordCraft looks for the Hunspell dictionary {name} in the WORDCRAFT_DICTIONARIES folder and in the usual system locations.	Nie zainstalowano słownika pisowni dla języka: {language}, więc tekst nie jest sprawdzany. WordCraft szuka słownika Hunspell {name} w folderze WORDCRAFT_DICTIONARIES i w typowych lokalizacjach systemowych.
+	No spelling dictionary for {language} is installed, so it isn't checked. ENGLAT Editor looks for the Hunspell dictionary {name} in the ENGLAT_EDITOR_DICTIONARIES folder and in the usual system locations.	Nie zainstalowano słownika pisowni dla języka: {language}, więc tekst nie jest sprawdzany. ENGLAT Editor szuka słownika Hunspell {name} w folderze ENGLAT_EDITOR_DICTIONARIES i w typowych lokalizacjach systemowych.
 	Lasso	Lasso
 	Last Column	Ostatnia kolumna
 	Last commit	Ostatni commit
@@ -406,7 +406,7 @@
 	Link to Previous	Połącz z poprzednim
 	Links	Linki
 	Location: {path}	Lokalizacja: {path}
-	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT lub Apache-2.0. Copyright (c) 2026 ArtCraft Team i współtwórcy WordCraft.
+	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT lub Apache-2.0. Copyright (c) 2026 ArtCraft Team i współtwórcy ENGLAT Editor.
 	Macros	Makra
 	Mailings	Korespondencja
 	Manage Sources	Zarządzaj źródłami
@@ -688,7 +688,7 @@
 	Small caps	Kapitaliki
 	SmartArt	SmartArt
 	Sort	Sortuj
-	Source code: github.com/storytold/wordcraft	Kod źródłowy: github.com/storytold/wordcraft
+	Source code: github.com/zi007/englat-editor	Kod źródłowy: github.com/zi007/englat-editor
 	Space before/after:	Odstęp przed/po:
 	Spacing	Odstępy
 	Spacing (pt):	Odstępy (pt):
@@ -816,7 +816,7 @@
 	Word Right	Słowo w prawo
 	Word document (*.docx)	Dokument Word (*.docx)
 	WordArt	WordArt
-	WordCraft	WordCraft
+	ENGLAT Editor	ENGLAT Editor
 	Words	Słowa
 	Words only	Tylko wyrazy
 	Wrap Text	Zawijaj tekst
@@ -884,7 +884,7 @@
 	Stopped	Zatrzymano
 	Speed	Szybkość
 	Normal speed	Normalna szybkość
-	AutoSave documents you have saved in WordCraft	Zapisuj automatycznie dokumenty zapisane już w programie WordCraft
+	AutoSave documents you have saved in ENGLAT Editor	Zapisuj automatycznie dokumenty zapisane już w programie ENGLAT Editor
 	AutoSave failed: {error}. Save the document to turn AutoSave back on.	Autozapis nie powiódł się: {error}. Zapisz dokument, aby ponownie włączyć autozapis.
 	Couldn't download {name}: {error}	Nie udało się pobrać pliku {name}: {error}
 	Do you want to save changes to {name}?	Czy zapisać zmiany w dokumencie {name}?
@@ -1051,7 +1051,7 @@
 	Insert a new equation (Alt+=)	Wstaw nowe równanie (Alt+=)
 	Leave the equation (Esc)	Opuść równanie (Esc)
 	Preview	Podgląd
-	getartcraft.com/apps/wordcraft	getartcraft.com/apps/wordcraft
+	github.com/zi007/englat-editor	github.com/zi007/englat-editor
 	English (United Kingdom)	Angielski (Wielka Brytania)
 	Polish	Polski
 	Do Not Check Spelling or Grammar	Nie sprawdzaj pisowni ani gramatyki
@@ -1106,7 +1106,7 @@
 	Glow Colors	Kolory poświaty
 	Hide from style lists	Ukryj na listach stylów
 	Indents and Spacing	Wcięcia i odstępy
-	Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password.	Przechowuj hasło w bezpiecznym miejscu: bez niego nikt, również WordCraft, nie otworzy dokumentu. Pozostaw oba pola puste, aby usunąć hasło.
+	Keep the password somewhere safe: without it nobody, ENGLAT Editor included, can open the document. Leave both boxes empty to remove the password.	Przechowuj hasło w bezpiecznym miejscu: bez niego nikt, również ENGLAT Editor, nie otworzy dokumentu. Pozostaw oba pola puste, aby usunąć hasło.
 	Line breaking	Łamanie wierszy
 	Linked style (paragraph and character)	Styl połączony (akapitowy i znakowy)
 	Manage Styles	Zarządzaj stylami
@@ -1732,7 +1732,7 @@
 	Beginning of Word	Początek wyrazu
 	Blue:	Niebieski:
 	Border lines	Linie obramowania
-	Browse in WordCraft…	Przeglądaj w programie WordCraft…
+	Browse in ENGLAT Editor…	Przeglądaj w programie ENGLAT Editor…
 	Building Block Gallery Content Control	Formant zawartości galerii bloków konstrukcyjnych
 	Can't be deleted	Nie można usunąć
 	Capitalize first letter of sentences	Zaczynaj zdania wielką literą
@@ -1906,7 +1906,7 @@
 	Only comments can be added, except in regions marked editable.	Można dodawać tylko komentarze, z wyjątkiem obszarów oznaczonych jako edytowalne.
 	Only form fields can be filled in.	Można wypełniać tylko pola formularza.
 	Only the allowed styles can be applied.	Można stosować tylko dozwolone style.
-	Open a file with WordCraft's own browser when the system file dialog doesn't appear.	Otwórz plik we własnej przeglądarce plików programu WordCraft, gdy systemowe okno wyboru pliku się nie pojawia.
+	Open a file with ENGLAT Editor's own browser when the system file dialog doesn't appear.	Otwórz plik we własnej przeglądarce plików programu ENGLAT Editor, gdy systemowe okno wyboru pliku się nie pojawia.
 	Ordinals (1st) as superscript	Liczebniki porządkowe (1st) jako indeks górny
 	Organizer	Organizator
 	Organizer…	Organizator…
@@ -2042,7 +2042,7 @@
 	The document is read only, except for regions marked editable.	Dokument jest tylko do odczytu, z wyjątkiem obszarów oznaczonych jako edytowalne.
 	The password is optional; without it anyone can stop the protection.	Hasło jest opcjonalne; bez niego każdy może wyłączyć ochronę.
 	The printer, two-sided printing and pages per sheet are chosen in that dialog.	Drukarkę, druk dwustronny i liczbę stron na arkuszu wybiera się w tym oknie.
-	The system file dialog isn't available, so WordCraft shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	Systemowe okno wyboru pliku jest niedostępne, więc WordCraft pokazuje własne. Aby korzystać z okna systemowego, zainstaluj portal wyboru plików (np. xdg-desktop-portal-gtk) lub zenity.
+	The system file dialog isn't available, so ENGLAT Editor shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	Systemowe okno wyboru pliku jest niedostępne, więc ENGLAT Editor pokazuje własne. Aby korzystać z okna systemowego, zainstaluj portal wyboru plików (np. xdg-desktop-portal-gtk) lub zenity.
 	These marks show even when Show/Hide ¶ is off.	Te znaki są widoczne nawet przy wyłączonym poleceniu Pokaż wszystko ¶.
 	This document	Ten dokument
 	This folder can't be read: {error}	Nie można odczytać tego folderu: {error}
@@ -2086,15 +2086,15 @@
 	Undo 1 Action	Cofnij 1 akcję
 	Undo {n} Actions	Cofnij akcje: {n}
 	Start-up	Uruchamianie
-	Show the Start screen when WordCraft starts	Pokazuj ekran startowy po uruchomieniu programu WordCraft
-	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Włączone: WordCraft otwiera się na karcie Plik › Start z pustym dokumentem, szablonami i ostatnimi dokumentami. Wyłączone: otwiera pusty dokument.
-	Couldn't make WordCraft the default: {error}	Nie udało się ustawić WordCraft jako domyślnego: {error}
-	In Default apps, choose WordCraft for the document types you want it to open.	W Aplikacjach domyślnych wybierz WordCraft dla typów dokumentów, które ma otwierać.
-	Make WordCraft the default for Word documents…	Ustaw WordCraft jako domyślny dla dokumentów Word…
-	Opens .docx, .doc, .rtf and .odt files and Word templates with WordCraft from now on.	Od teraz pliki .docx, .doc, .rtf i .odt oraz szablony Word otwierają się w WordCraft.
-	Opens Settings › Default apps, where you choose WordCraft for .docx and the other document types.	Otwiera Ustawienia › Aplikacje domyślne, gdzie wybierasz WordCraft dla .docx i innych typów dokumentów.
-	To open Word documents with WordCraft by default: select one in Finder, choose File › Get Info, pick WordCraft under Open with, then click Change All.	Aby otwierać dokumenty Word domyślnie w WordCraft: zaznacz jeden w Finderze, wybierz Plik › Pokaż info, wybierz WordCraft w „Otwórz za pomocą”, a następnie kliknij „Zmień wszystkie”.
-	WordCraft is now the default app for Word documents.	WordCraft jest teraz domyślną aplikacją dla dokumentów Word.
+	Show the Start screen when ENGLAT Editor starts	Pokazuj ekran startowy po uruchomieniu programu ENGLAT Editor
+	On: ENGLAT Editor opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Włączone: ENGLAT Editor otwiera się na karcie Plik › Start z pustym dokumentem, szablonami i ostatnimi dokumentami. Wyłączone: otwiera pusty dokument.
+	Couldn't make ENGLAT Editor the default: {error}	Nie udało się ustawić ENGLAT Editor jako domyślnego: {error}
+	In Default apps, choose ENGLAT Editor for the document types you want it to open.	W Aplikacjach domyślnych wybierz ENGLAT Editor dla typów dokumentów, które ma otwierać.
+	Make ENGLAT Editor the default for Word documents…	Ustaw ENGLAT Editor jako domyślny dla dokumentów Word…
+	Opens .docx, .doc, .rtf and .odt files and Word templates with ENGLAT Editor from now on.	Od teraz pliki .docx, .doc, .rtf i .odt oraz szablony Word otwierają się w ENGLAT Editor.
+	Opens Settings › Default apps, where you choose ENGLAT Editor for .docx and the other document types.	Otwiera Ustawienia › Aplikacje domyślne, gdzie wybierasz ENGLAT Editor dla .docx i innych typów dokumentów.
+	To open Word documents with ENGLAT Editor by default: select one in Finder, choose File › Get Info, pick ENGLAT Editor under Open with, then click Change All.	Aby otwierać dokumenty Word domyślnie w ENGLAT Editor: zaznacz jeden w Finderze, wybierz Plik › Pokaż info, wybierz ENGLAT Editor w „Otwórz za pomocą”, a następnie kliknij „Zmień wszystkie”.
+	ENGLAT Editor is now the default app for Word documents.	ENGLAT Editor jest teraz domyślną aplikacją dla dokumentów Word.
 	Numerals:	Cyfry:
 	Numerals	Cyfry
 	Hindi	Hindi
@@ -2551,7 +2551,7 @@ preview	Title	Tytuł
 	{name}   {height} × {width} mm	{name}   {height} × {width} mm
 	{width} × {height} mm	{width} × {height} mm
 	{kind}, {columns} × {rows}, {size} ({paper})	{kind}, {columns} × {rows}, {size} ({paper})
-	Researcher needs an online service; WordCraft keeps your documents offline.	Badacz wymaga usługi online, a WordCraft przechowuje Twoje dokumenty offline.
+	Researcher needs an online service; ENGLAT Editor keeps your documents offline.	Badacz wymaga usługi online, a ENGLAT Editor przechowuje Twoje dokumenty offline.
 	These settings will be used for new documents.	Te ustawienia będą używane w nowych dokumentach.
 	can't split at the first row	nie można podzielić tabeli na pierwszym wierszu
 	select two or more cells to merge	zaznacz co najmniej dwie komórki do scalenia

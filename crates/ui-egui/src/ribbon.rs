@@ -9,17 +9,17 @@ use crate::theme::{Tokens, medium, regular, semibold};
 use crate::widgets::{CONTENT_H, LABEL_H, big, big_toggle, combo, font_combo, group, menu_button, small, split};
 use crate::{WordApp, icons};
 
-pub const TABS: [&str; 13] = wordcraft_engine::ribbon::TABS;
+pub const TABS: [&str; 13] = englat_engine::ribbon::TABS;
 
 /// True when the caret/selection touches a picture (#147).
-pub fn has_picture_selected(s: &wordcraft_engine::Session) -> bool {
-    matches!(wordcraft_engine::cmd::objects::selected(s), Some((_, wordcraft_doc::para::InlineObject::Image { .. })))
+pub fn has_picture_selected(s: &englat_engine::Session) -> bool {
+    matches!(englat_engine::cmd::objects::selected(s), Some((_, englat_doc::para::InlineObject::Image { .. })))
 }
 
 /// Whether the selection is a shape, text box or Drawing Canvas (so Shape Format is shown).
-pub fn has_shape_selected(s: &wordcraft_engine::Session) -> bool {
-    match wordcraft_engine::cmd::objects::selected(s) {
-        Some((_, o)) => matches!(o, wordcraft_doc::para::InlineObject::Shape { .. }) || o.is_canvas(),
+pub fn has_shape_selected(s: &englat_engine::Session) -> bool {
+    match englat_engine::cmd::objects::selected(s) {
+        Some((_, o)) => matches!(o, englat_doc::para::InlineObject::Shape { .. }) || o.is_canvas(),
         None => false,
     }
 }
@@ -90,18 +90,18 @@ fn reading_toolbar(app: &mut WordApp, ui: &mut Ui, t: Tokens) {
         });
 }
 
-/// Whether the selection is a SmartArt graphic WordCraft can edit (so SmartArt Design is shown).
-pub fn has_smart_art_selected(s: &wordcraft_engine::Session) -> bool {
-    wordcraft_engine::cmd::smart_art::selected_smart_art(s).is_some()
+/// Whether the selection is a SmartArt graphic ENGLAT Editor can edit (so SmartArt Design is shown).
+pub fn has_smart_art_selected(s: &englat_engine::Session) -> bool {
+    englat_engine::cmd::smart_art::selected_smart_art(s).is_some()
 }
 
-/// Whether the selection is a chart WordCraft can edit (so Chart Design is shown).
-pub fn has_chart_selected(s: &wordcraft_engine::Session) -> bool {
-    wordcraft_engine::cmd::chart::selected_chart(s).is_some()
+/// Whether the selection is a chart ENGLAT Editor can edit (so Chart Design is shown).
+pub fn has_chart_selected(s: &englat_engine::Session) -> bool {
+    englat_engine::cmd::chart::selected_chart(s).is_some()
 }
 
 /// Contextual tabs for the current selection (pure, tested).
-pub fn contextual_tabs(s: &wordcraft_engine::Session) -> Vec<&'static str> {
+pub fn contextual_tabs(s: &englat_engine::Session) -> Vec<&'static str> {
     let mut tabs = Vec::new();
     if s.sel.focus.path.cell().is_some() {
         tabs.push("Table Design");
@@ -124,7 +124,7 @@ pub fn contextual_tabs(s: &wordcraft_engine::Session) -> Vec<&'static str> {
         tabs.push("Equation");
     }
     // Outline view (drawn first, next to File, as Word does).
-    if s.view.mode == wordcraft_layout::ViewMode::Outline {
+    if s.view.mode == englat_layout::ViewMode::Outline {
         tabs.push("Outlining");
     }
     tabs
@@ -182,7 +182,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
         app.ui.tab = prev;
     }
     // Outline view brings up the Outlining tab; closing it goes back.
-    if app.session.view.mode == wordcraft_layout::ViewMode::Outline {
+    if app.session.view.mode == englat_layout::ViewMode::Outline {
         if app.outline_prev_tab.is_none() {
             app.outline_prev_tab = Some(app.ui.tab.clone());
             app.ui.tab = "Outlining".into();
@@ -270,14 +270,14 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
                             .zip(&labels)
                             .map(|((tab, custom), shown)| {
                                 let w = ui.ctx().fonts_mut(|f| f.layout_no_wrap(shown.to_string(), medium(12.5), t.text).size().x) + 18.0;
-                                let contextual = !custom && wordcraft_engine::ribbon::CONTEXTUAL_TABS.contains(&tab.as_str());
+                                let contextual = !custom && englat_engine::ribbon::CONTEXTUAL_TABS.contains(&tab.as_str());
                                 (w + 2.0, tab == "File" || *tab == app.ui.tab || contextual)
                             })
                             .collect();
                         let fits = fit_tabs(&widths, ui.available_width(), MORE_TABS_W + 2.0);
                         for ((tab, custom), _) in tabs.iter().zip(&fits).filter(|(_, fits)| **fits) {
                             let (tab, custom) = (tab.as_str(), *custom);
-                            let contextual = !custom && wordcraft_engine::ribbon::CONTEXTUAL_TABS.contains(&tab);
+                            let contextual = !custom && englat_engine::ribbon::CONTEXTUAL_TABS.contains(&tab);
                             // A custom tab's name is the user's own text: shown as typed.
                             let shown = if custom { tab } else { tl!(tab) };
                             let w = ui.ctx().fonts_mut(|f| f.layout_no_wrap(shown.to_string(), medium(12.5), t.text).size().x) + 18.0;
@@ -414,7 +414,7 @@ pub fn show(app: &mut WordApp, ui: &mut Ui) {
 
 /// Custom groups (Customize Ribbon, #379): up to three commands as large buttons, more as small
 /// labelled buttons in columns of three. Each shows the command's own icon and label.
-fn custom_groups(app: &mut WordApp, ui: &mut Ui, groups: &[wordcraft_engine::ribbon::CustomGroup]) {
+fn custom_groups(app: &mut WordApp, ui: &mut Ui, groups: &[englat_engine::ribbon::CustomGroup]) {
     for g in groups {
         let ids: Vec<(&str, String)> =
             g.commands.iter().filter_map(|id| app.session.registry.get(id).map(|s| (s.id, tl!(s.label).to_string()))).collect();
@@ -470,9 +470,9 @@ fn stack(ui: &mut Ui, add: impl FnOnce(&mut Ui)) {
 /// Setup (#1433).
 pub(crate) fn size_menu(ui: &mut Ui, app: &mut WordApp) {
     // The current paper size is checked.
-    let x = wordcraft_engine::cmd::page::sect(&app.session);
-    let current = wordcraft_geom::paper_name(x.page_w, x.page_h);
-    for (n, w, h) in wordcraft_geom::PAPER_SIZES {
+    let x = englat_engine::cmd::page::sect(&app.session);
+    let current = englat_geom::paper_name(x.page_w, x.page_h);
+    for (n, w, h) in englat_geom::PAPER_SIZES {
         // Paper names are the industry's (Letter, A4, B5 (JIS)) and stay as they are; the
         // envelopes say what they are. Sizes in the measurement unit, written the region's
         // way (`21 cm × 29,7 cm`, #838).
@@ -513,7 +513,7 @@ pub(crate) const PROOFING_LANGUAGES: [(&str, &str); 9] = [
     ("cs-CZ", "Czech"),
 ];
 
-/// The English name of a proofing language tag, as the status bar shows it (no tag: WordCraft's
+/// The English name of a proofing language tag, as the status bar shows it (no tag: ENGLAT Editor's
 /// default, US English): a listed language by its name; another region of one by the language
 /// and the region ("French (Canada)"); a bare language subtag by its usual variant; else the tag.
 pub(crate) fn language_name(tag: Option<&str>) -> String {
@@ -541,16 +541,16 @@ pub(crate) fn language_name(tag: Option<&str>) -> String {
                 None => tag.to_string(),
             }
         }
-        // A bare language subtag ("pt", "pl"): the variant WordCraft proofs.
-        None => match wordcraft_engine::proof::ProofLang::from_tag(Some(tag)) {
-            wordcraft_engine::proof::ProofLang::Pl => "Polish".into(),
-            wordcraft_engine::proof::ProofLang::Hr => "Croatian".into(),
-            wordcraft_engine::proof::ProofLang::Pt => "Portuguese (Brazil)".into(),
-            wordcraft_engine::proof::ProofLang::It => "Italian".into(),
-            wordcraft_engine::proof::ProofLang::Tr => "Turkish".into(),
-            wordcraft_engine::proof::ProofLang::Ru => "Russian".into(),
-            wordcraft_engine::proof::ProofLang::Cs => "Czech".into(),
-            wordcraft_engine::proof::ProofLang::En if tag.eq_ignore_ascii_case("en") => "English (United States)".into(),
+        // A bare language subtag ("pt", "pl"): the variant ENGLAT Editor proofs.
+        None => match englat_engine::proof::ProofLang::from_tag(Some(tag)) {
+            englat_engine::proof::ProofLang::Pl => "Polish".into(),
+            englat_engine::proof::ProofLang::Hr => "Croatian".into(),
+            englat_engine::proof::ProofLang::Pt => "Portuguese (Brazil)".into(),
+            englat_engine::proof::ProofLang::It => "Italian".into(),
+            englat_engine::proof::ProofLang::Tr => "Turkish".into(),
+            englat_engine::proof::ProofLang::Ru => "Russian".into(),
+            englat_engine::proof::ProofLang::Cs => "Czech".into(),
+            englat_engine::proof::ProofLang::En if tag.eq_ignore_ascii_case("en") => "English (United States)".into(),
             _ => tag.to_string(),
         },
     }
@@ -639,7 +639,7 @@ fn caret_lang_tag(app: &WordApp) -> Option<String> {
 
 /// The Hunspell dictionary the caret's language needs but doesn't have (`pl_PL`), if any (#1167).
 pub(crate) fn caret_missing_dictionary(app: &WordApp) -> Option<&'static str> {
-    wordcraft_engine::proof::missing_dictionary(caret_lang_tag(app).as_deref())
+    englat_engine::proof::missing_dictionary(caret_lang_tag(app).as_deref())
 }
 
 /// Review › Language (and the status bar's language): set the selection's proofing language, or
@@ -664,7 +664,7 @@ pub(crate) fn language_menu(ui: &mut Ui, app: &mut WordApp) {
             || (tag == "it-IT" && current.eq_ignore_ascii_case("it"))
             || (tag == "hr-HR" && current.eq_ignore_ascii_case("hr"))
             || (tag == "tr-TR" && current.eq_ignore_ascii_case("tr"))
-            || (tag == "cs-CZ" && wordcraft_engine::proof::ProofLang::from_tag(Some(&current)) == wordcraft_engine::proof::ProofLang::Cs)
+            || (tag == "cs-CZ" && englat_engine::proof::ProofLang::from_tag(Some(&current)) == englat_engine::proof::ProofLang::Cs)
             || (tag == "en-US" && current.eq_ignore_ascii_case("en"))
     };
     let checks = language_checks(&current, listed);
@@ -710,8 +710,8 @@ fn mi_check(ui: &mut Ui, app: &mut WordApp, label: &str, checked: bool, id: &str
 }
 
 /// Word's text wrapping styles in menu order: label, model value, `arrange.wrap` parameter.
-pub(crate) const WRAP_STYLES: [(&str, wordcraft_doc::para::Wrap, &str); 7] = {
-    use wordcraft_doc::para::Wrap;
+pub(crate) const WRAP_STYLES: [(&str, englat_doc::para::Wrap, &str); 7] = {
+    use englat_doc::para::Wrap;
     [
         ("In Line with Text", Wrap::Inline, "inline"),
         ("Square", Wrap::Square, "square"),
@@ -727,7 +727,7 @@ pub(crate) const WRAP_STYLES: [(&str, wordcraft_doc::para::Wrap, &str); 7] = {
 /// current one checked), then Move with Text / Fix Position on Page for a floating one. The
 /// canvas context menu shows it; the ribbon's Wrap Text button can share it.
 pub(crate) fn wrap_text_items(ui: &mut Ui, app: &mut WordApp) {
-    use wordcraft_engine::cmd::objects::{moves_with_text, selected};
+    use englat_engine::cmd::objects::{moves_with_text, selected};
     let state = selected(&app.session).and_then(|(_, o)| o.frame().map(|(_, _, f)| (f.wrap, moves_with_text(f))));
     let wrap = state.map(|(w, _)| w);
     for (label, w, v) in WRAP_STYLES {
@@ -735,7 +735,7 @@ pub(crate) fn wrap_text_items(ui: &mut Ui, app: &mut WordApp) {
     }
     ui.separator();
     // An inline object is neither: it's part of the text.
-    let with_text = state.filter(|(w, _)| *w != wordcraft_doc::para::Wrap::Inline).map(|(_, m)| m);
+    let with_text = state.filter(|(w, _)| *w != englat_doc::para::Wrap::Inline).map(|(_, m)| m);
     mi_check(ui, app, "Move with Text", with_text == Some(true), "arrange.moveWithText", json!({"value": true}));
     mi_check(ui, app, "Fix Position on Page", with_text == Some(false), "arrange.moveWithText", json!({"value": false}));
 }
@@ -780,7 +780,7 @@ fn home(app: &mut WordApp, ui: &mut Ui) {
                     .map(|s| if s.fract() == 0.0 { format!("{s:.0}") } else { format!("{s}") })
                     .unwrap_or_default();
                 let sizes: Vec<String> =
-                    wordcraft_engine::cmd::format::SIZES.iter().map(|s| if s.fract() == 0.0 { format!("{s:.0}") } else { s.to_string() }).collect();
+                    englat_engine::cmd::format::SIZES.iter().map(|s| if s.fract() == 0.0 { format!("{s:.0}") } else { s.to_string() }).collect();
                 if let Some(v) = combo(ui, "size", 52.0, &size, &sizes, None)
                     && let Ok(x) = v.trim().parse::<f64>()
                 {
@@ -840,10 +840,10 @@ fn home(app: &mut WordApp, ui: &mut Ui) {
                 });
                 let hl = app.canvas.last_highlight.clone();
                 split(ui, app, "highlight", "Text Highlight Color", "format.highlight", json!({"color": hl}), false, None, |ui, app| {
-                    let grid = wordcraft_doc::props::Highlight::ALL;
+                    let grid = englat_doc::props::Highlight::ALL;
                     egui::Grid::new("hl").spacing(vec2(3.0, 3.0)).show(ui, |ui| {
                         for (i, h) in grid.iter().enumerate().skip(1) {
-                            let c = h.rgb().unwrap_or(wordcraft_doc::Rgb::WHITE);
+                            let c = h.rgb().unwrap_or(englat_doc::Rgb::WHITE);
                             let (r, resp) = ui.allocate_exact_size(vec2(18.0, 18.0), Sense::click());
                             ui.painter().rect_filled(r, 2.0, egui::Color32::from_rgb(c.0, c.1, c.2));
                             if resp.on_hover_text(h.name()).clicked() {
@@ -859,7 +859,7 @@ fn home(app: &mut WordApp, ui: &mut Ui) {
                     mi(ui, app, "No Color", "format.highlight", json!({"color": "none"}));
                 });
                 let fc = app.canvas.last_font_color.clone();
-                let sw = wordcraft_doc::Rgb::parse(&fc).map(crate::theme::c32);
+                let sw = englat_doc::Rgb::parse(&fc).map(crate::theme::c32);
                 split(ui, app, "fontcolor", "Font Color", "format.color", json!({"color": fc}), false, sw, |ui, app| {
                     mi(ui, app, "Automatic", "format.color", json!({"color": "auto"}));
                     let theme = app.session.doc.settings.theme_colors.clone();
@@ -873,7 +873,7 @@ fn home(app: &mut WordApp, ui: &mut Ui) {
         // The buttons show alignment as seen on the page (Align Right is a right-to-left paragraph's start).
         let align = rp.as_ref().map(|r| r.align.visual(r.bidi)).unwrap_or_default();
         let rtl = rp.as_ref().is_some_and(|r| r.bidi);
-        let lists = wordcraft_engine::cmd::para::list_buttons(&app.session.doc, rp.as_ref().and_then(|r| r.numbering));
+        let lists = englat_engine::cmd::para::list_buttons(&app.session.doc, rp.as_ref().and_then(|r| r.numbering));
         stack(ui, |ui| {
             crate::widgets::row(ui, |ui| {
                 split(ui, app, "bullets", "Bullets", "para.bullets", json!({}), lists.bullets, None, |ui, app| {
@@ -932,7 +932,7 @@ fn home(app: &mut WordApp, ui: &mut Ui) {
             });
             ui.add_space(3.0);
             crate::widgets::row(ui, |ui| {
-                use wordcraft_doc::Align as A;
+                use englat_doc::Align as A;
                 small(ui, app, "alignLeft", None, "Align Left", "para.alignLeft", json!({}), align == A::Left);
                 small(ui, app, "alignCenter", None, "Center", "para.alignCenter", json!({}), align == A::Center);
                 small(ui, app, "alignRight", None, "Align Right", "para.alignRight", json!({}), align == A::Right);
@@ -1159,8 +1159,8 @@ fn insert(app: &mut WordApp, ui: &mut Ui) {
 }
 
 fn draw(app: &mut WordApp, ui: &mut Ui) {
-    use wordcraft_doc::freeform::InkTool;
-    use wordcraft_engine::cmd::draw::{DrawMode, lasso_selection};
+    use englat_doc::freeform::InkTool;
+    use englat_engine::cmd::draw::{DrawMode, lasso_selection};
     let mode = app.session.view.draw.mode;
     // The pen the colour and thickness menus change: the one in use, else the pen.
     let tool = mode.pen().unwrap_or(InkTool::Pen);
@@ -1224,8 +1224,8 @@ fn draw(app: &mut WordApp, ui: &mut Ui) {
 }
 
 /// The command that picks up `tool`.
-fn pen_command(tool: wordcraft_doc::freeform::InkTool) -> &'static str {
-    use wordcraft_doc::freeform::InkTool;
+fn pen_command(tool: englat_doc::freeform::InkTool) -> &'static str {
+    use englat_doc::freeform::InkTool;
     match tool {
         InkTool::Pen => "draw.pen",
         InkTool::Pencil => "draw.pencil",
@@ -1235,7 +1235,7 @@ fn pen_command(tool: wordcraft_doc::freeform::InkTool) -> &'static str {
 
 /// After the colour or thickness menu changed `tool`'s settings, the gallery pen that was in use
 /// (`custom`) takes them too.
-fn update_gallery_pen(app: &mut WordApp, custom: Option<usize>, tool: wordcraft_doc::freeform::InkTool) {
+fn update_gallery_pen(app: &mut WordApp, custom: Option<usize>, tool: englat_doc::freeform::InkTool) {
     let set = app.session.view.draw.settings(tool);
     if let Some(p) = custom.and_then(|i| app.session.view.draw.pens.get_mut(i))
         && p.kind == tool
@@ -1247,8 +1247,8 @@ fn update_gallery_pen(app: &mut WordApp, custom: Option<usize>, tool: wordcraft_
 
 /// A pen of the gallery: its kind's icon over a bar of its colour and thickness; a click picks it
 /// up, right-click offers Remove Pen.
-fn gallery_pen(ui: &mut Ui, app: &mut WordApp, i: usize, pen: wordcraft_engine::cmd::draw::CustomPen, active: bool) {
-    use wordcraft_doc::freeform::InkTool;
+fn gallery_pen(ui: &mut Ui, app: &mut WordApp, i: usize, pen: englat_engine::cmd::draw::CustomPen, active: bool) {
+    use englat_doc::freeform::InkTool;
     let t = Tokens::get(ui.ctx());
     let (r, resp) = ui.allocate_exact_size(vec2(34.0, CONTENT_H), Sense::click());
     crate::widgets::bg(ui, r, &resp, active, &t);
@@ -1297,7 +1297,7 @@ fn style_set_box(app: &mut WordApp, ui: &mut Ui) -> (Rect, Rect) {
 fn design(app: &mut WordApp, ui: &mut Ui) {
     group(ui, "Themes", None, app, |ui, app| {
         menu_button(ui, app, "themes", Some("Themes"), "Themes", true, "design.themes", |ui, app| {
-            for (name, ..) in wordcraft_engine::cmd::design::THEMES {
+            for (name, ..) in englat_engine::cmd::design::THEMES {
                 mi(ui, app, name, "design.theme", json!({"name": name}));
             }
         });
@@ -1306,12 +1306,12 @@ fn design(app: &mut WordApp, ui: &mut Ui) {
         style_set_box(app, ui);
         stack(ui, |ui| {
             menu_button(ui, app, "colors", Some("Colors"), "Theme Colors", false, "design.themeColors", |ui, app| {
-                for (name, ..) in wordcraft_engine::cmd::design::THEMES {
+                for (name, ..) in englat_engine::cmd::design::THEMES {
                     mi(ui, app, name, "design.themeColors", json!({"name": name}));
                 }
             });
             menu_button(ui, app, "fonts", Some("Fonts"), "Theme Fonts", false, "design.themeFonts", |ui, app| {
-                for (name, h, b, _) in wordcraft_engine::cmd::design::THEMES {
+                for (name, h, b, _) in englat_engine::cmd::design::THEMES {
                     mi_text(ui, app, &format!("{}: {h} / {b}", tl!(name)), "design.themeFonts", json!({"heading": h, "body": b}));
                 }
             });
@@ -1355,7 +1355,7 @@ fn design(app: &mut WordApp, ui: &mut Ui) {
 // Layout › Margins, Orientation, Size and Columns: the caret section's setting has a check
 // mark, as Text Direction's does (#1206).
 fn margins_items(ui: &mut Ui, app: &mut WordApp) {
-    let current = wordcraft_engine::cmd::page::margins_preset_at(&app.session);
+    let current = englat_engine::cmd::page::margins_preset_at(&app.session);
     // The two uniform presets name their margin in the measurement unit (`2,54 cm`, #838).
     for (l, k, uniform) in [
         ("Normal  {size} all", "normal", Some(72.0)),
@@ -1377,13 +1377,13 @@ fn margins_items(ui: &mut Ui, app: &mut WordApp) {
 }
 
 fn orientation_items(ui: &mut Ui, app: &mut WordApp) {
-    let land = wordcraft_engine::cmd::page::sect(&app.session).landscape;
+    let land = englat_engine::cmd::page::sect(&app.session).landscape;
     mi_check(ui, app, "Portrait", !land, "layout.orientation", json!({"value": "portrait"}));
     mi_check(ui, app, "Landscape", land, "layout.orientation", json!({"value": "landscape"}));
 }
 
 fn columns_items(ui: &mut Ui, app: &mut WordApp) {
-    let current = wordcraft_engine::cmd::page::columns_preset_at(&app.session);
+    let current = englat_engine::cmd::page::columns_preset_at(&app.session);
     for (l, k, params) in [
         ("One", "one", json!({"count": 1})),
         ("Two", "two", json!({"count": 2})),
@@ -1400,9 +1400,9 @@ fn columns_items(ui: &mut Ui, app: &mut WordApp) {
 fn layout(app: &mut WordApp, ui: &mut Ui) {
     group(ui, "Page Setup", Some("layout.pageSetup"), app, |ui, app| {
         // Text Direction works on what the caret is in: table cells, a text box, else the section.
-        let dir = wordcraft_engine::cmd::page::text_direction_at(&app.session);
+        let dir = englat_engine::cmd::page::text_direction_at(&app.session);
         menu_button(ui, app, "textDirection", Some("Text\nDirection"), "Text Direction", true, "layout.textDirection", |ui, app| {
-            use wordcraft_doc::props::TextDirection;
+            use englat_doc::props::TextDirection;
             for (label, d) in
                 [("Horizontal", TextDirection::Horizontal), ("Rotate all text 90°", TextDirection::Down), ("Rotate all text 270°", TextDirection::Up)]
             {
@@ -1512,11 +1512,11 @@ fn layout(app: &mut WordApp, ui: &mut Ui) {
 /// Arrange › Wrap Text: how the selected object sits in the text, and (Square, Tight, Through)
 /// which of its sides text flows on.
 fn wrap_menu(ui: &mut Ui, app: &mut WordApp) {
-    let (wrap, side) = wordcraft_engine::cmd::objects::selected(&app.session)
+    let (wrap, side) = englat_engine::cmd::objects::selected(&app.session)
         .and_then(|(_, o)| o.frame().map(|(_, _, f)| (f.wrap, f.wrap_text)))
         .unwrap_or_default();
     menu_button(ui, app, "wrapText", Some("Wrap\nText"), "Wrap Text", true, "arrange.wrapText", |ui, app| {
-        use wordcraft_doc::para::{Wrap, WrapText};
+        use englat_doc::para::{Wrap, WrapText};
         for (l, w, v) in [
             ("In Line with Text", Wrap::Inline, "inline"),
             ("Square", Wrap::Square, "square"),
@@ -1553,7 +1553,7 @@ fn rotate_menu(ui: &mut Ui, app: &mut WordApp, label: Option<&str>) {
 
 /// Size › Rotation: the selected object's exact angle (a drag of the field is one undo step).
 fn rotation_field(ui: &mut Ui, app: &mut WordApp) {
-    let deg0 = wordcraft_engine::cmd::objects::selected(&app.session).and_then(|(_, o)| o.frame().map(|(_, _, f)| f.spin().deg)).unwrap_or(0.0);
+    let deg0 = englat_engine::cmd::objects::selected(&app.session).and_then(|(_, o)| o.frame().map(|(_, _, f)| f.spin().deg)).unwrap_or(0.0);
     ui.label(egui::RichText::new(tl!("Rotation:")).small());
     let mut deg = deg0;
     let r = ui.add(egui::DragValue::new(&mut deg).speed(1.0).range(-360.0..=360.0).max_decimals(1).suffix("°"));
@@ -1621,7 +1621,7 @@ fn references(app: &mut WordApp, ui: &mut Ui) {
             let current = app.session.bib_style.clone();
             let label = crate::i18n::fmt(tl!("Style: {style}"), &[("style", &current)]);
             menu_button(ui, app, "styles", Some(&label), "Citation Style", false, "references.citationStyle", |ui, app| {
-                for st in &wordcraft_engine::cmd::citations::STYLES {
+                for st in &englat_engine::cmd::citations::STYLES {
                     mi_check(ui, app, st.name, st.name == current, "references.citationStyle", json!({"style": st.name}));
                 }
             });
@@ -1945,7 +1945,7 @@ fn view(app: &mut WordApp, ui: &mut Ui) {
 /// The Outlining tab (Outline view): outline levels, moving, expanding and collapsing, what is
 /// shown, and closing the view.
 fn outlining(app: &mut WordApp, ui: &mut Ui) {
-    use wordcraft_engine::layout::outline::{BODY, para_level};
+    use englat_engine::layout::outline::{BODY, para_level};
     let o = app.session.view.outline.clone();
     let level = app.session.doc.para_at(&app.session.sel.focus).map(|p| para_level(&app.session.doc, p)).unwrap_or(BODY);
     let name = |l: u8| if l >= BODY { tl!("Body Text").to_string() } else { crate::i18n::fmt(tl!("Level {n}"), &[("n", &l.to_string())]) };
@@ -2013,8 +2013,8 @@ fn help(app: &mut WordApp, ui: &mut Ui) {
 /// SmartArt Design: the selected graphic's items (Add Shape, Promote, Demote, Text Pane), its
 /// layout (a gallery of previews), its colours and Reset.
 fn smart_art_design(app: &mut WordApp, ui: &mut Ui) {
-    use wordcraft_doc::smart_art::{SmartArtColors, SmartArtLayout};
-    let Some(g) = wordcraft_engine::cmd::smart_art::selected_smart_art(&app.session) else { return };
+    use englat_doc::smart_art::{SmartArtColors, SmartArtLayout};
+    let Some(g) = englat_engine::cmd::smart_art::selected_smart_art(&app.session) else { return };
     let theme = app.session.doc.settings.theme_colors.clone();
     // The Text Pane's current item, else the last.
     let current = app.smart_art_item.filter(|i| *i < g.items.len());
@@ -2073,7 +2073,7 @@ fn smart_art_design(app: &mut WordApp, ui: &mut Ui) {
 /// Chart Design: the selected chart's elements (title, legend, data labels), its data and type,
 /// and its size.
 fn chart_design(app: &mut WordApp, ui: &mut Ui) {
-    let Some(chart) = wordcraft_engine::cmd::chart::selected_chart(&app.session) else { return };
+    let Some(chart) = englat_engine::cmd::chart::selected_chart(&app.session) else { return };
     group(ui, "Chart Layouts", None, app, |ui, app| {
         menu_button(ui, app, "chartTitle", Some("Chart Title"), "Chart Title", true, "", |ui, app| {
             mi_check(ui, app, "None", chart.title.is_none(), "chart.title", json!({"text": null}));
@@ -2083,10 +2083,10 @@ fn chart_design(app: &mut WordApp, ui: &mut Ui) {
         menu_button(ui, app, "legend", Some("Legend"), "Legend", true, "", |ui, app| {
             mi_check(ui, app, "None", chart.legend.is_none(), "chart.legend", json!({"pos": "none"}));
             for (label, pos) in [
-                ("Right", wordcraft_doc::chart::LegendPos::Right),
-                ("Top", wordcraft_doc::chart::LegendPos::Top),
-                ("Left", wordcraft_doc::chart::LegendPos::Left),
-                ("Bottom", wordcraft_doc::chart::LegendPos::Bottom),
+                ("Right", englat_doc::chart::LegendPos::Right),
+                ("Top", englat_doc::chart::LegendPos::Top),
+                ("Left", englat_doc::chart::LegendPos::Left),
+                ("Bottom", englat_doc::chart::LegendPos::Bottom),
             ] {
                 mi_check(ui, app, label, chart.legend == Some(pos), "chart.legend", json!({"pos": pos.id()}));
             }
@@ -2104,7 +2104,7 @@ fn chart_design(app: &mut WordApp, ui: &mut Ui) {
     });
     group(ui, "Size", None, app, |ui, app| {
         let (w0, h0) =
-            wordcraft_engine::cmd::objects::selected(&app.session).and_then(|(_, o)| o.frame().map(|(w, h, _)| (w, h))).unwrap_or((0.0, 0.0));
+            englat_engine::cmd::objects::selected(&app.session).and_then(|(_, o)| o.frame().map(|(w, h, _)| (w, h))).unwrap_or((0.0, 0.0));
         stack(ui, |ui| {
             for (label, key, v0) in [("H:", "height", h0), ("W:", "width", w0)] {
                 crate::widgets::row(ui, |ui| {
@@ -2125,8 +2125,8 @@ fn chart_design(app: &mut WordApp, ui: &mut Ui) {
 
 /// Shape Format: fill, outline and effects of the selected shape, and its arrangement.
 fn shape_format(app: &mut WordApp, ui: &mut Ui) {
-    let (stroke, glow_size) = match wordcraft_engine::cmd::objects::selected(&app.session) {
-        Some((_, wordcraft_doc::para::InlineObject::Shape { stroke, effects, .. })) => (stroke, effects.glow.map(|g| g.size)),
+    let (stroke, glow_size) = match englat_engine::cmd::objects::selected(&app.session) {
+        Some((_, englat_doc::para::InlineObject::Shape { stroke, effects, .. })) => (stroke, effects.glow.map(|g| g.size)),
         _ => (None, None),
     };
     let theme = app.session.doc.settings.theme_colors.clone();
@@ -2141,7 +2141,7 @@ fn shape_format(app: &mut WordApp, ui: &mut Ui) {
                 crate::colors::menu(ui, app, &theme, Target::cmd("shape.outline"));
                 ui.separator();
                 ui.menu_button(tl!("Weight"), |ui| {
-                    let color = stroke.unwrap_or(wordcraft_doc::Rgb::BLACK).hex();
+                    let color = stroke.unwrap_or(englat_doc::Rgb::BLACK).hex();
                     for w in [0.25, 0.5, 0.75, 1.0, 1.5, 2.25, 3.0, 4.5, 6.0] {
                         mi(ui, app, &format!("{w} pt"), "shape.outline", json!({"color": color, "width": w}));
                     }
@@ -2153,7 +2153,7 @@ fn shape_format(app: &mut WordApp, ui: &mut Ui) {
         });
     });
     alt_text_group(ui, app);
-    if wordcraft_engine::cmd::canvas::selected_canvas(&app.session).is_some() {
+    if englat_engine::cmd::canvas::selected_canvas(&app.session).is_some() {
         group(ui, "Drawing Canvas", None, app, |ui, app| {
             menu_button(ui, app, "canvas", Some("Drawing\nCanvas"), "Drawing Canvas", true, "", |ui, app| {
                 mi(ui, app, "Fit", "canvas.fit", json!({}));
@@ -2192,7 +2192,7 @@ fn shape_format(app: &mut WordApp, ui: &mut Ui) {
     });
     group(ui, "Size", None, app, |ui, app| {
         let (w0, h0) =
-            wordcraft_engine::cmd::objects::selected(&app.session).and_then(|(_, o)| o.frame().map(|(w, h, _)| (w, h))).unwrap_or((0.0, 0.0));
+            englat_engine::cmd::objects::selected(&app.session).and_then(|(_, o)| o.frame().map(|(w, h, _)| (w, h))).unwrap_or((0.0, 0.0));
         stack(ui, |ui| {
             crate::widgets::row(ui, |ui| {
                 for (label, key, v0) in [("W:", "width", w0), ("H:", "height", h0)] {
@@ -2216,8 +2216,8 @@ fn shape_format(app: &mut WordApp, ui: &mut Ui) {
 /// Shape Format › Text: the text box's Text Direction and Align Text, and Create Link (Break Link
 /// once it is linked to another box).
 fn shape_text_group(app: &mut WordApp, ui: &mut Ui) {
-    use wordcraft_doc::props::{TextVert, VAlign};
-    let target = wordcraft_engine::cmd::objects::text_box_target(&app.session);
+    use englat_doc::props::{TextVert, VAlign};
+    let target = englat_engine::cmd::objects::text_box_target(&app.session);
     let body = target.and_then(|(_, id)| app.session.doc.parts.get(&id).map(|p| p.body)).unwrap_or_default();
     group(ui, "Text", None, app, |ui, app| {
         stack(ui, |ui| {
@@ -2233,7 +2233,7 @@ fn shape_text_group(app: &mut WordApp, ui: &mut Ui) {
             });
             menu_button(ui, app, "alignText", Some("Align Text"), "Align Text", false, "", |ui, app| {
                 for (label, anchor) in [("Top", VAlign::Top), ("Middle", VAlign::Center), ("Bottom", VAlign::Bottom)] {
-                    mi_check(ui, app, label, body.anchor == anchor, "shape.alignText", json!({"anchor": wordcraft_doc::props::anchor_ooxml(anchor)}));
+                    mi_check(ui, app, label, body.anchor == anchor, "shape.alignText", json!({"anchor": englat_doc::props::anchor_ooxml(anchor)}));
                 }
             });
             if body.next.is_some() {
@@ -2254,11 +2254,11 @@ fn alt_text_group(ui: &mut Ui, app: &mut WordApp) {
 }
 
 /// Shape Format › Shape Effects: Shadow, Glow and Soft Edges, each with presets and a "No …" entry.
-fn shape_effects_menu(ui: &mut Ui, app: &mut WordApp, theme: &[wordcraft_doc::Rgb], glow_size: Option<f32>) {
+fn shape_effects_menu(ui: &mut Ui, app: &mut WordApp, theme: &[englat_doc::Rgb], glow_size: Option<f32>) {
     ui.menu_button(tl!("Shadow"), |ui| {
         mi(ui, app, "No Shadow", "shape.effects", json!({"shadow": null}));
         ui.separator();
-        for (id, label) in wordcraft_doc::effects::SHADOW_PRESETS {
+        for (id, label) in englat_doc::effects::SHADOW_PRESETS {
             mi(ui, app, label, "shape.effects", json!({"shadow": id}));
         }
     });
@@ -2317,8 +2317,8 @@ fn picture_format(app: &mut WordApp, ui: &mut Ui) {
             // pixels, one undo step for the whole drag (same pattern as Size › W/H).
             // The current value isn't stored anywhere, so the slider reopens where it
             // was last left for this picture.
-            let (media, off) = match wordcraft_engine::cmd::objects::selected(&app.session) {
-                Some((pos, wordcraft_doc::para::InlineObject::Image { media, .. })) => (media, pos.off),
+            let (media, off) = match englat_engine::cmd::objects::selected(&app.session) {
+                Some((pos, englat_doc::para::InlineObject::Image { media, .. })) => (media, pos.off),
                 _ => (String::new(), 0),
             };
             let key = egui::Id::new(("picture_transparency", media, off));
@@ -2366,8 +2366,8 @@ fn picture_format(app: &mut WordApp, ui: &mut Ui) {
         });
     });
     group(ui, "Size", None, app, |ui, app| {
-        let (media, off, w0, h0, crop0, alt0) = match wordcraft_engine::cmd::objects::selected(&app.session) {
-            Some((pos, wordcraft_doc::para::InlineObject::Image { media, w, h, alt, crop, .. })) => (media, pos.off, w, h, crop, alt),
+        let (media, off, w0, h0, crop0, alt0) = match englat_engine::cmd::objects::selected(&app.session) {
+            Some((pos, englat_doc::para::InlineObject::Image { media, w, h, alt, crop, .. })) => (media, pos.off, w, h, crop, alt),
             _ => (String::new(), 0, 0.0, 0.0, [0.0; 4], String::new()),
         };
         // `picture.size` locks the aspect ratio unless told otherwise, so one dimension suffices.
@@ -2470,7 +2470,7 @@ fn table_design(app: &mut WordApp, ui: &mut Ui) {
             .styles
             .styles
             .iter()
-            .filter(|s| s.kind == wordcraft_doc::StyleKind::Table && !s.hidden)
+            .filter(|s| s.kind == englat_doc::StyleKind::Table && !s.hidden)
             .map(|s| (s.builtin, s.id.clone(), crate::i18n::style_name(s)))
             .collect();
         styles.sort_by_key(|(builtin, _, _)| *builtin);
@@ -2491,8 +2491,8 @@ fn table_design(app: &mut WordApp, ui: &mut Ui) {
                     .doc
                     .styles
                     .get(&id)
-                    .filter(|st| st.kind == wordcraft_doc::StyleKind::Table)
-                    .map(wordcraft_engine::cmd::table_style::is_builtin_table_style)
+                    .filter(|st| st.kind == englat_doc::StyleKind::Table)
+                    .map(englat_engine::cmd::table_style::is_builtin_table_style)
             });
             let can_modify = current.is_some();
             // Built-in table styles can't be deleted.
@@ -2544,7 +2544,7 @@ fn cell_size_boxes(ui: &mut Ui, app: &mut WordApp) {
     let row = t.rows.get(r).map(|x| x.props.clone()).unwrap_or_default();
     let stored_w = t.grid.get(t.grid_col(r, c)).copied();
     let laid = app.session.layout().pages.iter().flat_map(|pg| pg.items.iter()).find_map(|it| match it {
-        wordcraft_layout::Placed::Cell { rect, table, row, cell, story: st, .. } if *table == tp && *row == r && *cell == c && *st == story => {
+        englat_layout::Placed::Cell { rect, table, row, cell, story: st, .. } if *table == tp && *row == r && *cell == c && *st == story => {
             Some(*rect)
         }
         _ => None,
@@ -2558,7 +2558,7 @@ fn cell_size_boxes(ui: &mut Ui, app: &mut WordApp) {
         .iter()
         .flat_map(|pg| pg.items.iter())
         .filter_map(|it| match it {
-            wordcraft_layout::Placed::Cell { rect, table, row, story: st, .. } if *table == tp && *row == r && *st == story => Some(rect.h),
+            englat_layout::Placed::Cell { rect, table, row, story: st, .. } if *table == tp && *row == r && *st == story => Some(rect.h),
             _ => None,
         })
         .reduce(f32::min);
@@ -2566,7 +2566,7 @@ fn cell_size_boxes(ui: &mut Ui, app: &mut WordApp) {
     let k = unit.pt_per_unit();
     let h0 = row.height.or(row_h).unwrap_or(0.0);
     let w0 = laid.map(|x| x.w).or(stored_w).unwrap_or(0.0);
-    let exact = row.height_rule == wordcraft_doc::props::HeightRule::Exact;
+    let exact = row.height_rule == englat_doc::props::HeightRule::Exact;
     // The edited value in points, and whether it continues a drag (joins the previous Undo step).
     let boxed = |ui: &mut Ui, label: &str, pt: f32| -> Option<(f32, bool)> {
         let mut out = None;
@@ -2679,7 +2679,7 @@ fn table_layout(app: &mut WordApp, ui: &mut Ui) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use wordcraft_engine::Session;
+    use englat_engine::Session;
 
     fn png_data() -> String {
         let img = image::RgbaImage::from_fn(20, 10, |x, y| {
@@ -2687,14 +2687,14 @@ mod tests {
         });
         let mut b = Vec::new();
         image::DynamicImage::ImageRgba8(img).write_to(&mut std::io::Cursor::new(&mut b), image::ImageFormat::Png).unwrap();
-        wordcraft_engine::cmd::insert::base64_encode(&b)
+        englat_engine::cmd::insert::base64_encode(&b)
     }
 
     /// The style set gallery fills exactly its own box and the next control starts after a gap,
     /// so Colors and Fonts can't overlap the thumbnails (#638).
     #[test]
     fn design_style_set_gallery_stays_in_its_box() {
-        let mut app = WordApp::new(Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut app = WordApp::new(Session::new(englat_doc::Document::new()), crate::Services::default());
         let mut seen = None;
         let mut h = egui_kittest::Harness::builder().with_size(vec2(1440.0, 200.0)).build_ui(|ui| {
             ui.horizontal_top(|ui| {
@@ -2715,7 +2715,7 @@ mod tests {
     #[test]
     fn menu_buttons_follow_their_command() {
         use crate::widgets::menu_enabled;
-        let mut a = crate::WordApp::new(Session::new(wordcraft_doc::Document::from_text("Text")), crate::Services::default());
+        let mut a = crate::WordApp::new(Session::new(englat_doc::Document::from_text("Text")), crate::Services::default());
         for id in ["table.selectTable", "table.deleteTable", "table.autofit"] {
             assert!(!menu_enabled(&a, id), "{id} is off outside a table");
         }
@@ -2732,7 +2732,7 @@ mod tests {
     #[test]
     fn page_setup_menus_mark_the_current_setting() {
         use egui_kittest::kittest::{By, NodeT, Queryable};
-        let mut app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("Text")), crate::Services::default());
+        let mut app = WordApp::new(Session::new(englat_doc::Document::from_text("Text")), crate::Services::default());
         app.run("layout.margins", json!({"preset": "narrow"})).unwrap();
         app.run("layout.orientation", json!({"value": "landscape"})).unwrap();
         app.run("layout.size", json!({"name": "A4"})).unwrap();
@@ -2805,7 +2805,7 @@ mod tests {
 
     #[test]
     fn picture_format_tab_appears_when_picture_selected() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(englat_doc::Document::new());
         assert!(!has_picture_selected(&s));
         assert!(!contextual_tabs(&s).contains(&"Picture Format"));
         s.run("insert.picture", &json!({"data": png_data()})).unwrap();
@@ -2818,7 +2818,7 @@ mod tests {
 
     #[test]
     fn shape_format_tab_appears_when_shape_selected() {
-        let mut s = Session::new(wordcraft_doc::Document::new());
+        let mut s = Session::new(englat_doc::Document::new());
         s.run("insert.shape", &json!({"kind": "rectangle"})).unwrap();
         assert!(contextual_tabs(&s).contains(&"Shape Format"));
         assert!(!contextual_tabs(&s).contains(&"Picture Format"));
@@ -2830,7 +2830,7 @@ mod tests {
     #[test]
     fn page_setup_launcher_opens_the_dialog() {
         // A group launcher runs its command with no parameters (#471).
-        let mut app = crate::WordApp::new(Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut app = crate::WordApp::new(Session::new(englat_doc::Document::new()), crate::Services::default());
         app.run("layout.pageSetup", json!({})).unwrap();
         assert!(matches!(app.dialog, Some(crate::dialogs::Dialog::PageSetup { .. })));
         // `ui.dialog` needs a dialog name, so it can't be a launcher.
@@ -2844,7 +2844,7 @@ mod tests {
 
     #[test]
     fn smart_art_picker_inserts_and_design_tab_follows_the_selection() {
-        let mut app = crate::WordApp::new(Session::new(wordcraft_doc::Document::new()), Default::default());
+        let mut app = crate::WordApp::new(Session::new(englat_doc::Document::new()), Default::default());
         // Insert › SmartArt without a layout opens the picker.
         let _ = app.run("insert.smartArt", json!({}));
         assert_eq!(app.dialog.as_ref().map(crate::dialogs::Dialog::name), Some("insertSmartArt"));
@@ -2860,7 +2860,7 @@ mod tests {
 
     #[test]
     fn chart_design_tab_appears_when_chart_selected_and_buttons_open_dialogs() {
-        let mut app = crate::WordApp::new(Session::new(wordcraft_doc::Document::new()), Default::default());
+        let mut app = crate::WordApp::new(Session::new(englat_doc::Document::new()), Default::default());
         // Insert › Chart without a type opens the gallery; choosing inserts.
         let _ = app.run("insert.chart", json!({}));
         assert_eq!(app.dialog.as_ref().map(crate::dialogs::Dialog::name), Some("insertChart"));
@@ -2880,7 +2880,7 @@ mod tests {
     /// made for three, so "Hide White Space" was drawn under "Show". Every tab, every language.
     #[test]
     fn ribbon_groups_fit_above_their_labels() {
-        let app = WordApp::new(Session::new(wordcraft_engine::sample::sample_document()), crate::Services::default());
+        let app = WordApp::new(Session::new(englat_engine::sample::sample_document()), crate::Services::default());
         // Wide enough that no tab hides groups behind its scroll arrows.
         let mut h = egui_kittest::Harness::builder().with_size(vec2(2560.0, 900.0)).build_ui_state(
             |ui, app: &mut WordApp| {
@@ -2912,7 +2912,7 @@ mod tests {
     #[test]
     fn table_tabs_stay_clickable_when_the_tab_strip_overflows() {
         use egui_kittest::kittest::Queryable;
-        let mut app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("Text")), crate::Services::default());
+        let mut app = WordApp::new(Session::new(englat_doc::Document::from_text("Text")), crate::Services::default());
         app.run("insert.table", json!({"rows": 3, "cols": 3})).unwrap();
         app.run("ui.language", json!({"value": "pl"})).unwrap();
         let mut h = egui_kittest::Harness::builder().with_size(vec2(1280.0, 900.0)).build_ui_state(
@@ -2956,7 +2956,7 @@ mod tests {
     fn language_menu_reaches_every_language() {
         use egui_kittest::kittest::{By, NodeT, Queryable};
         let item = |label: &'static str| By::new().label_contains(label);
-        let app = WordApp::new(Session::new(wordcraft_doc::Document::from_text("Bonjour")), crate::Services::default());
+        let app = WordApp::new(Session::new(englat_doc::Document::from_text("Bonjour")), crate::Services::default());
         let mut h =
             egui_kittest::Harness::builder().with_size(vec2(400.0, 400.0)).build_ui_state(|ui, app: &mut WordApp| language_menu(ui, app), app);
         h.run();

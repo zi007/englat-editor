@@ -2,7 +2,7 @@
 //! Synthetic packages, written here; no external documents or installed fonts are needed.
 
 use std::io::Write;
-use wordcraft_doc::{Document, Paragraph};
+use englat_doc::{Document, Paragraph};
 
 fn package(run: &str, defaults: &str, styles: &str, paragraph_style: &str) -> Vec<u8> {
     let ns = r#"xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main""#;
@@ -30,10 +30,10 @@ fn paragraph(d: &Document) -> &Paragraph {
 }
 
 fn check_generations(bytes: &[u8], check: impl Fn(&Document)) {
-    let mut d = wordcraft_docx::read(bytes).unwrap();
+    let mut d = englat_docx::read(bytes).unwrap();
     for _ in 0..3 {
         check(&d);
-        let next = wordcraft_docx::read(&wordcraft_docx::write(&d).unwrap()).unwrap();
+        let next = englat_docx::read(&englat_docx::write(&d).unwrap()).unwrap();
         assert_eq!(paragraph(&next).text, paragraph(&d).text);
         assert_eq!(paragraph(&next).runs, paragraph(&d).runs);
         assert_eq!(paragraph(&next).props.bidi, Some(true));
@@ -128,7 +128,7 @@ fn tracked_formatting_keeps_independent_complex_script_values() {
         assert_eq!((change.old.size_cs, change.old.bold_cs, change.old.italic_cs), (Some(10.0), Some(false), Some(false)));
         let old = d.styles.resolve_char(None, &change.old).complex();
         assert_eq!((old.size, old.bold, old.italic), (10.0, false, false));
-        let mut overlaid = wordcraft_doc::props::CharProps::default();
+        let mut overlaid = englat_doc::props::CharProps::default();
         overlaid.overlay(c);
         assert_eq!(overlaid.fmt_change, c.fmt_change);
     });

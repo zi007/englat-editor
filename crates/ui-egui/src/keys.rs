@@ -353,7 +353,7 @@ pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
                     continue;
                 }
                 // Escape puts the pen or eraser down (back to selecting).
-                if key == Key::Escape && app.session.view.draw.mode != wordcraft_engine::cmd::draw::DrawMode::Select {
+                if key == Key::Escape && app.session.view.draw.mode != englat_engine::cmd::draw::DrawMode::Select {
                     app.canvas.ink = None;
                     let _ = app.run("draw.select", json!({}));
                     continue;
@@ -380,15 +380,15 @@ pub fn canvas_events(app: &mut WordApp, ctx: &egui::Context) {
                 // it (#1538). The anchor position is just after the box's object character.
                 if key == Key::Escape
                     && crate::canvas::in_text_box(app)
-                    && let wordcraft_doc::StoryRef::Part(id) = app.session.sel.focus.story
+                    && let englat_doc::StoryRef::Part(id) = app.session.sel.focus.story
                     && let Some(end) = app.session.doc.text_box_anchor(id)
-                    && let Some(off) = end.off.checked_sub(wordcraft_doc::para::OBJ.len_utf8())
+                    && let Some(off) = end.off.checked_sub(englat_doc::para::OBJ.len_utf8())
                 {
-                    let start = wordcraft_doc::Pos { off, ..end.clone() };
+                    let start = englat_doc::Pos { off, ..end.clone() };
                     let _ = app.run("select.range", json!({"anchor": start, "focus": end}));
                     continue;
                 }
-                if key == Key::Escape && matches!(app.session.sel.focus.story, wordcraft_doc::StoryRef::Part(_)) && app.session.sel.is_collapsed() {
+                if key == Key::Escape && matches!(app.session.sel.focus.story, englat_doc::StoryRef::Part(_)) && app.session.sel.is_collapsed() {
                     let _ = app.run("insert.closeHeader", json!({}));
                     continue;
                 }
@@ -523,7 +523,7 @@ fn finish_alt_code(app: &mut WordApp) {
     let mut params = json!({"code": code});
     if system_composes {
         // Windows: the code pages of the system locale (Polish 1250/852, Russian 1251/866…).
-        let (ansi, oem) = wordcraft_engine::cmd::text::system_code_pages();
+        let (ansi, oem) = englat_engine::cmd::text::system_code_pages();
         params = json!({"code": code, "ansi": ansi, "oem": oem});
         // The system's composed character comes as text after the digits' swallowed text.
         app.canvas.swallow_text = false;
@@ -553,7 +553,7 @@ fn alt_code_echoed(app: &mut WordApp, echo: &AltCodeEcho, text: &str) -> bool {
         let ours =
             start.filter(|_| s.sel.is_collapsed()).filter(|st| s.doc.para_at(&f).and_then(|p| p.text.get(*st..f.off)) == Some(echo.typed.as_str()));
         if let Some(start) = ours {
-            app.session.sel = wordcraft_engine::Selection { anchor: wordcraft_doc::Pos { off: start, ..f.clone() }, focus: f };
+            app.session.sel = englat_engine::Selection { anchor: englat_doc::Pos { off: start, ..f.clone() }, focus: f };
             let _ = app.run("text.insert", json!({"text": text}));
         }
     }
@@ -670,9 +670,9 @@ mod tests {
         if cfg!(target_os = "macos") {
             return;
         }
-        let doc_text = |a: &WordApp| a.session.doc.plain_text(wordcraft_doc::StoryRef::Body);
+        let doc_text = |a: &WordApp| a.session.doc.plain_text(englat_doc::StoryRef::Body);
         let ctx = egui::Context::default();
-        let mut a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let mut a = WordApp::new(englat_engine::Session::new(englat_doc::Document::new()), crate::Services::default());
         let alt = Modifiers { alt: true, ..Default::default() };
         let key = |key, pressed, modifiers| egui::Event::Key { key, physical_key: Some(key), pressed, repeat: false, modifiers };
         let frame = |a: &mut WordApp, events: Vec<egui::Event>| {
@@ -700,11 +700,11 @@ mod tests {
             frame(&mut a, vec![key(k, true, alt), key(k, false, alt)]);
         }
         frame(&mut a, vec![key(Key::AltLeft, false, alt), egui::Event::ModifiersChanged(Modifiers::NONE)]);
-        let pages = wordcraft_engine::cmd::text::system_code_pages();
-        let oem = wordcraft_engine::cmd::text::alt_code_char(
+        let pages = englat_engine::cmd::text::system_code_pages();
+        let oem = englat_engine::cmd::text::alt_code_char(
             "233",
             1252,
-            if cfg!(target_os = "windows") { pages.1 } else { wordcraft_engine::cmd::text::system_oem_code_page() },
+            if cfg!(target_os = "windows") { pages.1 } else { englat_engine::cmd::text::system_oem_code_page() },
         );
         assert_eq!(doc_text(&a).trim_end(), format!("éé{}", oem.unwrap_or('?')));
         // A bare Alt tap still opens keytips.
@@ -714,7 +714,7 @@ mod tests {
     }
 
     fn alt_frame_app() -> (egui::Context, WordApp) {
-        let a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), crate::Services::default());
+        let a = WordApp::new(englat_engine::Session::new(englat_doc::Document::new()), crate::Services::default());
         (egui::Context::default(), a)
     }
 
@@ -737,7 +737,7 @@ mod tests {
         alt_frame(&ctx, &mut a, vec![alt_key(Key::Num5, true, false)]);
         assert_eq!(a.canvas.alt_code, "65");
         alt_frame(&ctx, &mut a, vec![egui::Event::ModifiersChanged(Modifiers::NONE)]);
-        assert_eq!(a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end(), "A");
+        assert_eq!(a.session.doc.plain_text(englat_doc::StoryRef::Body).trim_end(), "A");
     }
 
     /// Switching to another window mid-code drops the digits: releasing Alt later types nothing.
@@ -751,7 +751,7 @@ mod tests {
         alt_frame(&ctx, &mut a, vec![egui::Event::WindowFocused(false)]);
         assert_eq!(a.canvas.alt_code, "");
         alt_frame(&ctx, &mut a, vec![egui::Event::WindowFocused(true), egui::Event::ModifiersChanged(Modifiers::NONE)]);
-        assert_eq!(a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end(), "");
+        assert_eq!(a.session.doc.plain_text(englat_doc::StoryRef::Body).trim_end(), "");
     }
 
     /// Windows composes Alt codes with the system's code pages: for a code up to 255 its
@@ -760,7 +760,7 @@ mod tests {
     #[test]
     fn system_composed_alt_code_character_wins_up_to_255() {
         let (ctx, mut a) = alt_frame_app();
-        let text = |a: &WordApp| a.session.doc.plain_text(wordcraft_doc::StoryRef::Body).trim_end().to_string();
+        let text = |a: &WordApp| a.session.doc.plain_text(englat_doc::StoryRef::Body).trim_end().to_string();
         let _ = a.run("text.typeCode", json!({"code": "0185", "ansi": 1252}));
         a.canvas.alt_code_echo = Some(AltCodeEcho { typed: "¹".into(), system_composes: true, byte_code: true });
         alt_frame(&ctx, &mut a, vec![egui::Event::Text("ą".into())]);

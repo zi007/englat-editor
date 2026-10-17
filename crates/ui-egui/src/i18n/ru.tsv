@@ -10,7 +10,7 @@
 # Clean room: every entry was written from the plain meaning of the English label in ordinary
 # computing vocabulary. No Microsoft Word (or other product) localisation, string table or
 # translated UI was consulted or copied; add entries the same way.
-# Product, format and technology names (WordCraft, PDF, Markdown, MCP …) stay in Latin letters.
+# Product, format and technology names (ENGLAT Editor, PDF, Markdown, MCP …) stay in Latin letters.
 # Counts use count-neutral wording (`Слов: 21`), so no plural forms are needed.
 
 	(no suggestions)	(нет вариантов)
@@ -18,7 +18,7 @@
 	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	Бесплатный текстовый процессор с открытым исходным кодом, написанный с нуля на Rust.\nВходит в Crafting Apps от команды ArtCraft.
 	AaBbCcDd	АаБбВвГг
 	About	О программе
-	About WordCraft	О WordCraft
+	About ENGLAT Editor	О ENGLAT Editor
 	Accept	Принять
 	Accept All Changes	Принять все изменения
 	Accept This Change	Принять это изменение
@@ -254,7 +254,7 @@
 	Equation	Уравнение
 	Eraser	Ластик
 	Even Page	Чётная страница
-	Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Любая команда доступна скриптам и ИИ-агентам: запустите `wordcraft-cli mcp`, чтобы получить MCP-сервер, или запустите приложение с `--control <port>`, чтобы открыть управляющий канал JSON.
+	Every command is available to scripts and AI agents: run `englat-editor-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Любая команда доступна скриптам и ИИ-агентам: запустите `englat-editor-cli mcp`, чтобы получить MCP-сервер, или запустите приложение с `--control <port>`, чтобы открыть управляющий канал JSON.
 	Export	Экспорт
 	Export a copy to share (PDF, Word document)	Экспортировать копию, чтобы поделиться (PDF, документ Word)
 	Export Page as PNG	Экспортировать страницу в PNG
@@ -388,7 +388,7 @@
 	Landscape	Альбомная
 	Language	Язык
 	{language} (no dictionary)	{language} (нет словаря)
-	No spelling dictionary for {language} is installed, so it isn't checked. WordCraft looks for the Hunspell dictionary {name} in the WORDCRAFT_DICTIONARIES folder and in the usual system locations.	Орфографический словарь для языка «{language}» не установлен, поэтому текст не проверяется. WordCraft ищет словарь Hunspell {name} в папке WORDCRAFT_DICTIONARIES и в обычных системных расположениях.
+	No spelling dictionary for {language} is installed, so it isn't checked. ENGLAT Editor looks for the Hunspell dictionary {name} in the ENGLAT_EDITOR_DICTIONARIES folder and in the usual system locations.	Орфографический словарь для языка «{language}» не установлен, поэтому текст не проверяется. ENGLAT Editor ищет словарь Hunspell {name} в папке ENGLAT_EDITOR_DICTIONARIES и в обычных системных расположениях.
 	Lasso	Лассо
 	Last Column	Последний столбец
 	Last commit	Последний коммит
@@ -437,7 +437,7 @@
 	Merge Formatting	Объединить форматирование
 	Merged PRs	Принятые PR
 	Mirrored	Зеркальные
-	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team и участники проекта WordCraft.
+	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team и участники проекта ENGLAT Editor.
 	Moderate	Средние
 	Modify Style	Изменить стиль
 	Modify…	Изменить…
@@ -689,7 +689,7 @@
 	Small caps	Малые прописные
 	SmartArt	SmartArt
 	Sort	Сортировка
-	Source code: github.com/storytold/wordcraft	Исходный код: github.com/storytold/wordcraft
+	Source code: github.com/zi007/englat-editor	Исходный код: github.com/zi007/englat-editor
 	Space before/after:	Интервал перед/после:
 	Spacing	Интервал
 	Spacing (pt):	Интервал (пт):
@@ -830,7 +830,7 @@ preview	Title	Пример
 	Word Left	На слово влево
 	Word Right	На слово вправо
 	WordArt	WordArt
-	WordCraft	WordCraft
+	ENGLAT Editor	ENGLAT Editor
 	Words	Слова
 	Words only	Только слова
 	Wrap Text	Обтекание текстом
@@ -848,7 +848,7 @@ preview	Title	Пример
 	Only web (http, https) and email (mailto) links can be followed	Переходить можно только по веб-ссылкам (http, https) и ссылкам на электронную почту (mailto)
 
 	Apply Styles	Применить стили
-	AutoSave documents you have saved in WordCraft	Автосохранение документов, уже сохранённых в WordCraft
+	AutoSave documents you have saved in ENGLAT Editor	Автосохранение документов, уже сохранённых в ENGLAT Editor
 	AutoSave failed: {error}. Save the document to turn AutoSave back on.	Ошибка автосохранения: {error}. Сохраните документ, чтобы снова включить автосохранение.
 	Bottom Margin	Нижнее поле
 	Edit Comment	Изменить комментарий
@@ -1100,7 +1100,7 @@ preview	Title	Пример
 	Insert a new equation (Alt+=)	Вставить новое уравнение (Alt+=)
 	Leave the equation (Esc)	Выйти из уравнения (Esc)
 	Preview	Предварительный просмотр
-	getartcraft.com/apps/wordcraft	getartcraft.com/apps/wordcraft
+	github.com/zi007/englat-editor	github.com/zi007/englat-editor
 	Browse…	Обзор…
 
 # Equation gallery, themes, watermarks, paper sizes, table styles and other strings the
@@ -1536,7 +1536,7 @@ preview	Title	Пример
 	The document will be saved with a password. Save it to protect it.	Документ будет сохранён с паролем. Сохраните его, чтобы защитить.
 	The password is removed. Save the document to keep the change.	Пароль убран. Сохраните документ, чтобы изменение осталось.
 	The passwords don't match.	Пароли не совпадают.
-	Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password.	Храните пароль в надёжном месте: без него никто, включая WordCraft, не сможет открыть документ. Оставьте оба поля пустыми, чтобы убрать пароль.
+	Keep the password somewhere safe: without it nobody, ENGLAT Editor included, can open the document. Leave both boxes empty to remove the password.	Храните пароль в надёжном месте: без него никто, включая ENGLAT Editor, не сможет открыть документ. Оставьте оба поля пустыми, чтобы убрать пароль.
 	{cols}×{rows} Table	Таблица {cols}×{rows}
 	Name	Имя
 	PRs	PR
@@ -2020,13 +2020,13 @@ preview	Title	Пример
 	Hindi	Хинди
 	Context	Контекст
 	System	Системные
-	Couldn't make WordCraft the default: {error}	Не удалось сделать WordCraft приложением по умолчанию: {error}
-	In Default apps, choose WordCraft for the document types you want it to open.	В разделе «Приложения по умолчанию» выберите WordCraft для нужных типов документов.
-	Make WordCraft the default for Word documents…	Сделать WordCraft приложением по умолчанию для документов Word…
-	Opens .docx, .doc, .rtf and .odt files and Word templates with WordCraft from now on.	Отныне файлы .docx, .doc, .rtf и .odt и шаблоны Word будут открываться в WordCraft.
-	Opens Settings › Default apps, where you choose WordCraft for .docx and the other document types.	Открывает «Параметры» › «Приложения по умолчанию», где можно выбрать WordCraft для .docx и других типов документов.
-	To open Word documents with WordCraft by default: select one in Finder, choose File › Get Info, pick WordCraft under Open with, then click Change All.	Чтобы открывать документы Word в WordCraft по умолчанию: выберите документ в Finder, выберите «Файл» › «Свойства», укажите WordCraft в разделе «Открывать в программе» и нажмите «Изменить все».
-	WordCraft is now the default app for Word documents.	WordCraft теперь приложение по умолчанию для документов Word.
+	Couldn't make ENGLAT Editor the default: {error}	Не удалось сделать ENGLAT Editor приложением по умолчанию: {error}
+	In Default apps, choose ENGLAT Editor for the document types you want it to open.	В разделе «Приложения по умолчанию» выберите ENGLAT Editor для нужных типов документов.
+	Make ENGLAT Editor the default for Word documents…	Сделать ENGLAT Editor приложением по умолчанию для документов Word…
+	Opens .docx, .doc, .rtf and .odt files and Word templates with ENGLAT Editor from now on.	Отныне файлы .docx, .doc, .rtf и .odt и шаблоны Word будут открываться в ENGLAT Editor.
+	Opens Settings › Default apps, where you choose ENGLAT Editor for .docx and the other document types.	Открывает «Параметры» › «Приложения по умолчанию», где можно выбрать ENGLAT Editor для .docx и других типов документов.
+	To open Word documents with ENGLAT Editor by default: select one in Finder, choose File › Get Info, pick ENGLAT Editor under Open with, then click Change All.	Чтобы открывать документы Word в ENGLAT Editor по умолчанию: выберите документ в Finder, выберите «Файл» › «Свойства», укажите ENGLAT Editor в разделе «Открывать в программе» и нажмите «Изменить все».
+	ENGLAT Editor is now the default app for Word documents.	ENGLAT Editor теперь приложение по умолчанию для документов Word.
 	Templates	Шаблоны
 	Templates and Add-ins	Шаблоны и надстройки
 	Attach Template	Присоединить шаблон
@@ -2180,7 +2180,7 @@ preview	Title	Пример
 	Word document	Документ Word
 	All files	Все файлы
 	Recipient lists	Списки получателей
-	The system file dialog isn't available, so WordCraft shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	Системное диалоговое окно выбора файлов недоступно, поэтому WordCraft показывает собственное. Чтобы пользоваться системным, установите портал выбора файлов (например, xdg-desktop-portal-gtk) или zenity.
+	The system file dialog isn't available, so ENGLAT Editor shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	Системное диалоговое окно выбора файлов недоступно, поэтому ENGLAT Editor показывает собственное. Чтобы пользоваться системным, установите портал выбора файлов (например, xdg-desktop-portal-gtk) или zenity.
 	Up one level	На уровень вверх
 	Home folder	Домашняя папка
 	{name} wasn't found.	{name} не найден.
@@ -2188,8 +2188,8 @@ preview	Title	Пример
 	This folder can't be read: {error}	Не удаётся прочитать папку: {error}
 	Showing the first {count} items.	Показаны первые элементы: {count}.
 	File name:	Имя файла:
-	Browse in WordCraft…	Обзор в WordCraft…
-	Open a file with WordCraft's own browser when the system file dialog doesn't appear.	Открыть файл во встроенном обозревателе WordCraft, если системное диалоговое окно выбора файлов не появляется.
+	Browse in ENGLAT Editor…	Обзор в ENGLAT Editor…
+	Open a file with ENGLAT Editor's own browser when the system file dialog doesn't appear.	Открыть файл во встроенном обозревателе ENGLAT Editor, если системное диалоговое окно выбора файлов не появляется.
 	Hide White Space	Скрыть пустое место между страницами
 	All pages	Все страницы
 	Current page	Текущая страница
@@ -2518,8 +2518,8 @@ preview	Title	Пример
 	Number only, without the label's words	Только номер, без слов метки
 	Add whether it is above or below	Добавлять, выше он или ниже
 	Start-up	Запуск
-	Show the Start screen when WordCraft starts	Показывать начальный экран при запуске WordCraft
-	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Вкл.: WordCraft открывается на странице Файл › Главная с пустым документом, шаблонами и недавними документами. Выкл.: открывается пустой документ.
+	Show the Start screen when ENGLAT Editor starts	Показывать начальный экран при запуске ENGLAT Editor
+	On: ENGLAT Editor opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Вкл.: ENGLAT Editor открывается на странице Файл › Главная с пустым документом, шаблонами и недавними документами. Выкл.: открывается пустой документ.
 	Typing	Ввод
 	Level 4	Уровень 4
 	Level 5	Уровень 5
@@ -2557,7 +2557,7 @@ preview	Title	Пример
 	{name}   {height} × {width} mm	{name}   {height} × {width} мм
 	{width} × {height} mm	{width} × {height} мм
 	{kind}, {columns} × {rows}, {size} ({paper})	{kind}, {columns} × {rows}, {size} ({paper})
-	Researcher needs an online service; WordCraft keeps your documents offline.	Исследователю нужен онлайн-сервис, а WordCraft работает с документами без подключения к интернету.
+	Researcher needs an online service; ENGLAT Editor keeps your documents offline.	Исследователю нужен онлайн-сервис, а ENGLAT Editor работает с документами без подключения к интернету.
 	These settings will be used for new documents.	Эти параметры будут использоваться для новых документов.
 	can't split at the first row	нельзя разделить таблицу по первой строке
 	select two or more cells to merge	выделите две или более ячеек для объединения

@@ -8,8 +8,8 @@
 
 use egui::{Pos2, Rect, Stroke, Ui, pos2};
 use serde_json::json;
-use wordcraft_engine::cmd::table_resize::{self, Edge, Plan, ResizeTarget, Share};
-use wordcraft_layout::DocLayout;
+use englat_engine::cmd::table_resize::{self, Edge, Plan, ResizeTarget, Share};
+use englat_layout::DocLayout;
 
 use crate::WordApp;
 use crate::theme::Tokens;
@@ -301,7 +301,7 @@ pub(crate) mod tests {
 
     /// The same, each step `dt` seconds apart (short enough for a double-click: 1/60).
     pub(crate) fn table_window_stepping(dt: f32) -> H {
-        let mut a = WordApp::new(wordcraft_engine::Session::new(wordcraft_doc::Document::new()), Default::default());
+        let mut a = WordApp::new(englat_engine::Session::new(englat_doc::Document::new()), Default::default());
         a.run("insert.table", json!({"rows": 2, "cols": 3})).unwrap();
         a.run("text.insert", json!({"text": "Product"})).unwrap();
         a.run("select.text", json!({"text": "Product"})).unwrap();
@@ -320,12 +320,12 @@ pub(crate) mod tests {
     }
 
     /// Cell (`row`, `cell`)'s rect in page points.
-    pub(crate) fn cell(h: &mut H, row: usize, cell: usize) -> wordcraft_geom::Rect {
+    pub(crate) fn cell(h: &mut H, row: usize, cell: usize) -> englat_geom::Rect {
         h.state_mut().session.layout().pages[0]
             .items
             .iter()
             .find_map(|it| match it {
-                wordcraft_layout::Placed::Cell { rect, row: r, cell: c, .. } if *r == row && *c == cell => Some(*rect),
+                englat_layout::Placed::Cell { rect, row: r, cell: c, .. } if *r == row && *c == cell => Some(*rect),
                 _ => None,
             })
             .unwrap()

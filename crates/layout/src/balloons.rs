@@ -15,10 +15,10 @@
 
 use std::collections::{BTreeMap, HashSet};
 
-use wordcraft_doc::para::InlineObject;
-use wordcraft_doc::props::{Border, BorderStyle, CharProps, Rgb, TextColor};
-use wordcraft_doc::{Document, Paragraph, Pos, StoryRef};
-use wordcraft_geom::Rect;
+use englat_doc::para::InlineObject;
+use englat_doc::props::{Border, BorderStyle, CharProps, Rgb, TextColor};
+use englat_doc::{Document, Paragraph, Pos, StoryRef};
+use englat_geom::Rect;
 
 use crate::display::revision_color;
 use crate::{BoxContext, BoxLayout, Ctx, DocLayout, Placed, fit_box, layout_box, push_para};

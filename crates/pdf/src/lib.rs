@@ -1,7 +1,7 @@
-//! WordCraft PDF export through the shared `craft-pdf` writer and Krilla drawing primitives.
+//! ENGLAT Editor PDF export through the shared `craft-pdf` writer and Krilla drawing primitives.
 //!
 //! [`export`] lays the document out and draws each page's display list
-//! ([`wordcraft_layout::display::page_display`]) into a PDF page:
+//! ([`englat_layout::display::page_display`]) into a PDF page:
 //!
 //! - **Text as real text:** glyph runs are written with embedded, subsetted fonts and a Unicode
 //!   mapping taken from the paragraph text, so text is selectable, searchable and extractable.
@@ -42,15 +42,15 @@ use krilla::paint::{Fill, FillRule, LineCap, LineJoin, Stroke, StrokeDash};
 use krilla::surface::Surface;
 use krilla::tagging::{Artifact, ArtifactType, ContentTag, Identifier, Node, SpanTag, Tag, TagGroup, TagKind, TagTree};
 use krilla::text::{Font, GlyphId, KrillaGlyph};
-use wordcraft_doc::graphic::GraphicKind;
-use wordcraft_doc::para::{InlineObject, ShapeKind};
-use wordcraft_doc::{Document, Path as DocPath, Rgb, StoryRef};
-use wordcraft_fonts::FaceRef;
-use wordcraft_geom::Rect;
-use wordcraft_layout::display::{DisplayOptions, Draw, Stroke as LineStyle, page_display};
-use wordcraft_layout::wordart::ArtPaint;
-use wordcraft_layout::{DocLayout, LayoutCache, LayoutOptions, Page, Placed, layout};
-use wordcraft_metafile::{Picture, PlacedItem};
+use englat_doc::graphic::GraphicKind;
+use englat_doc::para::{InlineObject, ShapeKind};
+use englat_doc::{Document, Path as DocPath, Rgb, StoryRef};
+use englat_fonts::FaceRef;
+use englat_geom::Rect;
+use englat_layout::display::{DisplayOptions, Draw, Stroke as LineStyle, page_display};
+use englat_layout::wordart::ArtPaint;
+use englat_layout::{DocLayout, LayoutCache, LayoutOptions, Page, Placed, layout};
+use englat_metafile::{Picture, PlacedItem};
 
 /// Largest page side we write (200", the PDF limit).
 const MAX_SIDE: f32 = 14_400.0;
@@ -250,7 +250,7 @@ impl Fit {
 
 /// The outlines of `glyphs` (glyph id, pen position) at `size`, as one path in page coordinates.
 fn glyph_outlines(face: &FaceRef, size: f32, glyphs: &[(u32, f32, f32)]) -> Option<Path> {
-    let db = wordcraft_fonts::FontDb::global();
+    let db = englat_fonts::FontDb::global();
     let scale = f64::from(size) / face.upem.max(1.0);
     let mut pb = PathBuilder::new();
     for &(g, x, y) in glyphs {
@@ -340,7 +340,7 @@ fn visual_order(text: &str, glyphs: &[(u32, f32, f32)], clusters: &[std::ops::Ra
     groups
         .into_iter()
         .flat_map(|(_, mut idx)| {
-            let rtl = idx.first().and_then(|&g| text.get(clusters.get(g)?.clone())).is_some_and(|t| t.chars().any(wordcraft_fonts::is_rtl));
+            let rtl = idx.first().and_then(|&g| text.get(clusters.get(g)?.clone())).is_some_and(|t| t.chars().any(englat_fonts::is_rtl));
             if rtl {
                 idx.sort_by_key(|&g| std::cmp::Reverse(parts.get(g).map_or(0, |r| r.start)));
             }
@@ -384,7 +384,7 @@ fn clamp_side(v: f32) -> f32 {
 
 fn metadata(doc: &Document, opts: &PdfOptions) -> Metadata {
     let c = &doc.core;
-    let mut m = Metadata { creator: "WordCraft".into(), producer: "WordCraft".into(), ..Default::default() };
+    let mut m = Metadata { creator: "ENGLAT Editor".into(), producer: "ENGLAT Editor".into(), ..Default::default() };
     let title = opts.title.clone().unwrap_or_else(|| c.title.clone());
     if !title.trim().is_empty() {
         m.title = Some(title);
@@ -484,13 +484,13 @@ fn grown(r: &Rect, g: f32, dx: f32, dy: f32) -> Rect {
 }
 
 /// A shape's shadow and glow, behind it: bands of its silhouette (the same approximation of a
-/// blur as the raster renderer, see [`wordcraft_doc::effects::bands`]).
+/// blur as the raster renderer, see [`englat_doc::effects::bands`]).
 fn shape_effects(
     s: &mut Surface,
     kind: ShapeKind,
     corner: Option<u32>,
     rect: &Rect,
-    fx: &wordcraft_doc::effects::ShapeEffects,
+    fx: &englat_doc::effects::ShapeEffects,
     filled: bool,
     stroked: bool,
     sw: f32,
@@ -514,12 +514,12 @@ fn shape_effects(
     };
     if let Some(sh) = fx.shadow {
         let (dx, dy) = sh.offset();
-        for (g, a) in wordcraft_doc::effects::bands(-sh.blur / 2.0, sh.blur / 2.0, sh.opacity()) {
+        for (g, a) in englat_doc::effects::bands(-sh.blur / 2.0, sh.blur / 2.0, sh.opacity()) {
             silhouette(s, sh.color, a, g, dx, dy);
         }
     }
     if let Some(gl) = fx.glow {
-        for (g, a) in wordcraft_doc::effects::bands(0.0, gl.size, gl.opacity()) {
+        for (g, a) in englat_doc::effects::bands(0.0, gl.size, gl.opacity()) {
             silhouette(s, gl.color, a, g, 0.0, 0.0);
         }
     }
@@ -528,7 +528,7 @@ fn shape_effects(
 }
 
 /// Outline of a basic shape in a rectangle (same geometry as the raster renderer); `corner` is a
-/// rounded rectangle's ([`wordcraft_doc::connector::ShapeExtra::corner`]).
+/// rounded rectangle's ([`englat_doc::connector::ShapeExtra::corner`]).
 fn shape_path(kind: ShapeKind, r: &Rect, corner: Option<u32>) -> Option<Path> {
     let flat_ok = kind.is_open() && r.w.max(r.h) > 0.0 && r.w.min(r.h) >= 0.0;
     if !(ok(r.x) && ok(r.y) && ok(r.w) && ok(r.h)) || !(flat_ok || r.w > 0.0 && r.h > 0.0) {
@@ -560,7 +560,7 @@ fn shape_path(kind: ShapeKind, r: &Rect, corner: Option<u32>) -> Option<Path> {
         // A freeform is drawn from its own paths; without them, its frame.
         ShapeKind::Rectangle | ShapeKind::TextBox | ShapeKind::Freeform => poly(&mut pb, &[(x0, y0), (x1, y0), (x1, y1), (x0, y1)]),
         ShapeKind::RoundedRectangle => {
-            let rad = wordcraft_doc::connector::corner_radius(corner, r.w, r.h);
+            let rad = englat_doc::connector::corner_radius(corner, r.w, r.h);
             let k = rad * (1.0 - K);
             pb.move_to(x0 + rad, y0);
             pb.line_to(x1 - rad, y0);
@@ -660,7 +660,7 @@ struct Exporter<'a> {
     /// Bookmark positions by name (the first of a name wins), gathered once: looking each internal
     /// link up by walking the whole document made a long document with a linked table of contents
     /// take seconds to export.
-    bookmarks: std::cell::OnceCell<HashMap<String, wordcraft_doc::Pos>>,
+    bookmarks: std::cell::OnceCell<HashMap<String, englat_doc::Pos>>,
 }
 
 /// What the content being drawn is, for tagging.
@@ -686,7 +686,7 @@ impl Exporter<'_> {
                 let variations = face.is_variable().then_some(face.coords.as_slice());
                 let font = match write::font(face.data(), face.index(), variations) {
                     Ok(font) => Some(font),
-                    // Keep WordCraft's existing policy: unreadable faces are skipped.
+                    // Keep ENGLAT Editor's existing policy: unreadable faces are skipped.
                     Err(WriteError::InvalidFont) => None,
                     Err(error) => {
                         // Allocation, validation or backend failures must fail the export,
@@ -719,7 +719,7 @@ impl Exporter<'_> {
     fn vector(&mut self, key: &str) -> Option<Arc<Vector>> {
         let doc = self.doc;
         let bytes = doc.media.get(key)?;
-        if !wordcraft_metafile::is_metafile(bytes) {
+        if !englat_metafile::is_metafile(bytes) {
             return None;
         }
         if let Some(v) = self.vectors.get(key) {
@@ -882,7 +882,7 @@ impl Exporter<'_> {
     /// A heading's text for bookmarks and tags: what the pages show. That leaves out what its
     /// layout `pl` left out (hidden text, resolved as laid out, so table formatting counts too) and,
     /// without markup, tracked deletions.
-    fn title_text(&self, p: &wordcraft_doc::Paragraph, pl: &wordcraft_layout::para::ParaLayout) -> String {
+    fn title_text(&self, p: &englat_doc::Paragraph, pl: &englat_layout::para::ParaLayout) -> String {
         let mut dropped = pl.left_out.clone();
         if !self.opts.include_markup {
             dropped.extend(p.deleted_ranges());
@@ -891,7 +891,7 @@ impl Exporter<'_> {
     }
 
     /// The structure entry for a paragraph (created on first sight, in reading order).
-    fn entry(&mut self, story: StoryRef, path: &DocPath, pl: &wordcraft_layout::para::ParaLayout) -> usize {
+    fn entry(&mut self, story: StoryRef, path: &DocPath, pl: &englat_layout::para::ParaLayout) -> usize {
         if let Some(i) = self.tag_index.get(&(story, path.clone())) {
             return *i;
         }
@@ -944,7 +944,7 @@ impl Exporter<'_> {
             Draw::Image { rect, media, crop, alpha, .. } => self.picture(s, rect, media, crop, *alpha),
             Draw::Path { segs, fill: f, stroke, stroke_width } => {
                 let mut pb = PathBuilder::new();
-                append_path(&mut pb, &wordcraft_layout::display::seg_path(segs));
+                append_path(&mut pb, &englat_layout::display::seg_path(segs));
                 let Some(p) = pb.finish() else { return };
                 s.set_fill(f.map(|c| fill(c, 1.0)));
                 s.set_stroke(stroke.map(|c| Stroke {
@@ -1000,7 +1000,7 @@ impl Exporter<'_> {
                 if let (Some(rad), Some(c), true) = (fx.soft_edge, f, can_fill) {
                     let rad = rad.min(rect.w.min(rect.h) / 2.0).max(0.0);
                     s.set_stroke(None);
-                    for (g, a) in wordcraft_doc::effects::bands(-rad, 0.0, 1.0) {
+                    for (g, a) in englat_doc::effects::bands(-rad, 0.0, 1.0) {
                         if let Some(p) = shape_path(*kind, &grown(rect, g, 0.0, 0.0), *corner) {
                             s.set_fill(Some(fill(*c, a)));
                             s.draw_path(&p);
@@ -1022,7 +1022,7 @@ impl Exporter<'_> {
                 s.set_stroke(None);
             }
             Draw::Art { path, fx, color, alpha } => {
-                for l in wordcraft_layout::wordart::art_layers(path, fx, *color, *alpha) {
+                for l in englat_layout::wordart::art_layers(path, fx, *color, *alpha) {
                     let mut pb = PathBuilder::new();
                     append_path(&mut pb, &l.path);
                     let Some(p) = pb.finish() else { continue };
@@ -1175,7 +1175,7 @@ impl Exporter<'_> {
 
     /// The page's picture or texture fill: tiled at 96 dpi for a `tile` fill (when that is a sane
     /// number of tiles), else stretched over the page.
-    fn page_picture(&mut self, s: &mut Surface, pic: &wordcraft_doc::PagePicture, w: f32, h: f32) {
+    fn page_picture(&mut self, s: &mut Surface, pic: &englat_doc::PagePicture, w: f32, h: f32) {
         const MAX_TILES: f32 = 4096.0;
         if !(w.is_finite() && h.is_finite() && w > 0.0 && h > 0.0) {
             return;
@@ -1527,11 +1527,11 @@ impl Exporter<'_> {
         Some(o)
     }
 
-    fn watermark(&mut self, s: &mut Surface, wm: &wordcraft_doc::Watermark, w: f32, h: f32) {
-        let r = wordcraft_fonts::word::resolve(&wm.font, false, false);
+    fn watermark(&mut self, s: &mut Surface, wm: &englat_doc::Watermark, w: f32, h: f32) {
+        let r = englat_fonts::word::resolve(&wm.font, false, false);
         let face = r.face;
         let text: String = wm.text.chars().take(200).collect();
-        let shaped = wordcraft_fonts::shape(&face, &text, &[], |c| c);
+        let shaped = englat_fonts::shape(&face, &text, &[], |c| c);
         let upem = face.upem.max(1.0) as f32;
         let raw_w: f32 = shaped.iter().map(|g| g.x_advance as f32).sum::<f32>() / upem;
         if raw_w <= 0.0 || !raw_w.is_finite() {
@@ -1599,7 +1599,7 @@ struct Vector {
 
 /// Parses a metafile and embeds its bitmaps. None when the picture has no usable size.
 fn build_vector(bytes: &[u8]) -> Option<Vector> {
-    let mut pic = wordcraft_metafile::parse(bytes).ok()?;
+    let mut pic = englat_metafile::parse(bytes).ok()?;
     if !pic.has_size() {
         return None;
     }

@@ -1,9 +1,9 @@
 [package]
-name = "wordcraft-fonts"
+name = "englat-fonts"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "WordCraft fonts: font database (bundled OFL + system), metrics, glyph outlines, shaping"
+description = "ENGLAT Editor fonts: font database (bundled OFL + system), metrics, glyph outlines, shaping"
 
 [lints]
 workspace = true

@@ -5,8 +5,8 @@
 use egui::{Sense, Ui, vec2};
 use serde::Serialize;
 use serde_json::{Value, json};
-use wordcraft_doc::section::NumFormat;
-use wordcraft_engine::cmd::lists::{LEVELS, caret_list, level_json, levels_of};
+use englat_doc::section::NumFormat;
+use englat_engine::cmd::lists::{LEVELS, caret_list, level_json, levels_of};
 
 use crate::WordApp;
 use crate::dialogs::buttons;
@@ -115,14 +115,14 @@ impl ListForm {
     pub fn read(app: &WordApp) -> ListForm {
         let s = &app.session;
         let levels =
-            caret_list(s).and_then(|n| levels_of(s, n)).unwrap_or_else(|| wordcraft_doc::numbering::levels_for(wordcraft_doc::ListKind::Numbered));
+            caret_list(s).and_then(|n| levels_of(s, n)).unwrap_or_else(|| englat_doc::numbering::levels_for(englat_doc::ListKind::Numbered));
         let levels = (0..LEVELS).map(|i| LevelForm::read(i, &levels.get(i).map(level_json).unwrap_or(Value::Null))).collect();
         let mut styles: Vec<(String, String)> = s
             .doc
             .styles
             .styles
             .iter()
-            .filter(|st| st.kind == wordcraft_doc::StyleKind::Paragraph && !st.hidden)
+            .filter(|st| st.kind == englat_doc::StyleKind::Paragraph && !st.hidden)
             .map(|st| (st.id.clone(), st.name.clone()))
             .collect();
         styles.sort_by(|a, b| a.1.cmp(&b.1));
@@ -164,7 +164,7 @@ impl ListForm {
 /// Define New Multilevel List. Returns true to close.
 pub fn define_list(app: &mut WordApp, ui: &mut Ui, f: &mut ListForm) -> bool {
     let unit = crate::options::unit();
-    fn len(v: &mut f32, unit: wordcraft_geom::Unit) -> egui::DragValue<'_> {
+    fn len(v: &mut f32, unit: englat_geom::Unit) -> egui::DragValue<'_> {
         egui::DragValue::new(v).speed(0.01).range(-10.0..=22.0).measure(unit).max_decimals(2)
     }
     let heading = |ui: &mut Ui, s: &str| {
@@ -365,9 +365,9 @@ pub struct TrackForm {
 
 impl TrackForm {
     pub fn read(app: &WordApp) -> TrackForm {
-        let v = wordcraft_engine::cmd::review::tracking_json(&app.session.prefs.markup);
+        let v = englat_engine::cmd::review::tracking_json(&app.session.prefs.markup);
         let s = |k: &str| v.get(k).and_then(Value::as_str).unwrap_or("").to_string();
-        let c = |k: &str| wordcraft_doc::Rgb::parse(&s(k)).map(|c| c.hex()).unwrap_or_default();
+        let c = |k: &str| englat_doc::Rgb::parse(&s(k)).map(|c| c.hex()).unwrap_or_default();
         let b = |k: &str| v.get(k).and_then(Value::as_bool).unwrap_or(true);
         TrackForm {
             comments: b("comments"),
@@ -419,11 +419,11 @@ fn choice(ui: &mut Ui, id: &str, value: &mut String, options: &[(&str, &str)]) {
 
 /// A colour: `none_label` (by author, or `auto` when given) or a colour from the grid. `value` is
 /// hex.
-fn color(ui: &mut Ui, theme: &[wordcraft_doc::Rgb], value: &mut String, none_label: &str, auto: Option<wordcraft_doc::Rgb>) {
+fn color(ui: &mut Ui, theme: &[englat_doc::Rgb], value: &mut String, none_label: &str, auto: Option<englat_doc::Rgb>) {
     ui.horizontal(|ui| {
         let id = ui.id().with("colorField");
         crate::colors::take_field(ui.ctx(), id, value);
-        let c = wordcraft_doc::Rgb::parse(value);
+        let c = englat_doc::Rgb::parse(value);
         let (r, _) = ui.allocate_exact_size(vec2(16.0, 16.0), Sense::hover());
         let t = Tokens::get(ui.ctx());
         match c.or(auto) {
@@ -435,7 +435,7 @@ fn color(ui: &mut Ui, theme: &[wordcraft_doc::Rgb], value: &mut String, none_lab
                 for (k, a) in [0u32, 1, 2].iter().enumerate() {
                     let w = r.width() / 3.0;
                     let part = egui::Rect::from_min_size(r.min + vec2(w * k as f32, 0.0), vec2(w, r.height()));
-                    ui.painter().rect_filled(part, 0.0, crate::theme::c32(wordcraft_layout::display::revision_color(*a)));
+                    ui.painter().rect_filled(part, 0.0, crate::theme::c32(englat_layout::display::revision_color(*a)));
                 }
             }
         }
@@ -522,7 +522,7 @@ pub fn track_options(app: &mut WordApp, ui: &mut Ui, f: &mut TrackForm) -> bool 
             &mut f.changed_lines,
             &[("outside", "Outside border"), ("left", "Left border"), ("right", "Right border"), ("none", "None")],
         );
-        color(ui, &theme, &mut f.changed_lines_color, "Automatic", Some(wordcraft_layout::display::CHANGE_BAR));
+        color(ui, &theme, &mut f.changed_lines_color, "Automatic", Some(englat_layout::display::CHANGE_BAR));
         ui.end_row();
     });
     ui.add_space(4.0);
@@ -537,13 +537,13 @@ pub fn track_options(app: &mut WordApp, ui: &mut Ui, f: &mut TrackForm) -> bool 
 #[cfg(test)]
 mod tests {
     use serde_json::json;
-    use wordcraft_engine::Session;
+    use englat_engine::Session;
 
     use crate::dialogs::Dialog;
     use crate::{Services, WordApp};
 
     fn app() -> WordApp {
-        WordApp::new(Session::new(wordcraft_doc::Document::new()), Services::default())
+        WordApp::new(Session::new(englat_doc::Document::new()), Services::default())
     }
 
     /// #328: the ribbon opens Define New Multilevel List; OK defines the list and numbers the
@@ -590,13 +590,13 @@ mod tests {
         a.dialog = None;
         a.run("review.trackingOptions", params).unwrap();
         let m = &a.session.prefs.markup;
-        assert_eq!(m.insert_mark, wordcraft_layout::display::InsertMark::DoubleUnderline);
-        assert_eq!(m.comment_display, wordcraft_layout::display::CommentDisplay::Selected);
-        assert_eq!(m.changed_lines_color, Some(wordcraft_doc::Rgb(0xFF, 0, 0)));
+        assert_eq!(m.insert_mark, englat_layout::display::InsertMark::DoubleUnderline);
+        assert_eq!(m.comment_display, englat_layout::display::CommentDisplay::Selected);
+        assert_eq!(m.changed_lines_color, Some(englat_doc::Rgb(0xFF, 0, 0)));
         // Saved and restored with the preferences.
         let saved = a.prefs();
         let mut b = app();
         b.apply_prefs(saved);
-        assert_eq!(b.session.prefs.markup.changed_lines, wordcraft_layout::display::ChangeBar::Right);
+        assert_eq!(b.session.prefs.markup.changed_lines, englat_layout::display::ChangeBar::Right);
     }
 }

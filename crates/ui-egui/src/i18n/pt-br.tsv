@@ -1,6 +1,6 @@
 # Brazilian Portuguese (pt-br) interface catalog. Columns, separated by a TAB:
 #   context <TAB> English source <TAB> translation
-#   context    empty (WordCraft uses no contexts yet)
+#   context    empty (ENGLAT Editor uses no contexts yet)
 #   source     the English text exactly as in the code (tl!(...), ribbon labels, command labels)
 #   escapes    \n  \t  \\  inside a column. `{name}` placeholders must appear in both columns, and a
 #              trailing "…" in one needs one in the other.
@@ -9,14 +9,14 @@
 # Clean room: every entry was written from the plain meaning of the English label in ordinary
 # computing vocabulary. No Microsoft Word (or other product) localisation, string table or
 # translated UI was consulted or copied; add entries the same way.
-# Product, format and technology names (WordCraft, PDF, Markdown, MCP …) stay in Latin letters.
+# Product, format and technology names (ENGLAT Editor, PDF, Markdown, MCP …) stay in Latin letters.
 
 	(no style)	(sem estilo)
 	(no suggestions)	(sem sugestões)
 	1.5 Line Spacing	Espaçamento de 1,5 linha
 	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	Um processador de texto gratuito e de código aberto, escrito do zero em Rust.\nFaz parte dos Crafting Apps da equipe ArtCraft.
 	About	Sobre
-	About WordCraft	Sobre o WordCraft
+	About ENGLAT Editor	Sobre o ENGLAT Editor
 	Accept	Aceitar
 	Accept All Changes	Aceitar todas as alterações
 	Accept This Change	Aceitar esta alteração
@@ -281,7 +281,7 @@
 	Copy	Copiar
 	Copy Formatting	Copiar formatação
 	Corrections	Correções
-	Couldn't make WordCraft the default: {error}	Não foi possível tornar o WordCraft o aplicativo padrão: {error}
+	Couldn't make ENGLAT Editor the default: {error}	Não foi possível tornar o ENGLAT Editor o aplicativo padrão: {error}
 	Count words in text boxes and notes	Contar palavras em caixas de texto e notas
 	Cover Page	Capa
 	Create	Criar
@@ -319,15 +319,15 @@
 	Drag a rectangle to draw a table, or a line across cells to split them. Esc stops.	Arraste um retângulo para desenhar uma tabela, ou uma linha sobre as células para dividi-las. Esc encerra.
 	Draw Table	Desenhar tabela
 	Edit Comment	Editar comentário
-	In Default apps, choose WordCraft for the document types you want it to open.	Em Aplicativos padrão, escolha o WordCraft para os tipos de documento que você quer que ele abra.
+	In Default apps, choose ENGLAT Editor for the document types you want it to open.	Em Aplicativos padrão, escolha o ENGLAT Editor para os tipos de documento que você quer que ele abra.
 	Left Margin	Margem esquerda
 	Indents and Spacing	Recuos e espaçamento
 	Line breaking	Quebra de linhas
-	Make WordCraft the default for Word documents…	Tornar o WordCraft o aplicativo padrão para documentos do Word…
+	Make ENGLAT Editor the default for Word documents…	Tornar o ENGLAT Editor o aplicativo padrão para documentos do Word…
 	More templates →	Mais modelos →
 	No templates match your search.	Nenhum modelo corresponde à pesquisa.
-	Opens .docx, .doc, .rtf and .odt files and Word templates with WordCraft from now on.	A partir de agora, arquivos .docx, .doc, .rtf e .odt e modelos do Word abrem no WordCraft.
-	Opens Settings › Default apps, where you choose WordCraft for .docx and the other document types.	Abre Configurações › Aplicativos padrão, onde você escolhe o WordCraft para .docx e os outros tipos de documento.
+	Opens .docx, .doc, .rtf and .odt files and Word templates with ENGLAT Editor from now on.	A partir de agora, arquivos .docx, .doc, .rtf e .odt e modelos do Word abrem no ENGLAT Editor.
+	Opens Settings › Default apps, where you choose ENGLAT Editor for .docx and the other document types.	Abre Configurações › Aplicativos padrão, onde você escolhe o ENGLAT Editor para .docx e os outros tipos de documento.
 	Reopen	Reabrir
 	Right Margin	Margem direita
 	Distribute letters	Distribuir letras
@@ -337,8 +337,8 @@
 	Right (vertical)	Direita (vertical)
 	Ruby text:	Texto ruby:
 	Search for templates	Pesquisar modelos
-	To open Word documents with WordCraft by default: select one in Finder, choose File › Get Info, pick WordCraft under Open with, then click Change All.	Para abrir documentos do Word com o WordCraft por padrão: selecione um no Finder, escolha Arquivo › Obter Informações, selecione o WordCraft em “Abrir com” e clique em “Alterar Tudo”.
-	WordCraft is now the default app for Word documents.	O WordCraft agora é o aplicativo padrão para documentos do Word.
+	To open Word documents with ENGLAT Editor by default: select one in Finder, choose File › Get Info, pick ENGLAT Editor under Open with, then click Change All.	Para abrir documentos do Word com o ENGLAT Editor por padrão: selecione um no Finder, escolha Arquivo › Obter Informações, selecione o ENGLAT Editor em “Abrir com” e clique em “Alterar Tudo”.
+	ENGLAT Editor is now the default app for Word documents.	O ENGLAT Editor agora é o aplicativo padrão para documentos do Word.
 	development build	versão de desenvolvimento
 	Diagonal	Diagonal
 	Diamond	Losango
@@ -391,7 +391,7 @@
 	Equation	Equação
 	Eraser	Borracha
 	Even Page	Página par
-	Every command is available to scripts and AI agents: run `wordcraft-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Todo comando está disponível para scripts e agentes de IA: execute `wordcraft-cli mcp` para um servidor MCP, ou inicie o aplicativo com `--control <port>` para o canal de controle JSON.
+	Every command is available to scripts and AI agents: run `englat-editor-cli mcp` for an MCP server, or start the app with `--control <port>` for the JSON control channel.	Todo comando está disponível para scripts e agentes de IA: execute `englat-editor-cli mcp` para um servidor MCP, ou inicie o aplicativo com `--control <port>` para o canal de controle JSON.
 	Export	Exportar
 	Export a copy to share (PDF, Word document)	Exporte uma cópia para compartilhar (PDF, documento Word)
 	Export Page as PNG	Exportar página como PNG
@@ -515,7 +515,7 @@
 	Landscape	Paisagem
 	Language	Idioma
 	{language} (no dictionary)	{language} (sem dicionário)
-	No spelling dictionary for {language} is installed, so it isn't checked. WordCraft looks for the Hunspell dictionary {name} in the WORDCRAFT_DICTIONARIES folder and in the usual system locations.	Não há dicionário ortográfico instalado para {language}, então o texto não é verificado. O WordCraft procura o dicionário Hunspell {name} na pasta WORDCRAFT_DICTIONARIES e nos locais habituais do sistema.
+	No spelling dictionary for {language} is installed, so it isn't checked. ENGLAT Editor looks for the Hunspell dictionary {name} in the ENGLAT_EDITOR_DICTIONARIES folder and in the usual system locations.	Não há dicionário ortográfico instalado para {language}, então o texto não é verificado. O ENGLAT Editor procura o dicionário Hunspell {name} na pasta ENGLAT_EDITOR_DICTIONARIES e nos locais habituais do sistema.
 	Lasso	Laço
 	Last Column	Última coluna
 	Last commit	Último commit
@@ -562,7 +562,7 @@
 	Merge Formatting	Mesclar formatação
 	Merged PRs	PRs mesclados
 	Mirrored	Espelhada
-	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team e os colaboradores do WordCraft.
+	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.	MIT OR Apache-2.0. Copyright (c) 2026 ArtCraft Team e os colaboradores do ENGLAT Editor.
 	Moderate	Moderada
 	Modify Style	Modificar estilo
 	Modify…	Modificar…
@@ -826,7 +826,7 @@
 	Small caps	Versaletes
 	SmartArt	SmartArt
 	Sort	Classificar
-	Source code: github.com/storytold/wordcraft	Código-fonte: github.com/storytold/wordcraft
+	Source code: github.com/zi007/englat-editor	Código-fonte: github.com/zi007/englat-editor
 	Space	Espaço
 	Space before/after:	Espaço antes/depois:
 	Spacing	Espaçamento
@@ -964,7 +964,7 @@
 	Word Left	Palavra à esquerda
 	Word Right	Palavra à direita
 	WordArt	Texto artístico
-	WordCraft	WordCraft
+	ENGLAT Editor	ENGLAT Editor
 	Words	Palavras
 	Words only	Somente palavras
 	Wrap Text	Quebrar texto
@@ -1027,7 +1027,7 @@
 	Stopped	Parado
 	Speed	Velocidade
 	Normal speed	Velocidade normal
-	AutoSave documents you have saved in WordCraft	Salvar automaticamente documentos que você salvou no WordCraft
+	AutoSave documents you have saved in ENGLAT Editor	Salvar automaticamente documentos que você salvou no ENGLAT Editor
 	AutoSave failed: {error}. Save the document to turn AutoSave back on.	Falha no salvamento automático: {error}. Salve o documento para reativar o salvamento automático.
 	Couldn't download {name}: {error}	Não foi possível baixar {name}: {error}
 	Do you want to save changes to {name}?	Deseja salvar as alterações em {name}?
@@ -1225,7 +1225,7 @@
 	Insert a new equation (Alt+=)	Inserir uma nova equação (Alt+=)
 	Leave the equation (Esc)	Sair da equação (Esc)
 	Preview	Visualizar
-	getartcraft.com/apps/wordcraft	getartcraft.com/apps/wordcraft
+	github.com/zi007/englat-editor	github.com/zi007/englat-editor
 	Draw Ink	Desenhar tinta
 	Erase Ink	Apagar tinta
 	Hide Ink	Ocultar tinta
@@ -1363,7 +1363,7 @@
 	The document will be saved with a password. Save it to protect it.	O documento será salvo com senha. Salve-o para protegê-lo.
 	The password is removed. Save the document to keep the change.	A senha foi removida. Salve o documento para manter a alteração.
 	The passwords don't match.	As senhas não coincidem.
-	Keep the password somewhere safe: without it nobody, WordCraft included, can open the document. Leave both boxes empty to remove the password.	Guarde a senha em um lugar seguro: sem ela, ninguém, nem o WordCraft, consegue abrir o documento. Deixe as duas caixas vazias para remover a senha.
+	Keep the password somewhere safe: without it nobody, ENGLAT Editor included, can open the document. Leave both boxes empty to remove the password.	Guarde a senha em um lugar seguro: sem ela, ninguém, nem o ENGLAT Editor, consegue abrir o documento. Deixe as duas caixas vazias para remover a senha.
 
 # Interface text routed through translation (#313)
 	Align Top Left	Alinhar acima à esquerda
@@ -1759,7 +1759,7 @@
 	Word document	Documento do Word
 	All files	Todos os arquivos
 	Recipient lists	Listas de destinatários
-	The system file dialog isn't available, so WordCraft shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	A caixa de diálogo de arquivos do sistema não está disponível, então o WordCraft mostra a sua própria. Para usar a do sistema, instale um portal seletor de arquivos (como xdg-desktop-portal-gtk) ou o zenity.
+	The system file dialog isn't available, so ENGLAT Editor shows its own. To get the system dialog, install a file chooser portal (such as xdg-desktop-portal-gtk) or zenity.	A caixa de diálogo de arquivos do sistema não está disponível, então o ENGLAT Editor mostra a sua própria. Para usar a do sistema, instale um portal seletor de arquivos (como xdg-desktop-portal-gtk) ou o zenity.
 	Up one level	Subir um nível
 	Home folder	Pasta pessoal
 	{name} wasn't found.	{name} não foi encontrado.
@@ -1767,8 +1767,8 @@
 	This folder can't be read: {error}	Não é possível ler esta pasta: {error}
 	Showing the first {count} items.	Mostrando os primeiros {count} itens.
 	File name:	Nome do arquivo:
-	Browse in WordCraft…	Procurar no WordCraft…
-	Open a file with WordCraft's own browser when the system file dialog doesn't appear.	Abra um arquivo com o navegador próprio do WordCraft quando a caixa de diálogo de arquivos do sistema não aparecer.
+	Browse in ENGLAT Editor…	Procurar no ENGLAT Editor…
+	Open a file with ENGLAT Editor's own browser when the system file dialog doesn't appear.	Abra um arquivo com o navegador próprio do ENGLAT Editor quando a caixa de diálogo de arquivos do sistema não aparecer.
 	Hide White Space	Ocultar espaço em branco
 	All pages	Todas as páginas
 	Current page	Página atual
@@ -2147,8 +2147,8 @@
 	Number only, without the label's words	Só o número, sem as palavras do rótulo
 	Add whether it is above or below	Acrescentar se está acima ou abaixo
 	Start-up	Inicialização
-	Show the Start screen when WordCraft starts	Mostrar a tela inicial ao abrir o WordCraft
-	On: WordCraft opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Ativado: o WordCraft abre em Arquivo › Início, com um documento em branco, os modelos e seus documentos recentes. Desativado: abre um documento em branco.
+	Show the Start screen when ENGLAT Editor starts	Mostrar a tela inicial ao abrir o ENGLAT Editor
+	On: ENGLAT Editor opens on File › Home, with a blank document, the templates and your recent documents. Off: it opens a blank document.	Ativado: o ENGLAT Editor abre em Arquivo › Início, com um documento em branco, os modelos e seus documentos recentes. Desativado: abre um documento em branco.
 	Copy to	Copiar para
 
 # Document naming and account controls.
@@ -2179,7 +2179,7 @@
 	{name}   {height} × {width} mm	{name}   {height} × {width} mm
 	{width} × {height} mm	{width} × {height} mm
 	{kind}, {columns} × {rows}, {size} ({paper})	{kind}, {columns} × {rows}, {size} ({paper})
-	Researcher needs an online service; WordCraft keeps your documents offline.	O Pesquisador precisa de um serviço online; o WordCraft mantém seus documentos offline.
+	Researcher needs an online service; ENGLAT Editor keeps your documents offline.	O Pesquisador precisa de um serviço online; o ENGLAT Editor mantém seus documentos offline.
 	These settings will be used for new documents.	Essas configurações serão usadas nos novos documentos.
 	can't split at the first row	não é possível dividir a tabela na primeira linha
 	select two or more cells to merge	selecione duas ou mais células para mesclar
