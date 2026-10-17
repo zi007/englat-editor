@@ -35,7 +35,7 @@
     <Property Id="ARPPRODUCTICON" Value="EnglatEditorIcon.ico" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/zi007/englat-editor" />
     <Property Id="ARPURLUPDATEINFO" Value="https://github.com/zi007/englat-editor" />
-    <Property Id="ARPHELPLINK" Value="https://discord.gg/artcraft" />
+    <Property Id="ARPHELPLINK" Value="https://englat.com" />
 
     <!-- Installer UI (#198): WixUI_Minimal is welcome + license, progress, then a finish page so
          people can see the install worked. Its dialogs and bitmaps are WiX's own

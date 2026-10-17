@@ -1,11 +1,22 @@
+ENGLAT Editor
+Modifications Copyright (c) 2026 ENGLAT.COM and the ENGLAT Editor contributors.
+Licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE).
+
+ENGLAT Editor is a modified version of WordCraft (https://github.com/storytold/wordcraft),
+Copyright (c) 2026 ArtCraft Team and the WordCraft contributors, licensed MIT OR Apache-2.0.
+It also includes snapshots of craft-libs (https://github.com/storytold/craft-libs), Copyright (c)
+2026 ArtCraft Team and the craft-libs contributors, licensed MIT OR Apache-2.0, under vendor/
+(see vendor/craft-ui/ and vendor/craft-pdf/ for their LICENSE-*, NOTICE and ATTRIBUTION files).
+ENGLAT Editor is an independent project; it is not made, endorsed or supported by the ArtCraft
+Team, and the ArtCraft name and logos are not used.
+
+---- Original WordCraft NOTICE (kept as required) ----
+
 WordCraft
 Copyright (c) 2026 ArtCraft Team and the WordCraft contributors.
 Licensed under the MIT License or the Apache License, Version 2.0, at your option
 (LICENSE-MIT, LICENSE-APACHE).
-
-The ArtCraft name, wordmark and logos in docs/brand/ are trademarks of the ArtCraft Team. They are
-not open source and are not covered by the license above; their terms are in
-docs/brand/LICENSE-brand.txt.
 
 Third-party material
 

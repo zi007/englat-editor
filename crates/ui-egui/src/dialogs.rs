@@ -2384,11 +2384,11 @@ fn body(app: &mut WordApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                     let build = option_env!("ENGLAT_EDITOR_BUILD_SHA").map(|s| s.get(..8).unwrap_or(s)).unwrap_or(tl!("development build"));
                     ui.label(crate::i18n::fmt(tl!("Version {version} ({build})"), &[("version", env!("CARGO_PKG_VERSION")), ("build", build)]));
                     ui.label(tl!(
-                        "A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team."
+                        "A free, open-source word processor written in Rust.\nBased on WordCraft; an independent ENGLAT project."
                     ));
                     ui.add_space(6.0);
                     ui.hyperlink_to(tl!("github.com/zi007/englat-editor"), "https://github.com/zi007/englat-editor");
-                    ui.hyperlink_to(tl!("Join us on Discord: discord.gg/artcraft"), "https://discord.gg/artcraft");
+                    ui.hyperlink_to(tl!("ENGLAT.COM: englat.com"), "https://englat.com");
                     ui.hyperlink_to(tl!("Source code: github.com/zi007/englat-editor"), "https://github.com/zi007/englat-editor");
                     ui.add_space(6.0);
                     ui.label(

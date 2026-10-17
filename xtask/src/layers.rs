@@ -51,9 +51,9 @@ pub const TABLE: &[(&str, Class)] = &[
     ("ui-egui", Class::Layer(6)),
     ("testkit", Class::Testkit),
     // apps and tooling
-    ("englat-editor", Class::Exempt),
-    ("cli", Class::Exempt),
-    ("web", Class::Exempt),
+    ("editor", Class::Exempt),
+    ("editor-cli", Class::Exempt),
+    ("editor-web", Class::Exempt),
     ("xtask", Class::Exempt),
 ];
 

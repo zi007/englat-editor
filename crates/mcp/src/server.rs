@@ -135,7 +135,7 @@ impl Server {
                     "capabilities": {"tools": {}, "resources": {}},
                     "serverInfo": {"name": "englat-editor", "title": "ENGLAT Editor", "version": env!("CARGO_PKG_VERSION"), "websiteUrl": "https://github.com/zi007/englat-editor"},
                     "instructions": format!(
-                        "{INSTRUCTIONS} Backend: {}. Community: https://discord.gg/artcraft · https://github.com/zi007/englat-editor · https://github.com/zi007/englat-editor",
+                        "{INSTRUCTIONS} Backend: {}. Project: https://github.com/zi007/englat-editor · https://englat.com",
                         self.backend.describe()
                     ),
                 }))

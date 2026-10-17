@@ -18,9 +18,10 @@ pub fn is_asset(path: &str) -> bool {
     ASSET_DIRS.iter().any(|d| path.starts_with(d)) || ASSET_EXT.contains(&ext.as_str())
 }
 
-/// Paths that need an ATTRIBUTION.md entry but lack one.
+/// Paths that need an ATTRIBUTION.md entry but lack one. The vendored craft-libs snapshots under
+/// `vendor/` are covered by their own ATTRIBUTION.md files and are not checked here.
 pub fn missing(files: &[String], assets_md: &str) -> Vec<String> {
-    files.iter().filter(|f| is_asset(f) && !assets_md.contains(&format!("`{f}`"))).cloned().collect()
+    files.iter().filter(|f| !f.starts_with("vendor/") && is_asset(f) && !assets_md.contains(&format!("`{f}`"))).cloned().collect()
 }
 
 /// The paths in `git ls-files -z` output: NUL-separated and never quoted, so a name with

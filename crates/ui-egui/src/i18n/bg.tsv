@@ -19,7 +19,6 @@
 	(no style)	(без стил)
 	(no suggestions)	(няма предложения)
 	1.5 Line Spacing	Междуредие 1,5
-	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	Безплатен текстообработващ редактор с отворен код, написан от нулата на Rust.\nЧаст от Crafting Apps на екипа на ArtCraft.
 	About	Относно
 	About ENGLAT Editor	За ENGLAT Editor
 	Accept	Приемане
@@ -227,7 +226,6 @@
 	Comment	Коментар
 	Comments	Коментари
 	Comments Pane	Панел с коментари
-	Community\nDiscord	Общност\nв Discord
 	Compact	Компактно
 	Compare	Сравняване
 	Compress Pictures	Компресиране на изображенията
@@ -280,8 +278,6 @@
 	Different First Page	Различна първа страница
 	Different Odd & Even Pages	Различни четни и нечетни страници
 	Direct formatting	Директно форматиране
-	Discord	Discord
-	Discord community	Общност в Discord
 	Display	Показване
 	Display for Review	Показване за преглед
 	Distribute Columns	Разпределяне на колоните
@@ -446,8 +442,6 @@
 	Inspect Styles at Selection	Проверка на стиловете при селекцията
 	Interface language:	Език на интерфейса:
 	Italic	Курсив
-	Join the ArtCraft community on Discord	Присъединете се към общността на ArtCraft в Discord
-	Join us on Discord: discord.gg/artcraft	Присъединете се към нас в Discord: discord.gg/artcraft
 	Justify	Двустранно подравняване
 	Keep Lines Together	Редовете заедно
 	Keep Text Only	Запазване само на текста

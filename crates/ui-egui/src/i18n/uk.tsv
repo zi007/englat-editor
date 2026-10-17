@@ -14,7 +14,6 @@
 	(no style)	(без стилю)
 	(no suggestions)	(немає пропозицій)
 	1.5 Line Spacing	Міжрядковий інтервал 1,5
-	A free, open-source word processor written from scratch in Rust.\nPart of the Crafting Apps from the ArtCraft team.	Безкоштовний текстовий процесор із відкритим кодом, написаний з нуля мовою Rust.\nЧастина Crafting Apps від команди ArtCraft.
 	About	Про програму
 	About ENGLAT Editor	Про ENGLAT Editor
 	Accept	Прийняти
@@ -275,7 +274,6 @@
 	Comment	Коментар
 	Comments	Коментарі
 	Comments Pane	Панель коментарів
-	Community\nDiscord	Спільнота\nDiscord
 	Compact	Компактний
 	Compare	Порівняти
 	Compress Pictures	Стиснути зображення
@@ -353,8 +351,6 @@
 	Different First Page	Інша перша сторінка
 	Different Odd & Even Pages	Різні парні й непарні сторінки
 	Direct formatting	Пряме форматування
-	Discord	Discord
-	Discord community	Спільнота Discord
 	Display	Відображення
 	Display for Review	Відображення для рецензування
 	Distribute Columns	Розподілити стовпці
@@ -516,8 +512,6 @@
 	Inspect Styles at Selection	Переглянути стилі у виділенні
 	Interface language:	Мова інтерфейсу:
 	Italic	Курсив
-	Join the ArtCraft community on Discord	Приєднатися до спільноти ArtCraft у Discord
-	Join us on Discord: discord.gg/artcraft	Приєднуйтеся до нас у Discord: discord.gg/artcraft
 	Justify	За шириною
 	Keep Lines Together	Не розривати рядки абзацу
 	Keep lines together	Не розривати рядки абзацу
