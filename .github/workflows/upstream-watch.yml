@@ -1,0 +1,46 @@
+# Weekly: looks for new commits in the upstream projects this fork is built from and keeps ONE open
+# issue ("Upstream changes") listing them. It changes no code and deploys nothing: merging upstream
+# changes into the rebranded fork is a reviewed task (see docs/upstream-sync.md).
+name: upstream-watch
+on:
+  schedule:
+    - cron: "17 6 * * 1"   # Mondays 06:17 UTC
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+env:
+  UPSTREAMS: "storytold/wordcraft storytold/craft-libs"
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compare upstream HEADs with the last report
+        run: |
+          set -euo pipefail
+          title="Upstream changes"
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number,body --jq '.[0] // empty')
+          last_body=""; num=""
+          if [ -n "$existing" ]; then num=$(jq -r .number <<<"$existing"); last_body=$(jq -r .body <<<"$existing"); fi
+          body="Checked $(date -u +%F). New commits in upstream projects since the last report (newest first, max 30 each).\n\nMerging them is a manual, reviewed task: this repository is a rebranded fork. Close this issue when handled; the next weekly run opens a new one if upstream moved again.\n"
+          changed=0
+          for repo in $UPSTREAMS; do
+            head=$(gh api "repos/$repo/commits/HEAD" --jq .sha)
+            marker="<!-- $repo:$head -->"
+            if grep -qF "$marker" <<<"$last_body"; then continue; fi
+            prev=$(grep -o "<!-- $repo:[0-9a-f]\{40\} -->" <<<"$last_body" | head -1 | sed -E 's/.*:([0-9a-f]{40}).*/\1/' || true)
+            if [ -n "$prev" ]; then
+              list=$(gh api "repos/$repo/compare/$prev...$head" --jq '[.commits[]|"- `"+(.sha[0:8])+"` "+(.commit.message|split("\n")[0])]|reverse|.[0:30]|.[]' || true)
+            else
+              since=$(date -u -d '7 days ago' +%FT%TZ)
+              list=$(gh api "repos/$repo/commits?since=$since&per_page=30" --jq '.[]|"- `"+(.sha[0:8])+"` "+(.commit.message|split("\n")[0])' || true)
+            fi
+            [ -n "$list" ] || list="- (no commit list available)"
+            body="$body\n### https://github.com/$repo\n$marker\n$list\n"
+            changed=1
+          done
+          if [ "$changed" = 0 ]; then echo "Upstream unchanged."; exit 0; fi
+          printf "%b" "$body" > body.md
+          if [ -n "$num" ]; then gh issue edit "$num" --repo "$GITHUB_REPOSITORY" --body-file body.md
+          else gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file body.md; fi
