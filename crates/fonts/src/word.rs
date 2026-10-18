@@ -346,6 +346,27 @@ mod tests {
     }
 
     #[test]
+    fn the_bundled_stand_ins_exist_on_every_machine() {
+        let db = FontDb::global();
+        for f in ["Liberation Sans", "Liberation Serif", "DejaVu Sans"] {
+            assert!(db.has_family(f), "{f} is bundled");
+        }
+        // Where the real font isn't installed, the stand-in is the metric-compatible one, not a
+        // generic fallback.
+        for (asked, stand_in) in [("Arial", "Liberation Sans"), ("Times New Roman", "Liberation Serif"), ("Verdana", "DejaVu Sans")] {
+            if !db.has_family(asked) {
+                let r = resolve(asked, false, false);
+                assert!(r.substituted && r.face.family == stand_in, "{asked} -> {}", r.face.family);
+            }
+        }
+        // Bold and italic come from real faces, not synthesised ones.
+        let r = resolve("Arial", true, true);
+        if !db.has_family("Arial") {
+            assert!(!r.synth_bold && !r.synth_italic, "Liberation Sans has a Bold Italic face");
+        }
+    }
+
+    #[test]
     fn listed_substituted_families_have_a_present_substitute() {
         let db = FontDb::global();
         for f in listed_substituted_families() {
