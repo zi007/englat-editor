@@ -10,6 +10,7 @@
 
 mod cache;
 mod layout;
+mod thumbs;
 
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
@@ -18,6 +19,7 @@ use cache::Cache;
 use egui::{Align2, Color32, Id, Key, Modifiers, Rect, Sense, TextureHandle, TextureOptions, pos2, vec2};
 pub use layout::Zoom;
 use layout::{GAP, Layout, layout, step};
+use thumbs::{THUMB_WIDTH, Thumbs};
 use wordcraft_pdfdoc::{OpenError, PageSize, PdfDoc, sample};
 use wordcraft_pdfview::render_page;
 
@@ -70,6 +72,7 @@ pub struct PdfApp {
     failed: HashSet<usize>,
     message: Option<String>,
     password: Option<PasswordPrompt>,
+    thumbs: Thumbs,
 }
 
 impl PdfApp {
@@ -87,6 +90,7 @@ impl PdfApp {
             failed: HashSet::new(),
             message: None,
             password: None,
+            thumbs: Thumbs::default(),
         }
     }
 
@@ -112,6 +116,7 @@ impl PdfApp {
                 self.last_scale = 0.0;
                 self.pictures.clear();
                 self.failed.clear();
+                self.thumbs.clear();
                 self.message = None;
                 self.password = None;
             }
@@ -180,6 +185,20 @@ impl PdfApp {
         self.zoom = Zoom::Factor(step(self.zoom_factor(), false));
     }
 
+    /// Show or hide the thumbnail strip.
+    pub fn set_thumbnails(&mut self, open: bool) {
+        self.thumbs.open = open;
+    }
+
+    pub fn thumbnails_shown(&self) -> bool {
+        self.thumbs.open
+    }
+
+    /// How many thumbnail pictures are held.
+    pub fn thumbnails_held(&self) -> usize {
+        self.thumbs.held()
+    }
+
     /// How many page pictures are held.
     pub fn pictures_held(&self) -> usize {
         self.pictures.len()
@@ -212,6 +231,20 @@ impl PdfApp {
         let ctx = ui.ctx().clone();
         self.keys(&ctx);
         egui::Panel::top("pdf_toolbar").show(ui, |ui| self.toolbar(ui));
+        if self.loaded.is_some() && self.thumbs.open {
+            let clicked = egui::Panel::left("pdf_thumbs_panel")
+                .resizable(false)
+                .exact_size(THUMB_WIDTH + 28.0)
+                .frame(egui::Frame::NONE.fill(Color32::from_gray(0x38)))
+                .show(ui, |ui| match &self.loaded {
+                    Some(l) => self.thumbs.show(ui, &l.doc, &l.sizes, self.current),
+                    None => None,
+                })
+                .inner;
+            if let Some(page) = clicked {
+                self.go_to_page(page);
+            }
+        }
         egui::CentralPanel::default().frame(egui::Frame::NONE.fill(BACKDROP)).show(ui, |ui| {
             self.banner(ui);
             if self.loaded.is_some() {
@@ -280,6 +313,11 @@ impl PdfApp {
             let Some(name) = self.loaded.as_ref().map(|l| l.name.clone()) else { return };
             ui.separator();
             ui.label(name);
+            ui.separator();
+            let mut shown = self.thumbs.open;
+            if ui.toggle_value(&mut shown, "Pages").on_hover_text("Show page thumbnails").changed() {
+                self.thumbs.open = shown;
+            }
             ui.separator();
             let n = self.page_count();
             let mut page = self.current + 1;

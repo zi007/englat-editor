@@ -218,3 +218,24 @@ fn a_picture_is_a_multiple_of_sixteen_wide_and_never_past_what_a_texture_can_be(
     }
     assert!(picture_width(500.0, 1.0, 1.0) >= 1);
 }
+
+#[test]
+fn the_thumbnail_strip_draws_pages_and_a_click_goes_to_one() {
+    let mut h = app_with(sample_pdf(8));
+    assert!(!h.state().thumbnails_shown());
+    h.state_mut().set_thumbnails(true);
+    steps(&mut h, 12);
+    assert!(h.state().thumbnails_held() >= 2, "thumbnails drawn: {}", h.state().thumbnails_held());
+    assert!(h.state().thumbnails_held() <= 16);
+    // Click the third thumbnail: its cell is below the first two, inside the strip.
+    let (w, y) = (14.0 + 56.0, 8.0 + 2.0 * (112.0 * 792.0 / 612.0 + 18.0 + 8.0) + 40.0);
+    let at = egui::pos2(w, y + 40.0);
+    h.hover_at(at);
+    h.step();
+    for pressed in [true, false] {
+        h.event(egui::Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed, modifiers: Modifiers::NONE });
+        h.step();
+    }
+    steps(&mut h, 6);
+    assert_eq!(h.state().current_page(), 2);
+}
