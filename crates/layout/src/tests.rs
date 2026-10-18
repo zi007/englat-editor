@@ -454,6 +454,9 @@ fn deleted_text_adds_no_line_break_opportunity_without_markup() {
     // "xx ab\u{ad}cdef" in a column where "xx ab-" and "abcdef" fit but "xx abcdef" does not; only
     // the soft hyphen (5..7) is track-deleted.
     let mut d = Document::from_text("xx ab\u{ad}cdef");
+    // The line breaks below depend on glyph widths, so pin the bundled font: the default body
+    // font resolves to whatever the machine has installed (Carlito, Liberation, DejaVu…).
+    d.styles.default_chr.font = Some("Source Sans 3".into());
     d.format_range(&Pos::body(0, 5), &Pos::body(0, 7), &|c| c.del = Some(0)).unwrap();
     d.format_paragraphs(&Pos::body(0, 0), &Pos::body(0, 0), &|p| p.indent_right = Some(468.0 - 40.0)).unwrap();
     let line_starts = |hide_deleted: bool| {
@@ -490,6 +493,9 @@ fn hidden_text_adds_no_line_break_opportunity_when_not_shown() {
     // but "xx abcdef" does not. Measured in Word (hidden text not printed): "xx" / "abcdef" both times.
     for hidden in ["\u{ad}", " "] {
         let mut d = Document::from_text(&format!("xx ab{hidden}cdef"));
+        // The line breaks below depend on glyph widths, so pin the bundled font: the default body
+        // font resolves to whatever the machine has installed (Carlito, Liberation, DejaVu…).
+        d.styles.default_chr.font = Some("Source Sans 3".into());
         let end = 5 + hidden.len();
         d.format_range(&Pos::body(0, 5), &Pos::body(0, end), &|c| c.hidden = Some(true)).unwrap();
         d.format_paragraphs(&Pos::body(0, 0), &Pos::body(0, 0), &|p| p.indent_right = Some(468.0 - 40.0)).unwrap();
@@ -4904,6 +4910,9 @@ fn line_spans(l: &DocLayout) -> Vec<(f32, f32, f32, f32)> {
 /// A shape floating at the column's top-left with `wrap`, beside a long paragraph.
 fn wrapped_shape_doc(kind: wordcraft_doc::para::ShapeKind, w: f32, h: f32, float: wordcraft_doc::para::Float) -> Document {
     let mut d = Document::from_text(&"Words flow around the shape here. ".repeat(40));
+    // The line breaks below depend on glyph widths, so pin the bundled font: the default body
+    // font resolves to whatever the machine has installed (Carlito, Liberation, DejaVu…).
+    d.styles.default_chr.font = Some("Source Sans 3".into());
     let float =
         wordcraft_doc::para::Float { h_rel: wordcraft_doc::para::Anchor::Column, v_rel: wordcraft_doc::para::Anchor::Paragraph, dist: 9.0, ..float };
     let shape = InlineObject::Shape {
