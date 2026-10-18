@@ -1167,6 +1167,10 @@ fn caps_list_labels_extract_as_displayed() {
 /// and a Latin one), then right-to-left words with a lam-alef ligature and with vowel marks.
 fn rtl_sample() -> Document {
     let mut d = Document::from_text("שלום עולם\nمرحبا بالعالم\nייפוי כח מס' 123 – Power of Attorney\nHello world\nالسلام مَرْحَبًا שָׁלוֹם");
+    // The bundled DejaVu Sans covers all three scripts, so the text doesn't depend on which fonts
+    // the machine has (the default body font resolves differently where only DejaVu is installed).
+    d.styles.default_chr.font = Some("DejaVu Sans".into());
+    d.styles.default_chr.font_cs = Some("DejaVu Sans".into());
     // Right to left: all but "Hello world".
     for i in [0, 1, 2, 4] {
         let at = wordcraft_doc::Pos::body(i, 0);
