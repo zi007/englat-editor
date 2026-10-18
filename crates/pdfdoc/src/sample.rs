@@ -16,11 +16,29 @@ pub fn sample_pdf(pages: usize) -> Vec<u8> {
 /// Like [`sample_pdf`], with every page `width` by `height` points. The values are written as they
 /// are, so tests can ask for sizes a real file would never have.
 pub fn sample_pdf_sized(pages: usize, width: f64, height: f64) -> Vec<u8> {
+    build(pages, width, height, false)
+}
+
+/// A sample with a table of contents (at least three pages): "Chapter 1" (page 1) with the nested
+/// "Section" (page 2), then one entry per later page; the last one reaches its page through a named
+/// destination, the others directly.
+pub fn sample_pdf_outlined(pages: usize) -> Vec<u8> {
+    build(pages.max(3), 612.0, 792.0, true)
+}
+
+fn build(pages: usize, width: f64, height: f64, outlined: bool) -> Vec<u8> {
     let pages = pages.clamp(1, MAX_SAMPLE_PAGES);
+    let extra = 5 + 2 * pages; // id of the outline root
+    let page_id = |i: usize| 5 + 2 * i + 1;
     let mut objects: Vec<Vec<u8>> = Vec::new();
     // 1 catalog, 2 page tree, 3 and 4 fonts; then a content stream and a page for each page.
     let kids: Vec<String> = (0..pages).map(|i| format!("{} 0 R", 5 + 2 * i + 1)).collect();
-    objects.push(b"<< /Type /Catalog /Pages 2 0 R >>".to_vec());
+    if outlined {
+        let last = page_id(pages - 1);
+        objects.push(format!("<< /Type /Catalog /Pages 2 0 R /Outlines {extra} 0 R /Dests << /last [{last} 0 R /Fit] >> >>").into_bytes());
+    } else {
+        objects.push(b"<< /Type /Catalog /Pages 2 0 R >>".to_vec());
+    }
     objects.push(format!("<< /Type /Pages /Count {pages} /Kids [{}] >>", kids.join(" ")).into_bytes());
     objects.push(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>".to_vec());
     objects.push(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>".to_vec());
@@ -50,6 +68,26 @@ pub fn sample_pdf_sized(pages: usize, width: f64, height: f64) -> Vec<u8> {
             )
             .into_bytes(),
         );
+    }
+    if outlined {
+        // Items 0 (Chapter 1), 1 (Section, its child), 2.. (later pages) are ids extra + 1 + k.
+        let item = |k: usize| extra + 1 + k;
+        let tops: Vec<usize> = std::iter::once(0).chain(2..pages).collect();
+        objects.push(format!("<< /Type /Outlines /First {} 0 R /Last {} 0 R /Count {} >>", item(0), item(pages - 1), pages).into_bytes());
+        for k in 0..pages {
+            let title = match k {
+                0 => "Chapter 1".to_string(),
+                1 => "Section".to_string(),
+                _ => format!("Page {}", k + 1),
+            };
+            let target = if k + 1 == pages { "/Dest /last".to_string() } else { format!("/Dest [{} 0 R /Fit]", page_id(k)) };
+            let parent = if k == 1 { item(0) } else { extra };
+            let pos = tops.iter().position(|t| *t == k);
+            let prev = pos.and_then(|p| p.checked_sub(1)).map(|p| format!(" /Prev {} 0 R", item(tops[p]))).unwrap_or_default();
+            let next = pos.and_then(|p| tops.get(p + 1)).map(|t| format!(" /Next {} 0 R", item(*t))).unwrap_or_default();
+            let child = if k == 0 { format!(" /First {} 0 R /Last {} 0 R /Count 1", item(1), item(1)) } else { String::new() };
+            objects.push(format!("<< /Title ({title}) /Parent {parent} 0 R {target}{prev}{next}{child} >>").into_bytes());
+        }
     }
     let mut out = b"%PDF-1.7\n%\xE2\xE3\xCF\xD3\n".to_vec();
     let mut offsets = Vec::with_capacity(objects.len());

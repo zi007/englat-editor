@@ -109,3 +109,52 @@ fn an_encrypted_file_asks_for_its_password_and_opens_with_it() {
         assert_eq!(doc.page_size(0), Some(PageSize { width: 612.0, height: 792.0 }), "{name}");
     }
 }
+
+#[test]
+fn the_outline_lists_entries_in_order_with_depth_and_page() {
+    let doc = PdfDoc::open(sample::sample_pdf_outlined(5), None).unwrap();
+    let o = doc.outline();
+    let got: Vec<(usize, &str, Option<usize>)> = o.iter().map(|e| (e.depth, e.title.as_str(), e.page)).collect();
+    assert_eq!(got, vec![(0, "Chapter 1", Some(0)), (1, "Section", Some(1)), (0, "Page 3", Some(2)), (0, "Page 4", Some(3)), (0, "Page 5", Some(4))]);
+    // A file without bookmarks has an empty outline.
+    assert!(PdfDoc::open(sample::sample_pdf(3), None).unwrap().outline().is_empty());
+}
+
+#[test]
+fn the_outline_survives_loops_and_damage() {
+    let good = sample::sample_pdf_outlined(4);
+    // Page 3's next link points back at Chapter 1: reading stops at the repeat.
+    let text = String::from_utf8_lossy(&good).into_owned();
+    assert!(text.contains("/Next 17 0 R"));
+    let looped = PdfDoc::open(text.replace("/Next 17 0 R", "/Next 14 0 R").into_bytes(), None).unwrap();
+    assert_eq!(looped.outline().len(), 3);
+    // Damaged files never panic and never return more than the cap.
+    for cut in (0..good.len()).step_by(37) {
+        if let Ok(doc) = PdfDoc::open(good[..cut].to_vec(), None) {
+            assert!(doc.outline().len() <= MAX_ENTRIES_FOR_TEST);
+        }
+    }
+    let mut seed = 0x2545_f491u32;
+    for _ in 0..300 {
+        let mut bytes = good.clone();
+        for _ in 0..4 {
+            seed = seed.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+            let at = (seed as usize) % bytes.len();
+            bytes[at] = (seed >> 24) as u8;
+        }
+        if let Ok(doc) = PdfDoc::open(bytes, None) {
+            assert!(doc.outline().len() <= MAX_ENTRIES_FOR_TEST);
+        }
+    }
+}
+
+const MAX_ENTRIES_FOR_TEST: usize = crate::outline::MAX_ENTRIES;
+
+#[test]
+fn titles_are_decoded_from_utf16_and_latin1_and_capped() {
+    use crate::outline::decode_title_for_test as t;
+    assert_eq!(t(&[0xFE, 0xFF, 0x01, 0x13, 0x00, 0x41]), "ēA");
+    assert_eq!(t(&[0xFF, 0xFE, 0x13, 0x01, 0x41, 0x00]), "ēA");
+    assert_eq!(t(b"Caf\xE9\x00\n"), "Café");
+    assert_eq!(t(&[b'x'; 1000]).chars().count(), 300);
+}

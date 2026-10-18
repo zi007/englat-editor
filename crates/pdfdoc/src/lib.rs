@@ -9,6 +9,7 @@
 //! This is the read side. Editing and saving live in later crates (`docs/pdf-editor.md`).
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
+pub mod outline;
 pub mod sample;
 
 use std::fmt;
