@@ -167,6 +167,11 @@ impl Previews {
                     f.push(w.to_string());
                 }
             }
+            for w in wordcraft_fonts::word::listed_substituted_families() {
+                if !f.iter().any(|x| x.eq_ignore_ascii_case(w)) {
+                    f.push(w.to_string());
+                }
+            }
             f.sort_by_key(|a| a.to_lowercase());
             f.dedup();
             let names = db.localized_names(lang);
