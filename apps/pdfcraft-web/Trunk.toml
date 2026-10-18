@@ -1,0 +1,10 @@
+# Build with: trunk build --release   (from apps/pdfcraft-web)
+[build]
+target = "index.html"
+dist = "../../dist/pdfcraft-web"
+public_url = "./"
+filehash = true
+
+[serve]
+addresses = ["127.0.0.1"]
+port = 8772
