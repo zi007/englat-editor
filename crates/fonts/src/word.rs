@@ -204,6 +204,14 @@ fn is_hebrew(f: &str) -> bool {
     NAMES.contains(&f) || f.contains("hebrew")
 }
 
+/// Document fonts every document uses that may not be installed (Linux, web) but have an open
+/// substitute that is: the font menu lists them anyway, so choosing "Arial" works and the document
+/// keeps saying Arial. Only names whose substitute is present are listed (no promise we can't keep).
+pub fn listed_substituted_families() -> Vec<&'static str> {
+    let db = FontDb::global();
+    ["Arial", "Times New Roman", "Verdana"].into_iter().filter(|f| !db.has_family(f) && substitutes(f).iter().any(|s| db.has_family(s))).collect()
+}
+
 fn style_name(bold: bool, italic: bool) -> &'static str {
     match (bold, italic) {
         (false, false) => "Regular",
@@ -335,6 +343,15 @@ mod tests {
         assert_eq!(substitutes("Times New Roman")[0], "Liberation Serif");
         assert!(substitutes("Verdana").contains(&"DejaVu Sans"));
         assert_ne!(substitutes("Verdana")[0], "Carlito");
+    }
+
+    #[test]
+    fn listed_substituted_families_have_a_present_substitute() {
+        let db = FontDb::global();
+        for f in listed_substituted_families() {
+            assert!(!db.has_family(f), "{f} is installed: no need to list it twice");
+            assert!(substitutes(f).iter().any(|s| db.has_family(s)), "{f}");
+        }
     }
 
     #[test]
