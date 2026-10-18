@@ -64,9 +64,13 @@ fn myanmar_without_spaces_wraps_between_syllables() {
     assert!(pl.lines[0].c1 - pl.lines[0].c0 > 10);
 }
 
-/// A face with Myanmar letters (an installed system font), or `None` to skip.
+/// A face with Myanmar letters and Myanmar shaping rules (an installed system font), or `None` to
+/// skip. A font that only carries GSUB (Unifont) draws the letters but does not reorder them.
 fn myanmar_face() -> Option<wordcraft_fonts::FaceRef> {
-    wordcraft_fonts::FontDb::global().fallback_for('\u{1000}', 0).map(|f| wordcraft_fonts::FaceRef::of(&f)).filter(|f| f.has_layout_tables())
+    wordcraft_fonts::FontDb::global()
+        .fallback_for('\u{1000}', 0)
+        .map(|f| wordcraft_fonts::FaceRef::of(&f))
+        .filter(|f| f.has_layout_tables() && (f.has_gsub_script(b"mym2") || f.has_gsub_script(b"mymr")))
 }
 
 #[test]

@@ -1417,6 +1417,26 @@ fn right_to_left_clusters_are_written_whole_left_to_right() {
     assert_eq!(visual_order(text, &glyphs, &ranges, &parts), [5, 4, 2, 3, 0, 1]);
 }
 
+/// Noto Sans Arabic draws a beh with a tanween as three glyphs: the mark, and the letter as two
+/// glyphs the character map doesn't list. The mark takes its own character and the letter's two
+/// glyphs share the letter; before, the first glyph carried the whole cluster's text and the
+/// letter read back doubled (`مَرْحَبًا` came out as `مَرْحَببًا`).
+#[test]
+fn a_letter_drawn_as_two_glyphs_keeps_its_mark_apart() {
+    let text = "ب\u{64b}";
+    let glyphs = [(375, 3.0, 8.0), (317, 4.0, 10.0), (16, 3.0, 10.0)];
+    let ranges = [0..4, 0..4, 0..4];
+    let rev: std::collections::HashMap<u32, char> = [(375, '\u{64b}')].into_iter().collect();
+    let parts = split_clusters(text, &glyphs, &ranges, &rev);
+    assert_eq!(parts, [2..4, 0..2, 0..2]);
+    // The mark is written first, then the letter's glyphs, so a viewer reversing the word reads the
+    // letter, then its mark.
+    assert_eq!(visual_order(text, &glyphs, &ranges, &parts), [0, 1, 2]);
+    // Two unknown glyphs for two or more characters can't be told apart: the cluster stays whole.
+    let rev: std::collections::HashMap<u32, char> = Default::default();
+    assert_eq!(split_clusters(text, &glyphs, &ranges, &rev), ranges);
+}
+
 #[test]
 fn extreme_page_index_returns_an_error() {
     let d = Document::from_text("Hostile page selection");

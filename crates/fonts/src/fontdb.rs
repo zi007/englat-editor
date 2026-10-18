@@ -221,6 +221,17 @@ impl FontFace {
         use skrifa::raw::TableProvider;
         self.skrifa().is_some_and(|f| f.gsub().is_ok())
     }
+    /// Does the face's GSUB have rules for the OpenType script `tag` (`b"mym2"` for Myanmar,
+    /// `b"latn"` for Latin)? A GSUB table alone is not enough: a font such as Unifont carries one
+    /// with no shaping rules for a script it still draws.
+    pub fn has_gsub_script(&self, tag: &[u8; 4]) -> bool {
+        use skrifa::raw::TableProvider;
+        let tag = skrifa::raw::types::Tag::new(tag);
+        self.skrifa()
+            .and_then(|f| f.gsub().ok())
+            .and_then(|g| g.script_list().ok())
+            .is_some_and(|l| l.script_records().iter().any(|r| r.script_tag() == tag))
+    }
     /// Units per em.
     pub fn units_per_em(&self) -> f64 {
         self.upem
