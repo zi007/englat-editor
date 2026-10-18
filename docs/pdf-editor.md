@@ -1,6 +1,6 @@
 # PDF editor (pdfcraft-web)
 
-> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-18 · **Change:** major (first version: plan only, no code yet) · **Status:** proposal, not started
+> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-18 · **Change:** minor (milestone 0 results and library decision; previously major: first version, plan only) · **Status:** milestone 0 done, no product code yet
 
 A browser PDF editor that lives in this repository next to WordCraft and shares its libraries. This
 page is the plan; nothing here is built yet. Rules for working in the code are in
@@ -45,7 +45,7 @@ registry types live in `engine` (L4, Word-specific). Either `pdfengine` depends 
 `cargo xtask layers` must learn the new crates (its table rejects unknown crates), and
 `cargo xtask wasm` must include them.
 
-## Dependencies to confirm in milestone 0
+## Dependencies (confirmed in milestone 0)
 
 | Need | Candidate | To check |
 |---|---|---|
@@ -60,7 +60,7 @@ for new content such as stamps and watermarks.
 
 Each milestone ships on its own and keeps CI green.
 
-0. **Spike (no UI).** Open, render page 1 and save an untouched copy in wasm, for a set of test
+0. **Spike (no UI). Done, see [Milestone 0 results](#milestone-0-results).** Open, render page 1 and save an untouched copy in wasm, for a set of test
    files including damaged, encrypted and very large ones. Decide the editing library from the
    table above and the command registry question. Output: a short decision record in this file.
 1. **Viewer.** Open a file (drop or picker), pages, zoom and fit, thumbnails, outline, text
@@ -83,6 +83,43 @@ line breaks. In milestone 4 a text run can be changed where its font has the new
 otherwise is replaced with a re-embedded font; reflowing a whole page like a word processor is not
 promised. Turning a PDF into an editable Word document is the separate Word-side feature "PDF
 Reflow" in [gaps.md](gaps.md) (#23); it can use `pdfdoc` as its reader.
+
+## Milestone 0 results
+
+Run on 2026-10-18 with `hayro` 0.8.0 / `hayro-syntax` 0.8.0 and `lopdf` 0.45.0 (default features
+off), natively on all 26 files and as `wasm32-unknown-unknown` run in Node 22 (V8, the same engine as Chrome) on 9 of them (the good ones, the 60 MB and 3000-page files, one corrupted copy, garbage, empty and the truncated paper). The
+spike was a throw-away crate outside the workspace; it opened each file, rendered page 1 at 1x (hayro)
+and loaded, saved and reloaded it (lopdf). Corpus: 26 files, each a file we made, public domain, or
+mutated from those: a 3-page file, a 3000-page file, a 60 MB file with 500 pages of images, a
+WordCraft export, a LibreOffice sample, a truncated paper, 12 randomly corrupted copies, an empty
+file, garbage, a header only, a file without its xref table, a half-cut file, and RC4-128, AES-128
+and AES-256 encrypted copies (user password `secret`, made with `lopdf`).
+
+| Question | Result |
+|---|---|
+| Builds for wasm32 | Both do. `lopdf` needs `getrandom = { version = "0.4", features = ["wasm_js"] }` as a wasm32-only dependency (it pulls `getrandom` for encryption); `hayro` needs nothing. |
+| Panics on hostile input | None in any of the files, native or wasm. Guard calls with `catch_unwind` natively; note that on `wasm32-unknown-unknown` a panic aborts the module (Rust's default there), so the guard cannot catch it. "Never panic" has to hold by construction and by fuzzing the loaders, and this milestone did not fuzz. How `Session::run`'s guard behaves in the existing web build is not verified here. |
+| Speed (wasm, Node) | `hayro` opens the 60 MB file and renders page 1 in 135 ms and the 3000-page file in 27 ms (opening is lazy). `lopdf` loads, saves and reloads the 60 MB file in 382 ms. Page 1 of these files is simple; heavy pages were not measured. |
+| Memory (wasm) | For the 60 MB file the module's memory peaked at 135 MB for `hayro` and 298 MB for `lopdf`. The probe itself holds two copies of the input (120 MB), so `hayro` added little (it parses lazily) and `lopdf`, which loads, saves and reloads, added about 180 MB, roughly three times the file. All far below the 4 GB wasm32 limit, but a very large file means a visible allocation. |
+| Damaged files | `hayro` is lenient: it recovered a file without its xref table, a half-cut file and 5 of 12 randomly corrupted copies, and refused the rest cleanly. `lopdf` is stricter and refused more, but it **opened 4 corrupted copies as documents with 0 pages and saved them**, which would destroy the content. Rule: never save a file through `lopdf` unless its page count matches what `hayro` found. |
+| Encrypted files | `hayro` opens RC4-128, AES-128 and AES-256 files with the right password, and reports "password protected" for an empty or wrong one. `lopdf` does the same, and can also write all three. Only files `lopdf` made were tried; files from other producers are not covered. The `hayro` README says encrypted PDFs are unsupported, but the parser decrypts; the README looks out of date. |
+| Rendering correctness | Page 1 of the WordCraft export and the LibreOffice sample matched `pdftoppm` by eye. These are plain text pages: this says nothing about images, gradients, transparency or complex fonts. `hayro` documents these gaps: blending and isolation, knockout groups, colour-key masking. |
+| Size | The wasm module with both libraries is 5.4 MB (2.0 MB gzipped), before `wasm-opt` and with `hayro`'s embedded standard fonts. Using the `fonts` crate instead of the embedded ones should shrink it. |
+| Editing support | `lopdf` has `IncrementalDocument` (append-only saves that keep the original bytes, which keeps signatures valid) and writes encryption. |
+
+### Decision
+
+- **Reader and renderer: `hayro`.** It is the source of truth for "what is in this file".
+- **Object editing and saving: `lopdf`**, behind a `pdfdoc` API that refuses to save when the
+  `lopdf` page count differs from `hayro`'s, and uses incremental saves where possible.
+- **Open question (not settled by this spike):** the shared `commands` crate for the registry; decide
+  when `pdfengine` is started.
+
+### Not done in milestone 0
+
+- Fuzzing of both loaders; a licence check of the full dependency trees (`cargo deny` is not in CI
+  yet); heavy-page rendering performance; a browser (not Node) run; text extraction, search and
+  font handling.
 
 ## Testing
 
