@@ -38,6 +38,19 @@ static BUNDLED: &[&[u8]] = &[
     include_bytes!("../../../assets/fonts/Inter-Medium.ttf"),
     include_bytes!("../../../assets/fonts/Inter-SemiBold.ttf"),
     include_bytes!("../../../assets/fonts/JetBrainsMono-Regular.ttf"),
+    // Open stand-ins for Arial, Times New Roman and Verdana (see `word.rs`), so a document that
+    // asks for them lays out the same where they are not installed (Linux, web). Appended: the
+    // fallback face is `BUNDLED[0]`.
+    include_bytes!("../../../assets/fonts/LiberationSans-Regular.ttf"),
+    include_bytes!("../../../assets/fonts/LiberationSans-Bold.ttf"),
+    include_bytes!("../../../assets/fonts/LiberationSans-Italic.ttf"),
+    include_bytes!("../../../assets/fonts/LiberationSans-BoldItalic.ttf"),
+    include_bytes!("../../../assets/fonts/LiberationSerif-Regular.ttf"),
+    include_bytes!("../../../assets/fonts/LiberationSerif-Bold.ttf"),
+    include_bytes!("../../../assets/fonts/LiberationSerif-Italic.ttf"),
+    include_bytes!("../../../assets/fonts/LiberationSerif-BoldItalic.ttf"),
+    include_bytes!("../../../assets/fonts/DejaVuSans.ttf"),
+    include_bytes!("../../../assets/fonts/DejaVuSans-Bold.ttf"),
 ];
 
 #[derive(Clone)]

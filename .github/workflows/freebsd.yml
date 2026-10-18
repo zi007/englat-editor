@@ -1,10 +1,13 @@
 # Builds and tests the workspace on FreeBSD, inside a FreeBSD VM on a Linux runner
 # (GitHub has no FreeBSD runners). GPU tests skip themselves when the VM has no adapter.
+#
+# Everything this workflow uses is pinned to a commit: nothing is tracked at a moving branch, so a
+# change in someone else's repository can't turn it red overnight.
 name: FreeBSD
 
 # The VM build is slow, so it runs nightly on main and on pushes to `release`, not on every push
 # or dependency change: a drifted dependency still shows up within a day, and always before a
-# release ships. PRs that change the FreeBSD packaging itself still run it.
+# release ships. PRs that change the FreeBSD packaging itself still run it (x86_64 only).
 on:
   schedule:
     - cron: "27 4 * * *"
@@ -26,7 +29,57 @@ permissions:
 
 jobs:
   freebsd:
-    # Intentionally tracked at @main (not SHA-pinned) so org-wide CI improvements, security fixes, and build optimizations propagate without PR churn across all craftapp repos.
-    uses: storytold/craft-common-actions/.github/workflows/freebsd.yml@main
-    with:
-      craft-fonts-ref: 8dcdacd5153e64560d109541a47d806f26f048c0
+    name: FreeBSD 15 ${{ matrix.arch }} (build + test)
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.timeout }}
+    # aarch64 runs in an emulated VM, which is several times slower, and FreeBSD ships no rustup
+    # for it (Rust there is a distro package). It runs on schedule and on demand, not on PRs, and
+    # does not fail the workflow until it has been seen to pass.
+    continue-on-error: ${{ matrix.arch == 'aarch64' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(github.event_name == 'pull_request' && '[{"arch":"x86_64","rust":"rustup","timeout":120}]' || '[{"arch":"x86_64","rust":"rustup","timeout":120},{"arch":"aarch64","rust":"pkg","timeout":330}]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Open fonts the build embeds (Arabic, CJK): https://github.com/storytold/craft-fonts,
+      # pinned to the commit this repository was last tested against.
+      - name: Check out craft-fonts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: storytold/craft-fonts
+          ref: 8dcdacd5153e64560d109541a47d806f26f048c0
+          path: craft-fonts
+          persist-credentials: false
+      - name: Build and test in a FreeBSD VM
+        uses: vmactions/freebsd-vm@c46abacb49f09938ca4e1702d15d836285d694cc # v1.5.9
+        with:
+          release: "15.1"
+          arch: ${{ matrix.arch }}
+          usesh: true
+          cpu: 4
+          mem: 12288
+          copyback: false
+          prepare: |
+            pkg install -y bash git curl pkgconf cmake python3 libxkbcommon wayland libX11 libXcursor libXrandr libXi libxcb mesa-libs vulkan-loader gtk3 fontconfig freetype2 alsa-lib dejavu
+            if [ "${{ matrix.rust }}" = "pkg" ]; then
+              pkg install -y rust
+            else
+              curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal
+            fi
+          run: |
+            if [ -f "$HOME/.cargo/env" ]; then . "$HOME/.cargo/env"; fi
+            git config --global --add safe.directory "*"
+            rustc --version
+            # The workspace needs the Rust version in Cargo.toml; say so plainly rather than
+            # failing later in a dependency.
+            need=$(sed -n 's/^rust-version *= *"\(.*\)"/\1/p' Cargo.toml | head -n 1)
+            have=$(rustc --version | sed 's/^rustc \([0-9.]*\).*/\1/')
+            if [ "$(printf '%s\n%s\n' "$need" "$have" | sort -V | head -n 1)" != "$need" ]; then
+              echo "error: rustc $have is older than the workspace's rust-version $need" >&2
+              exit 1
+            fi
+            export CRAFT_FONTS_DIR="$PWD/craft-fonts"
+            export CARGO_PROFILE_DEV_DEBUG=0
+            cargo build --workspace --all-targets --locked
+            cargo test --workspace --locked
