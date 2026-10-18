@@ -30,6 +30,9 @@ fn substitutes(family: &str) -> &'static [&'static str] {
     const MONO: &[&str] = &["Courier New", "Liberation Mono", "Menlo", "Consolas", "DejaVu Sans Mono", "JetBrains Mono"];
     const ARIAL: &[&str] = &["Liberation Sans", "Helvetica", "Helvetica Neue", "Arimo", "Source Sans 3"];
     const TIMES: &[&str] = &["Liberation Serif", "Times", "Tinos", "Source Serif 4"];
+    // Verdana has no metric-compatible open twin; DejaVu Sans (Bitstream Vera lineage) is the
+    // closest wide, highly legible face.
+    const VERDANA: &[&str] = &["Verdana", "DejaVu Sans", "Noto Sans", "Source Sans 3"];
     // Word's symbol fonts (Symbol, Wingdings…) are proprietary: their characters are drawn as their
     // Unicode equivalents (`wordcraft_doc::symbol_fonts`) from these faces or any face that has them.
     const SYMBOL: &[&str] = &["Apple Symbols", "Segoe UI Symbol", "DejaVu Sans", "Noto Sans Symbols", "Noto Sans Symbols 2", "Source Sans 3"];
@@ -80,6 +83,7 @@ fn substitutes(family: &str) -> &'static [&'static str] {
         "palatino linotype" | "book antiqua" | "palatino" => PALATINO,
         "arial" | "helvetica" | "arial nova" => ARIAL,
         "times new roman" | "times" => TIMES,
+        "verdana" => VERDANA,
         "courier new" | "courier" | "consolas" | "lucida console" | "cascadia code" | "cascadia mono" => MONO,
         "symbol" | "wingdings" | "wingdings 2" | "wingdings 3" | "segoe ui symbol" | "webdings" => SYMBOL,
         "cambria"
@@ -323,6 +327,14 @@ mod tests {
         assert_eq!(charset_base_family("Cyr"), "Cyr");
         assert_eq!(charset_base_family("Calibri"), "Calibri");
         assert_eq!(substitutes(charset_base_family("Times New Roman Cyr")), substitutes("Times New Roman"));
+    }
+
+    #[test]
+    fn arial_times_verdana_have_open_substitutes() {
+        assert_eq!(substitutes("Arial")[0], "Liberation Sans");
+        assert_eq!(substitutes("Times New Roman")[0], "Liberation Serif");
+        assert!(substitutes("Verdana").contains(&"DejaVu Sans"));
+        assert_ne!(substitutes("Verdana")[0], "Carlito");
     }
 
     #[test]
