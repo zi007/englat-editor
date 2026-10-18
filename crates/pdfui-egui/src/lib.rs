@@ -268,10 +268,11 @@ impl PdfApp {
 
     fn toolbar(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
-            if self.services.open_async.is_some() && ui.button("Open…").clicked() {
-                if let Some(open) = &self.services.open_async {
-                    open();
-                }
+            if self.services.open_async.is_some()
+                && ui.button("Open…").clicked()
+                && let Some(open) = &self.services.open_async
+            {
+                open();
             }
             if ui.button("Open sample").clicked() {
                 self.open_bytes("Sample.pdf", sample::sample_pdf(SAMPLE_PAGES));
