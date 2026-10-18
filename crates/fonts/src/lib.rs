@@ -269,6 +269,16 @@ mod tests {
     }
 
     #[test]
+    fn gsub_script_lookup_tells_which_scripts_a_font_shapes() {
+        // The default face has GSUB rules for Latin, and none for Myanmar (where only the bare
+        // existence of a GSUB table, `has_layout_tables`, would say "shapes it").
+        let face = FontDb::global().face(DEFAULT_FAMILY, "Regular");
+        assert!(face.has_layout_tables());
+        assert!(face.has_gsub_script(b"latn"));
+        assert!(!face.has_gsub_script(b"mym2") && !face.has_gsub_script(b"mymr"));
+    }
+
+    #[test]
     fn shaping_produces_clusters_and_advances() {
         let face = FontDb::global().face(DEFAULT_FAMILY, "Regular");
         let g = shape(&face, "Hello", &[], |c| c);

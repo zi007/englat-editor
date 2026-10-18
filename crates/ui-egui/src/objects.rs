@@ -847,12 +847,31 @@ mod tests {
         assert_eq!(h.state().ui.keytips, crate::keytips::Phase::Off, "Alt during a drag isn't a keytip tap");
     }
 
+    /// Is there a wgpu adapter, hardware or software, for `Harness::render`? Without one (a machine
+    /// with no GPU and no software Vulkan) the renderer panics with "No adapter found"; any other
+    /// panic is a real failure and is passed on.
+    fn gpu_adapter_available() -> bool {
+        let probe = std::panic::catch_unwind(|| {
+            egui_kittest::wgpu::create_render_state(egui_kittest::wgpu::default_wgpu_setup(), Default::default());
+        });
+        let Err(payload) = probe else { return true };
+        let message = payload.downcast_ref::<String>().map(String::as_str).or_else(|| payload.downcast_ref::<&str>().copied()).unwrap_or_default();
+        if message.contains("No adapter found") {
+            return false;
+        }
+        std::panic::resume_unwind(payload)
+    }
+
     /// #1010: dragging a shape off text, the preview is the shape alone, not the text that was
     /// behind it. An unfilled red rectangle in front of black text is dragged down into the empty
     /// page: its preview has its red outline and nothing dark inside.
     #[test]
     fn a_dragged_shape_leaves_the_text_behind_it() {
         use crate::table_resize::tests::{H, button, steps};
+        if !gpu_adapter_available() {
+            eprintln!("skipped: no GPU adapter to render the drag preview");
+            return;
+        }
         let text = "MMMMMMMMMMMM ".repeat(12);
         let mut a = WordApp::new(wordcraft_engine::Session::new(Document::from_text(&text)), Default::default());
         let shape = InlineObject::Shape {
