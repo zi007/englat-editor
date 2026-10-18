@@ -72,10 +72,14 @@ fn the_width_asked_for_is_held_to_the_limits() {
 /// Hostile input: the sizes a file claims for its pages never become an allocation.
 #[test]
 fn a_page_of_any_claimed_size_is_drawn_within_the_limits_or_refused() {
-    for (w, h) in [(1.0e9, 1.0e9), (1.0e12, 5.0), (0.0, 0.0), (-10.0, 20.0), (0.001, 0.001), (100000.0, 100000.0), (14400.0, 14400.0), (612.0, 792.0)] {
+    for (w, h) in [(1.0e9, 1.0e9), (1.0e12, 5.0), (0.0, 0.0), (-10.0, 20.0), (0.001, 0.001), (100000.0, 100000.0), (14400.0, 14400.0), (612.0, 792.0)]
+    {
         let doc = open(sample_pdf_sized(1, w, h));
         match render_page(&doc, 0, 800.0) {
-            Ok(img) => assert!(img.width <= MAX_SIDE_PX && img.height <= MAX_SIDE_PX && u64::from(img.width) * u64::from(img.height) <= MAX_PIXELS, "{w} x {h}"),
+            Ok(img) => assert!(
+                img.width <= MAX_SIDE_PX && img.height <= MAX_SIDE_PX && u64::from(img.width) * u64::from(img.height) <= MAX_PIXELS,
+                "{w} x {h}"
+            ),
             Err(e) => assert_ne!(e, RenderError::Crashed, "{w} x {h}"),
         }
     }

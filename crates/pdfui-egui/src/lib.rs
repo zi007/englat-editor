@@ -116,7 +116,8 @@ impl PdfApp {
                 self.password = None;
             }
             Err(e @ (OpenError::PasswordRequired | OpenError::WrongPassword)) => {
-                self.password = Some(PasswordPrompt { name: name.to_string(), bytes, input: String::new(), wrong: e == OpenError::WrongPassword, focus: true });
+                self.password =
+                    Some(PasswordPrompt { name: name.to_string(), bytes, input: String::new(), wrong: e == OpenError::WrongPassword, focus: true });
             }
             Err(e) => {
                 self.password = None;
@@ -353,28 +354,33 @@ impl PdfApp {
         let Some(prompt) = &mut self.password else { return };
         let mut submit = None;
         let mut cancel = false;
-        egui::Window::new("Password required").id(Id::new("pdf-password")).collapsible(false).resizable(false).anchor(Align2::CENTER_CENTER, vec2(0.0, -40.0)).show(ctx, |ui| {
-            ui.set_max_width(360.0);
-            ui.label(format!("{} is password protected.", prompt.name));
-            if prompt.wrong {
-                ui.colored_label(Color32::from_rgb(220, 60, 50), "That password is not correct.");
-            }
-            let edit = ui.add(egui::TextEdit::singleline(&mut prompt.input).password(true).hint_text("Password"));
-            if prompt.focus {
-                edit.request_focus();
-                prompt.focus = false;
-            }
-            let entered = edit.lost_focus() && ui.input(|i| i.key_pressed(Key::Enter));
-            ui.add_space(6.0);
-            ui.horizontal(|ui| {
-                if ui.button("Open").clicked() || entered {
-                    submit = Some(prompt.input.clone());
+        egui::Window::new("Password required")
+            .id(Id::new("pdf-password"))
+            .collapsible(false)
+            .resizable(false)
+            .anchor(Align2::CENTER_CENTER, vec2(0.0, -40.0))
+            .show(ctx, |ui| {
+                ui.set_max_width(360.0);
+                ui.label(format!("{} is password protected.", prompt.name));
+                if prompt.wrong {
+                    ui.colored_label(Color32::from_rgb(220, 60, 50), "That password is not correct.");
                 }
-                if ui.button("Cancel").clicked() {
-                    cancel = true;
+                let edit = ui.add(egui::TextEdit::singleline(&mut prompt.input).password(true).hint_text("Password"));
+                if prompt.focus {
+                    edit.request_focus();
+                    prompt.focus = false;
                 }
+                let entered = edit.lost_focus() && ui.input(|i| i.key_pressed(Key::Enter));
+                ui.add_space(6.0);
+                ui.horizontal(|ui| {
+                    if ui.button("Open").clicked() || entered {
+                        submit = Some(prompt.input.clone());
+                    }
+                    if ui.button("Cancel").clicked() {
+                        cancel = true;
+                    }
+                });
             });
-        });
         if cancel {
             self.password = None;
         } else if let Some(password) = submit {
@@ -394,7 +400,15 @@ fn picture_width(page_width_px: f32, aspect: f32, max_side: f32) -> u32 {
 
 /// Draw the pages that show in `viewport` (positions in the column whose top left is `rect.min`);
 /// returns whether pages still wait for their picture.
-fn draw_pages(ui: &mut egui::Ui, rect: Rect, viewport: Rect, lay: &Layout, doc: &PdfDoc, pictures: &mut Cache<TextureHandle>, failed: &mut HashSet<usize>) -> bool {
+fn draw_pages(
+    ui: &mut egui::Ui,
+    rect: Rect,
+    viewport: Rect,
+    lay: &Layout,
+    doc: &PdfDoc,
+    pictures: &mut Cache<TextureHandle>,
+    failed: &mut HashSet<usize>,
+) -> bool {
     let ctx = ui.ctx().clone();
     let ppp = ctx.pixels_per_point();
     let max_side = ctx.input(|i| i.max_texture_side) as f32;

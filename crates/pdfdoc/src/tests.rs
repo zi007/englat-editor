@@ -38,7 +38,12 @@ fn a_file_over_the_limit_is_refused_before_it_is_read() {
 
 #[test]
 fn page_sizes_a_file_can_claim_are_made_sane() {
-    let sane = |s: PageSize| s.width.is_finite() && s.height.is_finite() && (MIN_PAGE_POINTS..=MAX_PAGE_POINTS).contains(&s.width) && (MIN_PAGE_POINTS..=MAX_PAGE_POINTS).contains(&s.height);
+    let sane = |s: PageSize| {
+        s.width.is_finite()
+            && s.height.is_finite()
+            && (MIN_PAGE_POINTS..=MAX_PAGE_POINTS).contains(&s.width)
+            && (MIN_PAGE_POINTS..=MAX_PAGE_POINTS).contains(&s.height)
+    };
     // A huge page keeps its proportions inside the limit.
     let huge = PageSize::sane(2_000_000.0, 1_000_000.0);
     assert!(sane(huge) && (huge.width / huge.height - 2.0).abs() < 1e-3, "{huge:?}");
@@ -104,4 +109,3 @@ fn an_encrypted_file_asks_for_its_password_and_opens_with_it() {
         assert_eq!(doc.page_size(0), Some(PageSize { width: 612.0, height: 792.0 }), "{name}");
     }
 }
-
