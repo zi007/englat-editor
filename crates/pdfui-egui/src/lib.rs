@@ -10,6 +10,7 @@
 
 mod cache;
 mod layout;
+mod thumbs;
 
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
@@ -18,6 +19,8 @@ use cache::Cache;
 use egui::{Align2, Color32, Id, Key, Modifiers, Rect, Sense, TextureHandle, TextureOptions, pos2, vec2};
 pub use layout::Zoom;
 use layout::{GAP, Layout, layout, step};
+use thumbs::Thumbs;
+use wordcraft_pdfdoc::outline::OutlineEntry;
 use wordcraft_pdfdoc::{OpenError, PageSize, PdfDoc, sample};
 use wordcraft_pdfview::render_page;
 
@@ -39,11 +42,13 @@ const RENDERS_PER_FRAME: usize = 2;
 const PREFETCH: f32 = 200.0;
 const BACKDROP: Color32 = Color32::from_gray(0x4a);
 const SAMPLE_PAGES: usize = 8;
+const SIDEBAR_WIDTH: f32 = 200.0;
 
 struct Loaded {
     doc: PdfDoc,
     name: String,
     sizes: Vec<PageSize>,
+    outline: Vec<OutlineEntry>,
 }
 
 struct PasswordPrompt {
@@ -70,6 +75,9 @@ pub struct PdfApp {
     failed: HashSet<usize>,
     message: Option<String>,
     password: Option<PasswordPrompt>,
+    thumbs: Thumbs,
+    /// The sidebar shows the table of contents instead of thumbnails.
+    contents: bool,
 }
 
 impl PdfApp {
@@ -87,6 +95,8 @@ impl PdfApp {
             failed: HashSet::new(),
             message: None,
             password: None,
+            thumbs: Thumbs::default(),
+            contents: false,
         }
     }
 
@@ -104,7 +114,7 @@ impl PdfApp {
             }
             Ok(doc) => {
                 let sizes = (0..doc.page_count()).map(|i| doc.page_size(i).unwrap_or(PageSize { width: 612.0, height: 792.0 })).collect();
-                self.loaded = Some(Loaded { doc, name: name.to_string(), sizes });
+                self.loaded = Some(Loaded { outline: doc.outline(), doc, name: name.to_string(), sizes });
                 self.layout = None;
                 self.scroll_to = Some(0);
                 self.current = 0;
@@ -112,6 +122,7 @@ impl PdfApp {
                 self.last_scale = 0.0;
                 self.pictures.clear();
                 self.failed.clear();
+                self.thumbs.clear();
                 self.message = None;
                 self.password = None;
             }
@@ -180,6 +191,30 @@ impl PdfApp {
         self.zoom = Zoom::Factor(step(self.zoom_factor(), false));
     }
 
+    /// Show or hide the thumbnail strip.
+    pub fn set_thumbnails(&mut self, open: bool) {
+        self.thumbs.open = open;
+    }
+
+    pub fn thumbnails_shown(&self) -> bool {
+        self.thumbs.open
+    }
+
+    /// Show the table of contents (`true`) or the thumbnails in the sidebar.
+    pub fn set_contents(&mut self, contents: bool) {
+        self.contents = contents;
+    }
+
+    /// The entries of the open document's table of contents.
+    pub fn outline(&self) -> &[OutlineEntry] {
+        self.loaded.as_ref().map_or(&[], |l| l.outline.as_slice())
+    }
+
+    /// How many thumbnail pictures are held.
+    pub fn thumbnails_held(&self) -> usize {
+        self.thumbs.held()
+    }
+
     /// How many page pictures are held.
     pub fn pictures_held(&self) -> usize {
         self.pictures.len()
@@ -212,6 +247,33 @@ impl PdfApp {
         let ctx = ui.ctx().clone();
         self.keys(&ctx);
         egui::Panel::top("pdf_toolbar").show(ui, |ui| self.toolbar(ui));
+        if self.loaded.is_some() && self.thumbs.open {
+            let clicked = egui::Panel::left("pdf_thumbs_panel")
+                .resizable(false)
+                .exact_size(SIDEBAR_WIDTH)
+                .frame(egui::Frame::NONE.fill(Color32::from_gray(0x38)))
+                .show(ui, |ui| {
+                    let has_contents = self.loaded.as_ref().is_some_and(|l| !l.outline.is_empty());
+                    if !has_contents {
+                        self.contents = false;
+                    }
+                    if has_contents {
+                        ui.horizontal(|ui| {
+                            ui.selectable_value(&mut self.contents, false, "Pages");
+                            ui.selectable_value(&mut self.contents, true, "Contents");
+                        });
+                    }
+                    match &self.loaded {
+                        Some(l) if self.contents => contents_list(ui, &l.outline, self.current),
+                        Some(l) => self.thumbs.show(ui, &l.doc, &l.sizes, self.current),
+                        None => None,
+                    }
+                })
+                .inner;
+            if let Some(page) = clicked {
+                self.go_to_page(page);
+            }
+        }
         egui::CentralPanel::default().frame(egui::Frame::NONE.fill(BACKDROP)).show(ui, |ui| {
             self.banner(ui);
             if self.loaded.is_some() {
@@ -280,6 +342,11 @@ impl PdfApp {
             let Some(name) = self.loaded.as_ref().map(|l| l.name.clone()) else { return };
             ui.separator();
             ui.label(name);
+            ui.separator();
+            let mut shown = self.thumbs.open;
+            if ui.toggle_value(&mut shown, "Pages").on_hover_text("Show page thumbnails").changed() {
+                self.thumbs.open = shown;
+            }
             ui.separator();
             let n = self.page_count();
             let mut page = self.current + 1;
@@ -388,6 +455,26 @@ impl PdfApp {
             self.submit_password(&password);
         }
     }
+}
+
+/// The table of contents as a list; returns the page of the entry clicked.
+fn contents_list(ui: &mut egui::Ui, outline: &[OutlineEntry], current: usize) -> Option<usize> {
+    let mut clicked = None;
+    egui::ScrollArea::vertical().id_salt("pdf_contents").auto_shrink([false, false]).show(ui, |ui| {
+        for entry in outline {
+            ui.horizontal(|ui| {
+                ui.add_space(8.0 * entry.depth as f32);
+                let title = if entry.title.trim().is_empty() { "(untitled)" } else { entry.title.as_str() };
+                let label = egui::RichText::new(title).color(Color32::WHITE);
+                let response =
+                    ui.add_enabled(entry.page.is_some(), egui::Button::selectable(entry.page == Some(current), label).frame_when_inactive(false));
+                if response.clicked() {
+                    clicked = entry.page;
+                }
+            });
+        }
+    });
+    clicked
 }
 
 /// The width in pixels to draw a page at when it takes `page_width_px` on screen: rounded up to a

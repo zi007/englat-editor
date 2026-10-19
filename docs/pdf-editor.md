@@ -134,13 +134,15 @@ First slice, in the browser app `apps/pdfcraft-web` (and tested natively):
 | Zoom: buttons, Ctrl+scroll or pinch, Ctrl+0 fits the width; fit width by default; scroll position kept when zooming | `pdfui-egui` |
 | Page number box and PageUp, PageDown, Home, End | `pdfui-egui` |
 | Memory held to a fixed amount however long the document (least recently used pictures dropped) | `pdfui-egui` |
+| Thumbnail strip (the Pages button): small pages drawn lazily, one per frame; a click goes to the page | `pdfui-egui` |
+| Table of contents (bookmarks): depth, title, page; direct, named (`/Dests`, name tree) and go-to destinations; loops, depth, width and title length bounded; the strip gets a Contents tab when the file has any | `pdfdoc::outline`, `pdfui-egui` |
 | Limits a file can't raise: page sizes made sane, pictures capped in size and pixels, texture side respected | `pdfdoc`, `pdfview`, `pdfui-egui` |
 
 Checked in Chromium (WebGL2, software rasteriser) with the built wasm: the sample opens at 131% fitted to
 the window, PageDown twice reads page 3, `+` goes to 150% with horizontal scrolling, End reads page 8.
 The wasm module is 15.7 MB (4.9 MB gzipped) before `wasm-opt`, most of it egui and wgpu.
 
-Not done yet in milestone 1: thumbnails, outline, text selection, copy and search, printing, touch
+Not done yet in milestone 1: text selection, copy and search, printing, touch
 gestures beyond the egui defaults, and a text layer. Known limits of this slice:
 
 - **Drawing happens on the interface thread.** A very heavy page can make a frame slow, and in the
