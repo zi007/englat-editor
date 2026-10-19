@@ -9,6 +9,8 @@
 //! `wasm32-unknown-unknown` a panic aborts the module (see `docs/pdf-editor.md`).
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
+pub mod text;
+
 use std::fmt;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 
