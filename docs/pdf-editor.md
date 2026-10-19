@@ -137,13 +137,19 @@ First slice, in the browser app `apps/pdfcraft-web` (and tested natively):
 | Thumbnail strip (the Pages button): small pages drawn lazily, one per frame; a click goes to the page | `pdfui-egui` |
 | Table of contents (bookmarks): depth, title, page; direct, named (`/Dests`, name tree) and go-to destinations; loops, depth, width and title length bounded; the strip gets a Contents tab when the file has any | `pdfdoc::outline`, `pdfui-egui` |
 | Limits a file can't raise: page sizes made sane, pictures capped in size and pixels, texture side respected | `pdfdoc`, `pdfview`, `pdfui-egui` |
+| Text layer: each character with its box (from the glyph's Unicode value, ligatures split, at most 200 000 per page); spaces from gaps and line breaks from positions when copying | `pdfview::text` |
+| Selecting with the mouse on one page, Ctrl+C; find bar (Ctrl+F, F3 / Shift+F3, Enter), case-insensitive, matches highlighted and scrolled to, the document read three pages per frame, at most 10 000 matches | `pdfui-egui` |
 
 Checked in Chromium (WebGL2, software rasteriser) with the built wasm: the sample opens at 131% fitted to
 the window, PageDown twice reads page 3, `+` goes to 150% with horizontal scrolling, End reads page 8.
 The wasm module is 15.7 MB (4.9 MB gzipped) before `wasm-opt`, most of it egui and wgpu.
 
-Not done yet in milestone 1: text selection, copy and search, printing, touch
-gestures beyond the egui defaults, and a text layer. Known limits of this slice:
+
+Not done yet in milestone 1: selection across pages, selecting by touch (touch screens keep dragging
+for scrolling), double-click for a word, printing, and right-to-left or vertical text order. Text
+order is the order the file draws in, which is reading order for most files but not all. Glyphs whose
+font has no Unicode mapping are left out, so a scanned page (a picture) has no text. Known limits of
+this slice:
 
 - **Drawing happens on the interface thread.** A very heavy page can make a frame slow, and in the
   browser there is no second thread. Moving it off (a worker) is later work.

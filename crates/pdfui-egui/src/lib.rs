@@ -10,6 +10,7 @@
 
 mod cache;
 mod layout;
+mod select;
 mod thumbs;
 
 use std::collections::HashSet;
@@ -19,6 +20,7 @@ use cache::Cache;
 use egui::{Align2, Color32, Id, Key, Modifiers, Rect, Sense, TextureHandle, TextureOptions, pos2, vec2};
 pub use layout::Zoom;
 use layout::{GAP, Layout, layout, step};
+use select::{Hit, TextState};
 use thumbs::Thumbs;
 use wordcraft_pdfdoc::outline::OutlineEntry;
 use wordcraft_pdfdoc::{OpenError, PageSize, PdfDoc, sample};
@@ -78,6 +80,12 @@ pub struct PdfApp {
     thumbs: Thumbs,
     /// The sidebar shows the table of contents instead of thumbnails.
     contents: bool,
+    /// Selection, search matches and the text of the pages near the window.
+    text: TextState,
+    /// A search match to scroll to on the next frame.
+    scroll_hit: Option<Hit>,
+    /// Where the column of pages was drawn last frame, on the screen.
+    column: Rect,
 }
 
 impl PdfApp {
@@ -97,6 +105,9 @@ impl PdfApp {
             password: None,
             thumbs: Thumbs::default(),
             contents: false,
+            text: TextState::default(),
+            scroll_hit: None,
+            column: Rect::NOTHING,
         }
     }
 
@@ -123,6 +134,8 @@ impl PdfApp {
                 self.pictures.clear();
                 self.failed.clear();
                 self.thumbs.clear();
+                self.text.clear();
+                self.scroll_hit = None;
                 self.message = None;
                 self.password = None;
             }
@@ -172,6 +185,44 @@ impl PdfApp {
         if let Some(last) = self.page_count().checked_sub(1) {
             self.scroll_to = Some(page.min(last));
         }
+    }
+
+    /// The selected text, if anything is selected.
+    pub fn selected_text(&mut self) -> Option<String> {
+        let doc = &self.loaded.as_ref()?.doc;
+        self.text.selected_text(doc)
+    }
+
+    /// Open or close the find bar.
+    pub fn set_find_open(&mut self, open: bool) {
+        self.text.search.open = open;
+        self.text.search.focus = open;
+    }
+
+    pub fn find_open(&self) -> bool {
+        self.text.search.open
+    }
+
+    /// Search the document for `query` (read a few pages per frame, so matches arrive over a few frames).
+    pub fn set_find_query(&mut self, query: &str) {
+        self.text.search.query = query.to_string();
+    }
+
+    /// Matches found so far.
+    pub fn find_hits(&self) -> usize {
+        self.text.search.hits().len()
+    }
+
+    /// Go to the next (or previous) match.
+    pub fn find_step(&mut self, forward: bool) {
+        if let Some(hit) = self.text.search.step(forward) {
+            self.scroll_hit = Some(hit);
+        }
+    }
+
+    /// Pages whose text is held.
+    pub fn texts_held(&self) -> usize {
+        self.text.store.held()
     }
 
     /// The zoom as a factor (1.0 is 100%), as of the last frame.
@@ -247,6 +298,9 @@ impl PdfApp {
         let ctx = ui.ctx().clone();
         self.keys(&ctx);
         egui::Panel::top("pdf_toolbar").show(ui, |ui| self.toolbar(ui));
+        if self.loaded.is_some() && self.text.search.open {
+            egui::Panel::top("pdf_find").show(ui, |ui| self.find_bar(ui));
+        }
         if self.loaded.is_some() && self.thumbs.open {
             let clicked = egui::Panel::left("pdf_thumbs_panel")
                 .resizable(false)
@@ -288,6 +342,28 @@ impl PdfApp {
     fn keys(&mut self, ctx: &egui::Context) {
         if self.loaded.is_none() || self.password.is_some() {
             return;
+        }
+        let (find, escape, f3, shift_f3) = ctx.input_mut(|i| {
+            (
+                i.consume_key(Modifiers::COMMAND, Key::F),
+                self.text.search.open && i.consume_key(Modifiers::NONE, Key::Escape),
+                i.consume_key(Modifiers::NONE, Key::F3),
+                i.consume_key(Modifiers::SHIFT, Key::F3),
+            )
+        });
+        if find {
+            self.set_find_open(true);
+        }
+        if escape {
+            self.set_find_open(false);
+        }
+        if f3 || shift_f3 {
+            self.find_step(f3);
+        }
+        if select::copy_requested(ctx)
+            && let Some(text) = self.selected_text()
+        {
+            ctx.copy_text(text);
         }
         let (pinch, down, up, home, end, plus, minus, zero) = ctx.input_mut(|i| {
             (
@@ -347,6 +423,10 @@ impl PdfApp {
             if ui.toggle_value(&mut shown, "Pages").on_hover_text("Show page thumbnails").changed() {
                 self.thumbs.open = shown;
             }
+            let mut find = self.text.search.open;
+            if ui.toggle_value(&mut find, "Find").on_hover_text("Search the text (Ctrl+F)").changed() {
+                self.set_find_open(find);
+            }
             ui.separator();
             let n = self.page_count();
             let mut page = self.current + 1;
@@ -366,6 +446,50 @@ impl PdfApp {
                 self.zoom = Zoom::FitWidth;
             }
         });
+    }
+
+    fn find_bar(&mut self, ui: &mut egui::Ui) {
+        let mut step = None;
+        let mut close = false;
+        ui.horizontal(|ui| {
+            let search = &mut self.text.search;
+            let edit = ui.add(egui::TextEdit::singleline(&mut search.query).hint_text("Find in document").desired_width(220.0));
+            if search.focus {
+                edit.request_focus();
+                search.focus = false;
+            }
+            if edit.lost_focus() && ui.input(|i| i.key_pressed(Key::Enter)) {
+                step = Some(!ui.input(|i| i.modifiers.shift));
+                edit.request_focus();
+            }
+            if ui.button("▲").on_hover_text("Previous match (Shift+F3)").clicked() {
+                step = Some(false);
+            }
+            if ui.button("▼").on_hover_text("Next match (F3)").clicked() {
+                step = Some(true);
+            }
+            let hits = search.hits().len();
+            let total = self.loaded.as_ref().map_or(0, |l| l.doc.page_count());
+            let label = match (search.query.is_empty(), search.current()) {
+                (true, _) => String::new(),
+                (false, _) if hits == 0 && search.scanned() >= total => "No matches".to_string(),
+                (false, Some(c)) => format!("{} of {hits}", c + 1),
+                (false, None) => "Searching…".to_string(),
+            };
+            ui.label(label);
+            if search.scanned() < total && !search.query.is_empty() {
+                ui.weak(format!("({}/{total} pages)", search.scanned()));
+            }
+            if ui.small_button("×").on_hover_text("Close (Esc)").clicked() {
+                close = true;
+            }
+        });
+        if let Some(forward) = step {
+            self.find_step(forward);
+        }
+        if close {
+            self.set_find_open(false);
+        }
     }
 
     fn banner(&mut self, ui: &mut egui::Ui) {
@@ -390,14 +514,28 @@ impl PdfApp {
     }
 
     fn pages(&mut self, ui: &mut egui::Ui) {
-        let Self { loaded, zoom, layout: last_layout, scroll_to, current, last_offset, last_scale, pictures, failed, .. } = self;
+        let Self {
+            loaded, zoom, layout: last_layout, scroll_to, scroll_hit, current, last_offset, last_scale, pictures, failed, text, column, ..
+        } = self;
         let Some(loaded) = loaded.as_ref() else { return };
         let lay = layout(&loaded.sizes, *zoom, ui.available_width());
-        // Where to scroll: to a page asked for, or, when the zoom changed, to the same place.
-        let wanted = match scroll_to.take() {
-            Some(page) => lay.top(page).map(|t| (t - GAP).max(0.0)),
-            None if *last_scale > 0.0 && (lay.scale - *last_scale).abs() > 1e-4 => Some(*last_offset * lay.scale / *last_scale),
-            None => None,
+        let mut searching = false;
+        if text.search.open || !text.search.query.is_empty() {
+            searching = text.search.update(&loaded.doc);
+            if text.search.jump
+                && let Some(hit) = text.search.current_hit()
+            {
+                text.search.jump = false;
+                *scroll_hit = Some(hit);
+            }
+        }
+        // Where to scroll: to a page asked for, to a search match, or, when the zoom changed, to
+        // the same place.
+        let wanted = match (scroll_to.take(), scroll_hit.take()) {
+            (Some(page), _) => lay.top(page).map(|t| (t - GAP).max(0.0)),
+            (None, Some(hit)) => lay.top(hit.page).map(|t| (t + hit.top * lay.scale - select::HIT_MARGIN).max(0.0)),
+            (None, None) if *last_scale > 0.0 && (lay.scale - *last_scale).abs() > 1e-4 => Some(*last_offset * lay.scale / *last_scale),
+            (None, None) => None,
         };
         let mut area = egui::ScrollArea::both().id_salt("pdf_pages").auto_shrink([false, false]);
         if let Some(y) = wanted {
@@ -406,14 +544,19 @@ impl PdfApp {
         let mut more = false;
         let out = area.show_viewport(ui, |ui, viewport| {
             let width = lay.content.x.max(ui.available_width());
-            let (rect, _) = ui.allocate_exact_size(vec2(width, lay.content.y), Sense::hover());
-            more = draw_pages(ui, rect, viewport, &lay, &loaded.doc, pictures, failed);
+            // Touch screens keep dragging for scrolling; the mouse selects text.
+            let sense = if ui.input(|i| i.has_touch_screen()) { Sense::click() } else { Sense::click_and_drag() };
+            let (rect, response) = ui.allocate_exact_size(vec2(width, lay.content.y), sense);
+            *column = rect;
+            more = draw_pages(ui, rect, viewport, &lay, &loaded.doc, pictures, failed, text);
+            let on_screen = select::visible_pages(&lay, rect, viewport.min.y, viewport.max.y);
+            select::interact(ui, &response, &on_screen, lay.scale, &loaded.doc, text);
         });
         *last_offset = out.state.offset.y;
         *last_scale = lay.scale;
         *current = lay.page_at(out.state.offset.y, out.inner_rect.height());
         *last_layout = Some(lay);
-        if more || wanted.is_some() {
+        if more || wanted.is_some() || searching {
             ui.ctx().request_repaint();
         }
     }
@@ -496,6 +639,7 @@ fn draw_pages(
     doc: &PdfDoc,
     pictures: &mut Cache<TextureHandle>,
     failed: &mut HashSet<usize>,
+    text: &mut TextState,
 ) -> bool {
     let ctx = ui.ctx().clone();
     let ppp = ctx.pixels_per_point();
@@ -537,9 +681,14 @@ fn draw_pages(
                 painter.image(id, page, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
             }
             None => {
-                let text = if failed.contains(&index) { "This page can't be drawn".to_string() } else { format!("Page {}", index + 1) };
-                painter.text(page.center(), Align2::CENTER_CENTER, text, egui::FontId::proportional(16.0), Color32::from_gray(0x99));
+                let label = if failed.contains(&index) { "This page can't be drawn".to_string() } else { format!("Page {}", index + 1) };
+                painter.text(page.center(), Align2::CENTER_CENTER, label, egui::FontId::proportional(16.0), Color32::from_gray(0x99));
             }
+        }
+        if page.intersects(ui.clip_rect())
+            && let Some(page_text) = text.store.get(doc, index)
+        {
+            select::paint_highlights(&painter, page, lay.scale, index, &page_text, text);
         }
     }
     more

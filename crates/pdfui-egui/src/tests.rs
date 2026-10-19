@@ -261,3 +261,137 @@ fn a_file_without_bookmarks_has_no_contents_tab() {
     assert!(h.state().outline().is_empty());
     assert!(h.query_by_label("Contents").is_none());
 }
+
+/// The screen position of the middle of character `index` of page 0's text, found by looking the
+/// characters up the way the window draws them.
+fn char_pos(h: &H, page: usize, index: usize) -> egui::Pos2 {
+    let app = h.state();
+    let lay = app.layout.as_ref().unwrap();
+    let doc = &app.loaded.as_ref().unwrap().doc;
+    let text = wordcraft_pdfview::text::page_text(doc, page).unwrap();
+    let r = text.chars[index].rect;
+    let origin = app.column.min + lay.page_rect(page, app.column.width()).unwrap().min.to_vec2();
+    origin + vec2((r[0] + r[2]) / 2.0, (r[1] + r[3]) / 2.0) * lay.scale
+}
+
+fn index_of(h: &H, page: usize, needle: &str) -> (usize, usize) {
+    let doc = &h.state().loaded.as_ref().unwrap().doc;
+    wordcraft_pdfview::text::page_text(doc, page).unwrap().find(needle)[0]
+}
+
+fn drag(h: &mut H, from: egui::Pos2, to: egui::Pos2) {
+    h.hover_at(from);
+    h.step();
+    h.drag_at(from);
+    h.step();
+    for k in 1..=4 {
+        h.hover_at(from + (to - from) * (k as f32 / 4.0));
+        h.step();
+    }
+    h.drop_at(to);
+    steps(h, 2);
+}
+
+#[test]
+fn dragging_across_text_selects_it_and_a_click_clears_it() {
+    let mut h = app_with(sample_pdf(2));
+    let (first, last) = index_of(&h, 0, "quick brown");
+    let (a, b) = (char_pos(&h, 0, first), char_pos(&h, 0, last));
+    drag(&mut h, a, b);
+    assert_eq!(h.state_mut().selected_text().as_deref(), Some("quick brown"));
+    // A click somewhere else clears the selection.
+    let at = char_pos(&h, 0, index_of(&h, 0, "Pack my").0);
+    h.hover_at(at);
+    h.step();
+    h.drag_at(at);
+    h.step();
+    h.drop_at(at);
+    steps(&mut h, 2);
+    assert_eq!(h.state_mut().selected_text(), None);
+}
+
+#[test]
+fn a_selection_dragged_backwards_reads_the_same_and_copy_puts_it_on_the_clipboard() {
+    let mut h = app_with(sample_pdf(1));
+    let (first, last) = index_of(&h, 0, "lazy dog");
+    let (a, b) = (char_pos(&h, 0, last), char_pos(&h, 0, first));
+    drag(&mut h, a, b);
+    assert_eq!(h.state_mut().selected_text().as_deref(), Some("lazy dog"));
+    h.event(egui::Event::Copy);
+    h.step();
+    let copied = h.output().platform_output.commands.iter().any(|c| matches!(c, egui::OutputCommand::CopyText(t) if t == "lazy dog"));
+    assert!(copied, "{:?}", h.output().platform_output.commands);
+}
+
+#[test]
+fn copy_with_nothing_selected_copies_nothing() {
+    let mut h = app_with(sample_pdf(1));
+    h.event(egui::Event::Copy);
+    h.step();
+    assert!(!h.output().platform_output.commands.iter().any(|c| matches!(c, egui::OutputCommand::CopyText(_))));
+}
+
+#[test]
+fn a_search_finds_every_match_ignoring_case_and_steps_to_other_pages() {
+    let mut h = app_with(sample_pdf(4));
+    h.state_mut().set_find_open(true);
+    h.state_mut().set_find_query("QUICK");
+    steps(&mut h, 12);
+    // "quick" is on two lines of each of the four pages.
+    assert_eq!(h.state().find_hits(), 8);
+    assert_eq!(h.state().current_page(), 0);
+    for _ in 0..3 {
+        h.state_mut().find_step(true);
+        steps(&mut h, 3);
+    }
+    assert_eq!(h.state().current_page(), 1, "the fourth match is on the second page");
+    h.state_mut().find_step(false);
+    h.state_mut().find_step(false);
+    h.state_mut().find_step(false);
+    h.state_mut().find_step(false);
+    steps(&mut h, 3);
+    assert_eq!(h.state().find_hits(), 8, "stepping doesn't change the matches");
+    // A new query replaces the matches; no match means none.
+    h.state_mut().set_find_query("zzzz");
+    steps(&mut h, 8);
+    assert_eq!(h.state().find_hits(), 0);
+    h.state_mut().set_find_query("");
+    steps(&mut h, 3);
+    assert_eq!(h.state().find_hits(), 0);
+}
+
+#[test]
+fn ctrl_f_opens_the_find_bar_and_escape_closes_it() {
+    let mut h = app_with(sample_pdf(2));
+    assert!(!h.state().find_open());
+    h.key_press_modifiers(Modifiers::COMMAND, Key::F);
+    steps(&mut h, 3);
+    assert!(h.state().find_open());
+    h.key_press(Key::Escape);
+    steps(&mut h, 3);
+    assert!(!h.state().find_open());
+}
+
+#[test]
+fn opening_another_file_drops_the_selection_and_the_matches() {
+    let mut h = app_with(sample_pdf(2));
+    h.state_mut().set_find_open(true);
+    h.state_mut().set_find_query("quick");
+    steps(&mut h, 8);
+    assert!(h.state().find_hits() > 0);
+    h.state_mut().open_bytes("other.pdf", sample_pdf(1));
+    steps(&mut h, 8);
+    // The query stays, and is run again on the new document: one page, two lines.
+    assert_eq!(h.state().find_hits(), 2);
+    assert_eq!(h.state_mut().selected_text(), None);
+}
+
+#[test]
+fn the_text_held_for_selecting_stays_bounded_in_a_long_document() {
+    let mut h = app_with(sample_pdf(MAX_SAMPLE_PAGES));
+    for page in (0..MAX_SAMPLE_PAGES).step_by(7) {
+        h.state_mut().go_to_page(page);
+        steps(&mut h, 4);
+    }
+    assert!(h.state().texts_held() <= 48, "{} pages of text held", h.state().texts_held());
+}
