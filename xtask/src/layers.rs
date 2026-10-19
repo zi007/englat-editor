@@ -38,6 +38,7 @@ pub const TABLE: &[(&str, Class)] = &[
     ("doc", Class::Layer(1)),
     ("fonts", Class::Layer(1)),
     ("metafile", Class::Layer(1)),
+    ("pdfdoc", Class::Layer(1)),
     ("proof", Class::Layer(1)),
     ("layout", Class::Layer(2)),
     ("docx", Class::Layer(2)),
@@ -45,15 +46,18 @@ pub const TABLE: &[(&str, Class)] = &[
     ("formats", Class::Layer(2)),
     ("render", Class::Layer(3)),
     ("pdf", Class::Layer(3)),
+    ("pdfview", Class::Layer(3)),
     ("engine", Class::Layer(4)),
     ("mcp", Class::Layer(5)),
     ("zotero", Class::Layer(5)),
     ("ui-egui", Class::Layer(6)),
+    ("pdfui-egui", Class::Layer(6)),
     ("testkit", Class::Testkit),
     // apps and tooling
     ("wordcraft", Class::Exempt),
     ("cli", Class::Exempt),
     ("web", Class::Exempt),
+    ("pdfcraft-web", Class::Exempt),
     ("xtask", Class::Exempt),
 ];
 

@@ -1,6 +1,6 @@
 # PDF editor (pdfcraft-web)
 
-> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-18 · **Change:** minor (milestone 0 results and library decision; previously major: first version, plan only) · **Status:** milestone 0 done, no product code yet
+> **Last reviewed:** 2026-10-18 · **Last updated:** 2026-10-18 · **Change:** minor (milestone 1 first slice: open, scroll, zoom, page jump, password; previously minor: milestone 0 results and library decision; previously major: first version, plan only) · **Status:** milestone 0 done, milestone 1 started
 
 A browser PDF editor that lives in this repository next to WordCraft and shares its libraries. This
 page is the plan; nothing here is built yet. Rules for working in the code are in
@@ -63,7 +63,7 @@ Each milestone ships on its own and keeps CI green.
 0. **Spike (no UI). Done, see [Milestone 0 results](#milestone-0-results).** Open, render page 1 and save an untouched copy in wasm, for a set of test
    files including damaged, encrypted and very large ones. Decide the editing library from the
    table above and the command registry question. Output: a short decision record in this file.
-1. **Viewer.** Open a file (drop or picker), pages, zoom and fit, thumbnails, outline, text
+1. **Viewer. First slice done, see [Milestone 1 progress](#milestone-1-progress).** Open a file (drop or picker), pages, zoom and fit, thumbnails, outline, text
    selection, copy, search, print through the browser. Keyboard and touch.
 2. **Page operations.** Reorder, rotate, delete, insert blank, extract, split, merge several files;
    undo/redo; save a new file.
@@ -120,6 +120,37 @@ and AES-256 encrypted copies (user password `secret`, made with `lopdf`).
 - Fuzzing of both loaders; a licence check of the full dependency trees (`cargo deny` is not in CI
   yet); heavy-page rendering performance; a browser (not Node) run; text extraction, search and
   font handling.
+
+## Milestone 1 progress
+
+First slice, in the browser app `apps/pdfcraft-web` (and tested natively):
+
+| Done | Where |
+|---|---|
+| Open a PDF from the file picker, a drop, or the built-in sample; the file is read by the page and never uploaded | `pdfcraft-web`, `pdfui-egui` |
+| Encrypted files ask for the password (RC4-128, AES-128, AES-256 tested); a wrong password says so | `pdfdoc`, `pdfui-egui` |
+| Damaged, empty and non-PDF files say why and leave the open document alone | `pdfdoc`, `pdfui-egui` |
+| Pages in a scrolling column, drawn as they scroll into view, a few per frame | `pdfui-egui`, `pdfview` |
+| Zoom: buttons, Ctrl+scroll or pinch, Ctrl+0 fits the width; fit width by default; scroll position kept when zooming | `pdfui-egui` |
+| Page number box and PageUp, PageDown, Home, End | `pdfui-egui` |
+| Memory held to a fixed amount however long the document (least recently used pictures dropped) | `pdfui-egui` |
+| Limits a file can't raise: page sizes made sane, pictures capped in size and pixels, texture side respected | `pdfdoc`, `pdfview`, `pdfui-egui` |
+
+Checked in Chromium (WebGL2, software rasteriser) with the built wasm: the sample opens at 131% fitted to
+the window, PageDown twice reads page 3, `+` goes to 150% with horizontal scrolling, End reads page 8.
+The wasm module is 15.7 MB (4.9 MB gzipped) before `wasm-opt`, most of it egui and wgpu.
+
+Not done yet in milestone 1: thumbnails, outline, text selection, copy and search, printing, touch
+gestures beyond the egui defaults, and a text layer. Known limits of this slice:
+
+- **Drawing happens on the interface thread.** A very heavy page can make a frame slow, and in the
+  browser there is no second thread. Moving it off (a worker) is later work.
+- **Pictures are at most 4096 pixels a side**, so a page zoomed far in is a scaled picture, not
+  re-drawn sharp. Tiled drawing is later work.
+- **No commands yet.** The viewer is plain UI state; `AGENTS.md` says every user-visible action is a
+  registered command. `pdfengine` (the registry, undo, MCP and CLI access) arrives with milestone 2,
+  when there is something to undo.
+- English text only: the interface strings are not yet in the translation catalogs.
 
 ## Testing
 

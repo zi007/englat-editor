@@ -1,0 +1,13 @@
+[package]
+name = "wordcraft-pdfdoc"
+description = "The PDF a person opens: its pages and their sizes, read with hayro and safe on hostile files"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+hayro-syntax = { workspace = true }
